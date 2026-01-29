@@ -78,8 +78,8 @@ class _SplashPageViewState extends State<SplashPageView> {
         curve: Curves.easeInOutCubic,
       );
     } else {
-      // TODO: Navigate to next flow (onboarding or home)
-      // Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
+      // Navigate to Sign In (Onboarding)
+      Navigator.pushReplacementNamed(context, '/onboarding');
     }
   }
 

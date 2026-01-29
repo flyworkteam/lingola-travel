@@ -1,0 +1,346 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../Core/Theme/my_colors.dart';
+import '../../Core/Routes/app_routes.dart';
+
+/// Step 4 of 4 - Daily Goal Selection View
+/// Pixel-perfect implementation from Figma
+class DailyGoalSelectionView extends StatefulWidget {
+  const DailyGoalSelectionView({super.key});
+
+  @override
+  State<DailyGoalSelectionView> createState() =>
+      _DailyGoalSelectionViewState();
+}
+
+class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
+  String? _selectedGoal;
+
+  final List<Map<String, String>> _goals = [
+    {
+      'id': 'casual',
+      'title': 'Casual',
+      'duration': '5 mins/day',
+      'icon': 'assets/images/casual.png',
+    },
+    {
+      'id': 'regular',
+      'title': 'Regular',
+      'duration': '15 mins/day',
+      'icon': 'assets/images/regular.png',
+    },
+    {
+      'id': 'serious',
+      'title': 'Serious',
+      'duration': '30 mins/day',
+      'icon': 'assets/images/serious.png',
+    },
+  ];
+
+  void _onGoalSelected(String goalId) {
+    setState(() {
+      _selectedGoal = goalId;
+    });
+  }
+
+  void _onContinue() {
+    if (_selectedGoal != null) {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.creatingPlan,
+      );
+    }
+  }
+
+  void _onBack() {
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: MyColors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Progress Bar
+              SizedBox(height: 20.h),
+              _buildProgressBar(),
+
+              SizedBox(height: 28.h),
+
+              // Title
+              Text(
+                'What is your\ndaily goal?',
+                style: GoogleFonts.montserrat(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w700,
+                  color: MyColors.black,
+                  height: 1.2,
+                ),
+              ),
+
+              SizedBox(height: 10.h),
+
+              // Subtitle
+              Text(
+                'Choose how much time you want to spend\nlearning. You can always change this later.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  color: MyColors.grey600,
+                  height: 1.3,
+                ),
+              ),
+
+              SizedBox(height: 24.h),
+
+              // Goal Cards
+              Expanded(
+                child: ListView.separated(
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _goals.length,
+                  separatorBuilder: (context, index) => SizedBox(height: 12.h),
+                  itemBuilder: (context, index) {
+                    final goal = _goals[index];
+                    final isSelected = _selectedGoal == goal['id'];
+                    return _buildGoalCard(
+                      goal: goal,
+                      isSelected: isSelected,
+                      onTap: () => _onGoalSelected(goal['id']!),
+                    );
+                  },
+                ),
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Bottom Buttons
+              Row(
+                children: [
+                  // Back Button
+                  _buildBackButton(),
+
+                  SizedBox(width: 12.w),
+
+                  // Continue Button
+                  Expanded(
+                    child: _buildContinueButton(),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 16.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'STEP 4 OF 4',
+          style: GoogleFonts.montserrat(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w600,
+            color: MyColors.lingolaPrimaryColor,
+            letterSpacing: 1.2,
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            // Step 1 - Completed
+            Expanded(
+              child: Container(
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: MyColors.lingolaPrimaryColor,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            // Step 2 - Completed
+            Expanded(
+              child: Container(
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: MyColors.lingolaPrimaryColor,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            // Step 3 - Completed
+            Expanded(
+              child: Container(
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: MyColors.lingolaPrimaryColor,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            // Step 4 - Current
+            Expanded(
+              child: Container(
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: MyColors.lingolaPrimaryColor,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGoalCard({
+    required Map<String, String> goal,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? MyColors.lingolaPrimaryColor.withOpacity(0.1)
+              : MyColors.white,
+          border: Border.all(
+            color: isSelected
+                ? MyColors.lingolaPrimaryColor
+                : MyColors.grey300,
+            width: isSelected ? 2.w : 1.w,
+          ),
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow: [
+            BoxShadow(
+              color: MyColors.black.withOpacity(0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 48.w,
+              height: 48.w,
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? MyColors.lingolaPrimaryColor
+                    : MyColors.grey200,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Image.asset(
+                goal['icon']!,
+                width: 24.w,
+                height: 24.w,
+                fit: BoxFit.contain,
+                color: isSelected ? MyColors.white : MyColors.lingolaPrimaryColor,
+              ),
+            ),
+
+            SizedBox(width: 16.w),
+
+            // Text Content
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  goal['title']!,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: MyColors.black,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  goal['duration']!,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
+                    color: MyColors.grey600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: _onBack,
+      child: Container(
+        width: 50.w,
+        height: 50.h,
+        decoration: BoxDecoration(
+          color: MyColors.grey200,
+          borderRadius: BorderRadius.circular(14.r),
+        ),
+        child: Icon(
+          Icons.arrow_back,
+          color: MyColors.grey700,
+          size: 22.w,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContinueButton() {
+    final isEnabled = _selectedGoal != null;
+
+    return GestureDetector(
+      onTap: isEnabled ? _onContinue : null,
+      child: Container(
+        height: 50.h,
+        decoration: BoxDecoration(
+          color: isEnabled
+              ? MyColors.lingolaPrimaryColor
+              : MyColors.grey300,
+          borderRadius: BorderRadius.circular(14.r),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Continue',
+              style: GoogleFonts.montserrat(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                color: MyColors.white,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            Icon(
+              Icons.arrow_forward,
+              color: MyColors.white,
+              size: 20.w,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

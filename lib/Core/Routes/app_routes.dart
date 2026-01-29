@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../View/SplashView/splash_view.dart';
 import '../../View/SplashView/splash_page_view.dart';
+import '../../View/OnboardingView/sign_in_view.dart';
+import '../../View/OnboardingView/language_selection_view.dart';
+import '../../View/OnboardingView/profession_selection_view.dart';
+import '../../View/OnboardingView/english_level_selection_view.dart';
+import '../../View/OnboardingView/daily_goal_selection_view.dart';
+import '../../View/OnboardingView/creating_plan_view.dart';
 
 /// App Routes - Named route definitions
 class AppRoutes {
@@ -10,6 +16,11 @@ class AppRoutes {
   static const String splash = '/';
   static const String splashPages = '/splash-pages';
   static const String onboarding = '/onboarding';
+  static const String languageSelection = '/language-selection';
+  static const String professionSelection = '/profession-selection';
+  static const String englishLevelSelection = '/english-level-selection';
+  static const String dailyGoalSelection = '/daily-goal-selection';
+  static const String creatingPlan = '/creating-plan';
   static const String login = '/login';
   static const String home = '/home';
   static const String premium = '/premium';
@@ -63,8 +74,13 @@ class AppRoutes {
     return {
       splash: (context) => const SplashView(),
       splashPages: (context) => const SplashPageView(),
+      onboarding: (context) => const SignInView(),
+      languageSelection: (context) => const LanguageSelectionView(),
+      professionSelection: (context) => const ProfessionSelectionView(),
+      englishLevelSelection: (context) => const EnglishLevelSelectionView(),
+      dailyGoalSelection: (context) => const DailyGoalSelectionView(),
+      creatingPlan: (context) => const CreatingPlanView(),
       // TODO: Add more routes as views are created
-      // onboarding: (context) => OnboardingView(),
       // home: (context) => HomeView(),
       // etc.
     };
