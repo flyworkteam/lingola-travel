@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
+import '../NotificationsView/notifications_view.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -303,18 +304,28 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Notification icon
   Widget _buildNotificationIcon() {
-    return Container(
-      width: 44.w,
-      height: 44.h,
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        shape: BoxShape.circle,
-        border: Border.all(color: MyColors.border, width: 1),
-      ),
-      child: Icon(
-        Icons.notifications_outlined,
-        size: 24.sp,
-        color: MyColors.textPrimary,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const NotificationsView(),
+          ),
+        );
+      },
+      child: Container(
+        width: 44.w,
+        height: 44.h,
+        decoration: BoxDecoration(
+          color: MyColors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: MyColors.border, width: 1),
+        ),
+        child: Icon(
+          Icons.notifications_outlined,
+          size: 24.sp,
+          color: MyColors.textPrimary,
+        ),
       ),
     );
   }
