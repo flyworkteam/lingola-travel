@@ -7,6 +7,7 @@ import '../../View/OnboardingView/profession_selection_view.dart';
 import '../../View/OnboardingView/english_level_selection_view.dart';
 import '../../View/OnboardingView/daily_goal_selection_view.dart';
 import '../../View/OnboardingView/creating_plan_view.dart';
+import '../../View/HomeView/home_view.dart';
 
 /// App Routes - Named route definitions
 class AppRoutes {
@@ -80,8 +81,8 @@ class AppRoutes {
       englishLevelSelection: (context) => const EnglishLevelSelectionView(),
       dailyGoalSelection: (context) => const DailyGoalSelectionView(),
       creatingPlan: (context) => const CreatingPlanView(),
+      home: (context) => const HomeView(),
       // TODO: Add more routes as views are created
-      // home: (context) => HomeView(),
       // etc.
     };
   }

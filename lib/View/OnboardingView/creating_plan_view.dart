@@ -94,9 +94,8 @@ class _CreatingPlanViewState extends State<CreatingPlanView>
 
   void _onGetStarted() {
     if (_currentProgress >= 100) {
-      // TODO: Navigate to home screen
-      // Navigator.pushReplacementNamed(context, AppRoutes.home);
-      print('Navigating to home...');
+      // Navigate to home screen
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     }
   }
 
