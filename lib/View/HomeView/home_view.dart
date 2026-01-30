@@ -76,6 +76,16 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           // Course Cards
                           _buildCourseCards(),
                           
+                          SizedBox(height: 32.h),
+                          
+                          // Premium Membership Card
+                          _buildPremiumCard(),
+                          
+                          SizedBox(height: 32.h),
+                          
+                          // Visual Dictionary Card
+                          _buildVisualDictionaryCard(),
+                          
                           SizedBox(height: 24.h),
                           
                           // TODO: Add more sections here
@@ -1099,6 +1109,217 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   size: 20.sp,
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Premium Membership Card
+  Widget _buildPremiumCard() {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to premium subscription page
+        print('Tapped on Premium Membership');
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(24.w),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1A2332), // Dark navy
+              Color(0xFF2D3A4F),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row with badge and premium logo
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // PRO MEMBERSHIP badge
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFFFA726), // Orange
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    'PRO MEMBERSHIP',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                
+                // Premium logo
+                Image.asset(
+                  'assets/images/premiumlogo.png',
+                  width: 48.w,
+                  height: 48.h,
+                  fit: BoxFit.contain,
+                ),
+              ],
+            ),
+            
+            SizedBox(height: 20.h),
+            
+            // Title
+            Text(
+              'Unlimited Access',
+              style: TextStyle(
+                fontSize: 28.sp,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Montserrat',
+                color: Colors.white,
+                height: 1.2,
+              ),
+            ),
+            
+            SizedBox(height: 12.h),
+            
+            // Description
+            Text(
+              'Unlock live translator and all\ncity guides worldwide.',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'Montserrat',
+                color: Colors.white.withOpacity(0.85),
+                height: 1.4,
+              ),
+            ),
+            
+            SizedBox(height: 24.h),
+            
+            // UPGRADE NOW button
+            Container(
+              width: double.infinity,
+              height: 56.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.2),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  'UPGRADE NOW',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Montserrat',
+                    color: Color(0xFF1A2332),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Visual Dictionary Card
+  Widget _buildVisualDictionaryCard() {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to visual dictionary page
+        print('Tapped on Visual Dictionary');
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: MyColors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Book icon
+            Container(
+              width: 64.w,
+              height: 64.h,
+              decoration: BoxDecoration(
+                color: Color(0xFFE0F7F4), // Light turquoise
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: Center(
+                child: Image.asset(
+                  'assets/images/book.png',
+                  width: 36.w,
+                  height: 36.h,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            
+            SizedBox(width: 16.w),
+            
+            // Text content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Visual Dictionary',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: MyColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    '20,000+ Translated Items',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Montserrat',
+                      color: MyColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Arrow icon
+            Icon(
+              Icons.arrow_forward_ios,
+              color: MyColors.textSecondary,
+              size: 20.sp,
             ),
           ],
         ),
