@@ -18,7 +18,7 @@ class _NotificationsViewState extends State<NotificationsView> {
       title: 'Premium avantajlarını kaçırma!',
       message: 'Premium aboneliği olarak fırsatları yakala',
       time: '17:58',
-      isPremium: true,
+      isPremium: false,
     ),
     NotificationItem(
       id: '2',
@@ -38,10 +38,42 @@ class _NotificationsViewState extends State<NotificationsView> {
     ),
   ];
 
+  // Selection state
+  Set<String> selectedNotifications = {};
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (selectedNotifications.contains(id)) {
+        selectedNotifications.remove(id);
+      } else {
+        selectedNotifications.add(id);
+      }
+    });
+  }
+
   void _deleteNotification(String id) {
     setState(() {
       notifications.removeWhere((notification) => notification.id == id);
+      selectedNotifications.remove(id);
     });
+  }
+
+  void _deleteSelectedNotifications() {
+    if (selectedNotifications.isEmpty) return;
+    
+    setState(() {
+      notifications.removeWhere(
+        (notification) => selectedNotifications.contains(notification.id),
+      );
+      selectedNotifications.clear();
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Selected notifications deleted'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _showDeleteAllDialog() {
@@ -49,11 +81,17 @@ class _NotificationsViewState extends State<NotificationsView> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
+          alignment: Alignment.bottomCenter,
+          insetPadding: EdgeInsets.only(
+            left: 16.w,
+            right: 16.w,
+            bottom: 40.h,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Container(
-            padding: EdgeInsets.all(32.w),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24.r),
@@ -61,52 +99,59 @@ class _NotificationsViewState extends State<NotificationsView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Trash icon
+                // Trash icon with effect
                 Container(
-                  width: 80.w,
-                  height: 80.h,
+                  width: 64.w,
+                  height: 64.h,
                   decoration: BoxDecoration(
                     color: Color(0xFFFFEBEE), // Light red
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFFE53935).withOpacity(0.3),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
                   child: Icon(
                     Icons.delete_outline,
                     color: Color(0xFFE53935), // Red
-                    size: 40.sp,
+                    size: 32.sp,
                   ),
                 ),
                 
-                SizedBox(height: 24.h),
+                SizedBox(height: 20.h),
                 
                 // Title
                 Text(
-                  'Delete All\nNotifications?',
+                  'Delete All Notifications?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 24.sp,
+                    fontSize: 22.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
-                    height: 1.3,
+                    height: 1.2,
                   ),
                 ),
                 
-                SizedBox(height: 12.h),
+                SizedBox(height: 10.h),
                 
                 // Description
                 Text(
                   'Are you sure you want to delete all\nyour notifications? This action\ncannot be undone',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
-                    height: 1.5,
+                    height: 1.4,
                   ),
                 ),
                 
-                SizedBox(height: 32.h),
+                SizedBox(height: 24.h),
                 
                 // Buttons
                 Row(
@@ -197,7 +242,9 @@ class _NotificationsViewState extends State<NotificationsView> {
           },
         ),
         title: Text(
-          'Notifications',
+          selectedNotifications.isEmpty
+              ? 'Notifications'
+              : '${selectedNotifications.length} selected',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.w700,
@@ -207,6 +254,15 @@ class _NotificationsViewState extends State<NotificationsView> {
         ),
         centerTitle: true,
         actions: [
+          if (selectedNotifications.isNotEmpty)
+            IconButton(
+              icon: Icon(
+                Icons.delete_outline,
+                color: Color(0xFFE53935),
+                size: 24.sp,
+              ),
+              onPressed: _deleteSelectedNotifications,
+            ),
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert,
@@ -310,86 +366,123 @@ class _NotificationsViewState extends State<NotificationsView> {
   }
 
   Widget _buildNotificationCard(NotificationItem notification) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        gradient: notification.isPremium
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF4ECDC4), // Turquoise
-                  Color(0xFF44B3AC),
+    final isSelected = selectedNotifications.contains(notification.id);
+    
+    return GestureDetector(
+      onTap: () => _toggleSelection(notification.id),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          gradient: (notification.isPremium || isSelected)
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF4ECDC4), // Turquoise
+                    Color(0xFF44B3AC),
+                  ],
+                )
+              : null,
+          color: (notification.isPremium || isSelected) ? null : Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Checkbox
+            Container(
+              width: 24.w,
+              height: 24.h,
+              margin: EdgeInsets.only(right: 12.w),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withOpacity(0.3)
+                    : (notification.isPremium
+                        ? Colors.white.withOpacity(0.3)
+                        : Colors.grey.withOpacity(0.2)),
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.white
+                      : (notification.isPremium
+                          ? Colors.white.withOpacity(0.5)
+                          : Colors.grey.withOpacity(0.4)),
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 16.sp,
+                    )
+                  : null,
+            ),
+            
+            // Icon
+            Text(
+              notification.icon,
+              style: TextStyle(fontSize: 24.sp),
+            ),
+            
+            SizedBox(width: 12.w),
+            
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notification.title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: (notification.isPremium || isSelected) 
+                          ? Colors.white 
+                          : MyColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    notification.message,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Montserrat',
+                      color: (notification.isPremium || isSelected)
+                          ? Colors.white.withOpacity(0.9)
+                          : MyColors.textSecondary,
+                    ),
+                  ),
                 ],
-              )
-            : null,
-        color: notification.isPremium ? null : Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon
-          Text(
-            notification.icon,
-            style: TextStyle(fontSize: 24.sp),
-          ),
-          
-          SizedBox(width: 12.w),
-          
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  notification.title,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Montserrat',
-                    color: notification.isPremium ? Colors.white : MyColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  notification.message,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Montserrat',
-                    color: notification.isPremium
-                        ? Colors.white.withOpacity(0.9)
-                        : MyColors.textSecondary,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          
-          SizedBox(width: 12.w),
-          
-          // Time
-          Text(
-            notification.time,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w400,
-              fontFamily: 'Montserrat',
-              color: notification.isPremium
-                  ? Colors.white.withOpacity(0.8)
-                  : MyColors.textSecondary,
+            
+            SizedBox(width: 12.w),
+            
+            // Time
+            Text(
+              notification.time,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'Montserrat',
+                color: (notification.isPremium || isSelected)
+                    ? Colors.white.withOpacity(0.8)
+                    : MyColors.textSecondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
