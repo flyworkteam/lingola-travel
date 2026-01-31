@@ -7,6 +7,7 @@ import 'package:lingola_travel/Models/language.dart';
 import '../NotificationsView/notifications_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
+import '../CourseView/course_view.dart';
 
 class PremiumHomeView extends ConsumerStatefulWidget {
   const PremiumHomeView({super.key});
@@ -745,6 +746,14 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               builder: (context) => const TravelVocabularyView(),
             ),
           );
+        } else if (title.contains('Learning')) {
+          // Navigate to Course page for "Start Learning"
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CourseView(),
+            ),
+          );
         } else {
           // TODO: Navigate to other feature pages
           print('Tapped on feature: $title');
@@ -918,8 +927,13 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
 
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to course detail page
-        print('Tapped on current course');
+        // Navigate to Course page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CourseView(),
+          ),
+        );
       },
       child: Container(
         width: double.infinity,
@@ -1099,8 +1113,13 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   }) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to course detail page
-        print('Tapped on course: $title');
+        // Navigate to Course page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CourseView(),
+          ),
+        );
       },
       child: Container(
         width: 200.w,
