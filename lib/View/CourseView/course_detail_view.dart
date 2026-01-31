@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import '../LessonView/lesson_detail_view.dart';
 
 class CourseDetailView extends StatefulWidget {
   final Map<String, dynamic> courseData;
@@ -293,67 +294,85 @@ class _CourseDetailViewState extends State<CourseDetailView> {
       borderColor = null;
     }
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16.r),
-        border: borderColor != null
-            ? Border.all(color: borderColor, width: 2)
-            : null,
-      ),
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            width: 48.w,
-            height: 48.w,
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.2),
-              shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: () {
+        if (!isLocked) {
+          // Navigate to lesson detail
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LessonDetailView(
+                lessonData: lesson,
+              ),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 24.sp,
+          );
+        } else {
+          print('Lesson locked: ${lesson['title']}');
+          // TODO: Show premium dialog
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16.r),
+          border: borderColor != null
+              ? Border.all(color: borderColor, width: 2)
+              : null,
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 48.w,
+              height: 48.w,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 24.sp,
+              ),
             ),
-          ),
 
-          SizedBox(width: 12.w),
+            SizedBox(width: 12.w),
 
-          // Lesson info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${lesson['number']}. ${lesson['title']}',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textPrimary,
+            // Lesson info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${lesson['number']}. ${lesson['title']}',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Montserrat',
+                      color: MyColors.textPrimary,
+                    ),
                   ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  isCompleted
-                      ? '${lesson['duration']} Mins • Completed'
-                      : isInProgress
-                          ? '${lesson['duration']} Mins • In Progress'
-                          : '${lesson['duration']} Mins',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
+                  SizedBox(height: 4.h),
+                  Text(
+                    isCompleted
+                        ? '${lesson['duration']} Mins • Completed'
+                        : isInProgress
+                            ? '${lesson['duration']} Mins • In Progress'
+                            : '${lesson['duration']} Mins',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Montserrat',
+                      color: MyColors.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -362,8 +381,15 @@ class _CourseDetailViewState extends State<CourseDetailView> {
   Widget _buildResumeButton() {
     return GestureDetector(
       onTap: () {
-        print('Resume lesson 2');
-        // TODO: Navigate to lesson detail
+        // Navigate to lesson 2 detail
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LessonDetailView(
+              lessonData: _lessons[1], // Lesson 2 (in progress)
+            ),
+          ),
+        );
       },
       child: Container(
         width: double.infinity,
