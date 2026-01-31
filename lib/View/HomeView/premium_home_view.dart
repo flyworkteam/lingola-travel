@@ -6,6 +6,7 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import '../NotificationsView/notifications_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
+import '../DictionaryView/visual_dictionary_view.dart';
 
 class PremiumHomeView extends ConsumerStatefulWidget {
   const PremiumHomeView({super.key});
@@ -26,6 +27,14 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         context,
         MaterialPageRoute(
           builder: (context) => const TravelVocabularyView(),
+        ),
+      );
+    } else if (index == 2) {
+      // Navigate to Visual Dictionary (dictionary icon)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const VisualDictionaryView(),
         ),
       );
     } else {
