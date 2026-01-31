@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import '../NotificationsView/notifications_view.dart';
+import '../VocabularyView/travel_vocabulary_view.dart';
 
 class PremiumHomeView extends ConsumerStatefulWidget {
   const PremiumHomeView({super.key});
@@ -19,10 +20,20 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
 
   /// Handle navigation item tap
   void _onNavigationItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    // TODO: Navigate to different pages based on index
+    if (index == 1) {
+      // Navigate to Travel Vocabulary (plane icon)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const TravelVocabularyView(),
+        ),
+      );
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+      // TODO: Navigate to different pages based on index
+    }
   }
 
   @override
@@ -717,8 +728,18 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   }) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to feature detail page
-        print('Tapped on feature: $title');
+        // Navigate to Travel Vocabulary for "Learn New Words"
+        if (title.contains('Words')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TravelVocabularyView(),
+            ),
+          );
+        } else {
+          // TODO: Navigate to other feature pages
+          print('Tapped on feature: $title');
+        }
       },
       child: Container(
         width: 240.w,
