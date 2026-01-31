@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'course_detail_view.dart';
 
 class CourseView extends StatefulWidget {
   const CourseView({super.key});
@@ -299,6 +300,7 @@ class _CourseViewState extends State<CourseView> {
               child: Image.asset(
                 course['image'],
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: MyColors.grey200,
@@ -432,8 +434,15 @@ class _CourseViewState extends State<CourseView> {
                         GestureDetector(
                           onTap: () {
                             if (course['isUnlocked']) {
-                              print('Play course: ${course['title']}');
-                              // TODO: Navigate to course detail
+                              // Navigate to course detail
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CourseDetailView(
+                                    courseData: course,
+                                  ),
+                                ),
+                              );
                             } else {
                               print('Course locked: ${course['title']}');
                               // TODO: Show premium dialog
