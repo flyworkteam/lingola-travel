@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'dictionary_category_view.dart';
+import '../VocabularyView/travel_vocabulary_view.dart';
+import '../LibraryView/library_view.dart';
+import '../ProfileView/profile_view.dart';
 
 class VisualDictionaryView extends StatefulWidget {
   const VisualDictionaryView({super.key});
@@ -17,16 +20,56 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
 
   // Categories data
   final List<Map<String, dynamic>> _categories = [
-    {'name': 'Airport', 'items': 1240, 'icon': '🛫', 'color': Color(0xFFE3F2FD)},
-    {'name': 'Accommodation', 'items': 1000, 'icon': '🏨', 'color': Color(0xFFFFE0B2)},
-    {'name': 'Transportation', 'items': 980, 'icon': '🚕', 'color': Color(0xFFFFF9C4)},
-    {'name': 'Food & Drink', 'items': 1250, 'icon': '🍽️', 'color': Color(0xFFFFCDD2)},
-    {'name': 'Shopping', 'items': 1520, 'icon': '🛒', 'color': Color(0xFFC8E6C9)},
-    {'name': 'Culture', 'items': 550, 'icon': '🏛️', 'color': Color(0xFFB2EBF2)},
-    {'name': 'Meeting', 'items': 1520, 'icon': '👥', 'color': Color(0xFFD1C4E9)},
+    {
+      'name': 'Airport',
+      'items': 1240,
+      'icon': '🛫',
+      'color': Color(0xFFE3F2FD),
+    },
+    {
+      'name': 'Accommodation',
+      'items': 1000,
+      'icon': '🏨',
+      'color': Color(0xFFFFE0B2),
+    },
+    {
+      'name': 'Transportation',
+      'items': 980,
+      'icon': '🚕',
+      'color': Color(0xFFFFF9C4),
+    },
+    {
+      'name': 'Food & Drink',
+      'items': 1250,
+      'icon': '🍽️',
+      'color': Color(0xFFFFCDD2),
+    },
+    {
+      'name': 'Shopping',
+      'items': 1520,
+      'icon': '🛒',
+      'color': Color(0xFFC8E6C9),
+    },
+    {
+      'name': 'Culture',
+      'items': 550,
+      'icon': '🏛️',
+      'color': Color(0xFFB2EBF2),
+    },
+    {
+      'name': 'Meeting',
+      'items': 1520,
+      'icon': '👥',
+      'color': Color(0xFFD1C4E9),
+    },
     {'name': 'Sport', 'items': 1550, 'icon': '🏐', 'color': Color(0xFFF8BBD0)},
     {'name': 'Health', 'items': 1520, 'icon': '🏥', 'color': Color(0xFFC8E6C9)},
-    {'name': 'Business', 'items': 1550, 'icon': '💼', 'color': Color(0xFFBBDEFB)},
+    {
+      'name': 'Business',
+      'items': 1550,
+      'icon': '💼',
+      'color': Color(0xFFBBDEFB),
+    },
   ];
 
   @override
@@ -54,7 +97,8 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DictionaryCategoryView(categoryName: categoryName),
+        builder: (context) =>
+            DictionaryCategoryView(categoryName: categoryName),
       ),
     );
   }
@@ -64,38 +108,49 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
-      body: Column(
+      body: Stack(
         children: [
-          SizedBox(height: 16.h),
-          
-          // Search bar
-          _buildSearchBar(),
-          
-          SizedBox(height: 24.h),
-          
-          // Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category grid
-                  _buildCategoryGrid(),
-                  
-                  SizedBox(height: 32.h),
-                  
-                  // Recent Search
-                  if (_recentSearches.isNotEmpty) _buildRecentSearch(),
-                  
-                  SizedBox(height: 100.h), // Space for bottom nav
-                ],
+          Column(
+            children: [
+              SizedBox(height: 16.h),
+
+              // Search bar
+              _buildSearchBar(),
+
+              SizedBox(height: 24.h),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Category grid
+                      _buildCategoryGrid(),
+
+                      SizedBox(height: 32.h),
+
+                      // Recent Search
+                      if (_recentSearches.isNotEmpty) _buildRecentSearch(),
+
+                      SizedBox(height: 100.h), // Space for bottom nav
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
+          ),
+
+          // Floating bottom navigation
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 20.h,
+            child: _buildBottomNavigationBar(),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -105,11 +160,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
       backgroundColor: MyColors.white,
       elevation: 0,
       leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back,
-          color: MyColors.textPrimary,
-          size: 24.sp,
-        ),
+        icon: Icon(Icons.arrow_back, color: MyColors.textPrimary, size: 24.sp),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
@@ -217,9 +268,9 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
                 ),
               ),
             ),
-            
+
             Spacer(),
-            
+
             // Category name
             Text(
               category['name'],
@@ -232,9 +283,9 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            
+
             SizedBox(height: 4.h),
-            
+
             // Item count
             Row(
               children: [
@@ -294,11 +345,13 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
             ),
           ],
         ),
-        
+
         SizedBox(height: 12.h),
-        
+
         // Recent items
-        ..._recentSearches.map((search) => _buildRecentSearchItem(search)).toList(),
+        ..._recentSearches
+            .map((search) => _buildRecentSearchItem(search))
+            .toList(),
       ],
     );
   }
@@ -322,14 +375,10 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
       child: Row(
         children: [
           // Clock icon
-          Icon(
-            Icons.history,
-            size: 24.sp,
-            color: MyColors.textSecondary,
-          ),
-          
+          Icon(Icons.history, size: 24.sp, color: MyColors.textSecondary),
+
           SizedBox(width: 12.w),
-          
+
           // Category name
           Expanded(
             child: Column(
@@ -356,7 +405,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
               ],
             ),
           ),
-          
+
           // Audio button
           GestureDetector(
             onTap: () {
@@ -376,9 +425,9 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
               ),
             ),
           ),
-          
+
           SizedBox(width: 8.w),
-          
+
           // Bookmark button
           Icon(
             Icons.bookmark_border,
@@ -392,52 +441,108 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
 
   /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 70.h,
-      margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: Offset(0, -5),
+    return Center(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 24.w),
+        height: 65.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(35.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(35.r),
+          child: Stack(
+            children: [
+              // Background image
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/home/altmenuarkaplan.png',
+                  fit: BoxFit.fill,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: MyColors.white,
+                        borderRadius: BorderRadius.circular(35.r),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Navigation items - centered
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+                      _buildNavItem(
+                        icon: Icons.flight_takeoff_rounded,
+                        index: 1,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.account_balance_rounded,
+                        index: 2,
+                      ),
+                      _buildNavItem(icon: Icons.person_rounded, index: 3),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.grid_view_rounded, 0),
-          _buildNavItem(Icons.flight_takeoff, 1),
-          _buildNavItem(Icons.account_balance, 2),
-          _buildNavItem(Icons.person_outline, 3),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedNavIndex == index;
+  Widget _buildNavItem({required IconData icon, required int index}) {
+    final bool isActive = _selectedNavIndex == index;
+
     return GestureDetector(
       onTap: () {
         if (index == 0) {
           // Navigate back to home
           Navigator.pop(context);
+        } else if (index == 1) {
+          // Navigate to Travel Vocabulary
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TravelVocabularyView(),
+            ),
+          );
+        } else if (index == 3) {
+          // Navigate to Profile
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfileView()),
+          );
         } else {
           setState(() {
             _selectedNavIndex = index;
           });
-          // TODO: Navigate to different pages
         }
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: EdgeInsets.all(12.w),
+        width: 50.w,
+        height: 50.w,
+        decoration: BoxDecoration(
+          color: isActive ? MyColors.white : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
         child: Icon(
           icon,
-          size: 28.sp,
-          color: isSelected ? Color(0xFF4ECDC4) : MyColors.textSecondary,
+          size: 26.sp,
+          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
         ),
       ),
     );

@@ -55,11 +55,9 @@ class MyApp extends StatelessWidget {
             ),
             useMaterial3: true,
           ),
-          // For testing: Show HomeView directly, bypassing splash/onboarding
-          home: AppRoutes.routes[AppRoutes.home]!(context),
-          // TODO: For production, uncomment below and remove 'home' above
-          // initialRoute: AppRoutes.splash,
-          // routes: AppRoutes.routes,
+          // Start from splash screen
+          initialRoute: AppRoutes.splash,
+          routes: AppRoutes.routes,
         );
       },
     );

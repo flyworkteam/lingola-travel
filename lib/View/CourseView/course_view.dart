@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'course_detail_view.dart';
+import '../VocabularyView/travel_vocabulary_view.dart';
+import '../DictionaryView/visual_dictionary_view.dart';
+import '../ProfileView/profile_view.dart';
 
 class CourseView extends StatefulWidget {
   const CourseView({super.key});
@@ -126,34 +129,43 @@ class _CourseViewState extends State<CourseView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            SizedBox(height: 20.h),
-            
-            // Title
-            _buildTitle(),
-            
-            SizedBox(height: 20.h),
-            
-            // Search bar
-            _buildSearchBar(),
-            
-            SizedBox(height: 20.h),
-            
-            // Filter tabs
-            _buildFilterTabs(),
-            
-            SizedBox(height: 20.h),
-            
-            // Course list
-            Expanded(
-              child: _buildCourseList(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 20.h),
+
+                // Title
+                _buildTitle(),
+
+                SizedBox(height: 20.h),
+
+                // Search bar
+                _buildSearchBar(),
+
+                SizedBox(height: 20.h),
+
+                // Filter tabs
+                _buildFilterTabs(),
+
+                SizedBox(height: 20.h),
+
+                // Course list
+                Expanded(child: _buildCourseList()),
+              ],
+            ),
+
+            // Floating bottom navigation
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 20.h,
+              child: _buildBottomNavigationBar(),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -268,7 +280,7 @@ class _CourseViewState extends State<CourseView> {
   /// Course list
   Widget _buildCourseList() {
     return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
       itemCount: _courses.length,
       itemBuilder: (context, index) {
         return _buildCourseCard(_courses[index]);
@@ -315,7 +327,7 @@ class _CourseViewState extends State<CourseView> {
                 },
               ),
             ),
-            
+
             // Gradient overlay
             Positioned.fill(
               child: Container(
@@ -323,22 +335,22 @@ class _CourseViewState extends State<CourseView> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                   ),
                 ),
               ),
             ),
-            
+
             // Progress badge (top-right)
             if (course['progress'] > 0)
               Positioned(
                 top: 16.h,
                 right: 16.w,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
                   decoration: BoxDecoration(
                     color: Color(0xFF4ECDC4),
                     borderRadius: BorderRadius.circular(20.r),
@@ -354,7 +366,7 @@ class _CourseViewState extends State<CourseView> {
                   ),
                 ),
               ),
-            
+
             // Content (bottom) with glassmorphism
             Positioned(
               left: 16.w,
@@ -427,9 +439,9 @@ class _CourseViewState extends State<CourseView> {
                             ],
                           ),
                         ),
-                        
+
                         SizedBox(width: 12.w),
-                        
+
                         // Play/Lock button
                         GestureDetector(
                           onTap: () {
@@ -438,9 +450,8 @@ class _CourseViewState extends State<CourseView> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CourseDetailView(
-                                    courseData: course,
-                                  ),
+                                  builder: (context) =>
+                                      CourseDetailView(courseData: course),
                                 ),
                               );
                             } else {
@@ -458,7 +469,9 @@ class _CourseViewState extends State<CourseView> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              course['isUnlocked'] ? Icons.play_arrow : Icons.lock,
+                              course['isUnlocked']
+                                  ? Icons.play_arrow
+                                  : Icons.lock,
                               color: MyColors.white,
                               size: 28.sp,
                             ),
@@ -478,52 +491,108 @@ class _CourseViewState extends State<CourseView> {
 
   /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 70.h,
-      margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: Offset(0, -5),
+    return Center(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 24.w),
+        height: 65.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(35.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(35.r),
+          child: Stack(
+            children: [
+              // Background image
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/home/altmenuarkaplan.png',
+                  fit: BoxFit.fill,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: MyColors.white,
+                        borderRadius: BorderRadius.circular(35.r),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Navigation items - centered
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+                      _buildNavItem(
+                        icon: Icons.flight_takeoff_rounded,
+                        index: 1,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.account_balance_rounded,
+                        index: 2,
+                      ),
+                      _buildNavItem(icon: Icons.person_rounded, index: 3),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.grid_view_rounded, 0),
-          _buildNavItem(Icons.flight_takeoff, 1),
-          _buildNavItem(Icons.account_balance, 2),
-          _buildNavItem(Icons.person_outline, 3),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedNavIndex == index;
+  Widget _buildNavItem({required IconData icon, required int index}) {
+    final bool isActive = _selectedNavIndex == index;
+
     return GestureDetector(
       onTap: () {
         if (index == 0) {
           // Navigate back to home
           Navigator.pop(context);
+        } else if (index == 2) {
+          // Navigate to Dictionary
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const VisualDictionaryView(),
+            ),
+          );
+        } else if (index == 3) {
+          // Navigate to Profile
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfileView()),
+          );
         } else {
           setState(() {
             _selectedNavIndex = index;
           });
-          // TODO: Navigate to different pages
         }
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: EdgeInsets.all(12.w),
+        width: 50.w,
+        height: 50.w,
+        decoration: BoxDecoration(
+          color: isActive ? MyColors.white : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
         child: Icon(
           icon,
-          size: 28.sp,
-          color: isSelected ? Color(0xFF4ECDC4) : MyColors.textSecondary,
+          size: 26.sp,
+          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
         ),
       ),
     );

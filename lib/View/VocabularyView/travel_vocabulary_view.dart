@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import '../DictionaryView/visual_dictionary_view.dart';
+import '../LibraryView/library_view.dart';
+import '../ProfileView/profile_view.dart';
 
 class TravelVocabularyView extends StatefulWidget {
   const TravelVocabularyView({super.key});
@@ -50,21 +53,21 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
     'Airport': [
       {
         'question': 'Where is the check-in counter for British Airways?',
-        'translation': 'British Airways check-in kontuarı nerede?'
+        'translation': 'British Airways check-in kontuarı nerede?',
       },
       {
         'question': 'Is this the line for security?',
-        'translation': 'Güvenlik sırası bu mu?'
+        'translation': 'Güvenlik sırası bu mu?',
       },
     ],
     'Accommodation': [
       {
         'question': 'What time is breakfast served?',
-        'translation': 'Kahvaltı saat kaçta servis ediliyor?'
+        'translation': 'Kahvaltı saat kaçta servis ediliyor?',
       },
       {
         'question': 'Could I have some extra towels, please',
-        'translation': 'Lütfen birkaç tane daha havlu alabilir miyim?'
+        'translation': 'Lütfen birkaç tane daha havlu alabilir miyim?',
       },
     ],
   };
@@ -90,32 +93,40 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
-      body: Column(
+      body: Stack(
         children: [
-          SizedBox(height: 16.h), // Added spacing from AppBar
-          
-          // Search bar
-          _buildSearchBar(),
-          
-          SizedBox(height: 16.h),
-          
-          // Tab switcher
-          _buildTabSwitcher(),
-          
-          SizedBox(height: 20.h),
-          
-          // Category filters
-          _buildCategoryFilters(),
-          
-          SizedBox(height: 20.h),
-          
-          // Content
-          Expanded(
-            child: _buildContent(),
+          Column(
+            children: [
+              SizedBox(height: 16.h), // Added spacing from AppBar
+              // Search bar
+              _buildSearchBar(),
+
+              SizedBox(height: 16.h),
+
+              // Tab switcher
+              _buildTabSwitcher(),
+
+              SizedBox(height: 20.h),
+
+              // Category filters
+              _buildCategoryFilters(),
+
+              SizedBox(height: 20.h),
+
+              // Content
+              Expanded(child: _buildContent()),
+            ],
+          ),
+
+          // Floating bottom navigation
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 20.h,
+            child: _buildBottomNavigationBar(),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -125,11 +136,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       backgroundColor: MyColors.white,
       elevation: 0,
       leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back,
-          color: MyColors.textPrimary,
-          size: 24.sp,
-        ),
+        icon: Icon(Icons.arrow_back, color: MyColors.textPrimary, size: 24.sp),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
@@ -198,12 +205,8 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: _buildTabButton('Words', 0),
-            ),
-            Expanded(
-              child: _buildTabButton('Phrases', 1),
-            ),
+            Expanded(child: _buildTabButton('Words', 0)),
+            Expanded(child: _buildTabButton('Phrases', 1)),
           ],
         ),
       ),
@@ -250,7 +253,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = _selectedCategory == category['name'];
-          
+
           return Padding(
             padding: EdgeInsets.only(right: 12.w),
             child: GestureDetector(
@@ -273,10 +276,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (category['icon'] != null) ...[
-                      Text(
-                        category['icon'],
-                        style: TextStyle(fontSize: 16.sp),
-                      ),
+                      Text(category['icon'], style: TextStyle(fontSize: 16.sp)),
                       SizedBox(width: 6.w),
                     ],
                     Text(
@@ -306,15 +306,15 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         : [_selectedCategory];
 
     return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
       itemCount: categories.length * 2, // Category + items
       itemBuilder: (context, index) {
         final categoryIndex = index ~/ 2;
         if (categoryIndex >= categories.length) return SizedBox.shrink();
-        
+
         final categoryName = categories[categoryIndex];
         final items = data[categoryName] ?? [];
-        
+
         if (index % 2 == 0) {
           // Category header
           return _buildCategoryHeader(categoryName, items.length);
@@ -326,7 +326,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                 final itemIndex = entry.key;
                 final item = entry.value;
                 final itemId = '$categoryName-$itemIndex';
-                
+
                 return _selectedTab == 0
                     ? _buildWordCard(item, itemId)
                     : _buildPhraseCard(item, itemId);
@@ -349,15 +349,12 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
     );
     final categoryIcon = category['icon'] ?? '�';
     final label = _selectedTab == 0 ? 'Words' : 'Phrases';
-    
+
     return Padding(
       padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
       child: Row(
         children: [
-          Text(
-            categoryIcon,
-            style: TextStyle(fontSize: 20.sp),
-          ),
+          Text(categoryIcon, style: TextStyle(fontSize: 20.sp)),
           SizedBox(width: 8.w),
           Text(
             categoryName,
@@ -386,7 +383,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
   /// Word card
   Widget _buildWordCard(Map<String, String> word, String id) {
     final isBookmarked = _bookmarkedItems.contains(id);
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
@@ -467,7 +464,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
   /// Phrase card
   Widget _buildPhraseCard(Map<String, String> phrase, String id) {
     final isBookmarked = _bookmarkedItems.contains(id);
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
@@ -542,7 +539,9 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                     onTap: () => _toggleBookmark(id),
                     child: Icon(
                       isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.textSecondary,
+                      color: isBookmarked
+                          ? Color(0xFF4ECDC4)
+                          : MyColors.textSecondary,
                       size: 24.sp,
                     ),
                   ),
@@ -577,52 +576,108 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
 
   /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 70.h,
-      margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: Offset(0, -5),
+    return Center(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 24.w),
+        height: 65.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(35.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(35.r),
+          child: Stack(
+            children: [
+              // Background image
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/home/altmenuarkaplan.png',
+                  fit: BoxFit.fill,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: MyColors.white,
+                        borderRadius: BorderRadius.circular(35.r),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Navigation items - centered
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+                      _buildNavItem(
+                        icon: Icons.flight_takeoff_rounded,
+                        index: 1,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.account_balance_rounded,
+                        index: 2,
+                      ),
+                      _buildNavItem(icon: Icons.person_rounded, index: 3),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.grid_view_rounded, 0),
-          _buildNavItem(Icons.flight_takeoff, 1),
-          _buildNavItem(Icons.account_balance, 2),
-          _buildNavItem(Icons.person_outline, 3),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedNavIndex == index;
+  Widget _buildNavItem({required IconData icon, required int index}) {
+    final bool isActive = _selectedNavIndex == index;
+
     return GestureDetector(
       onTap: () {
         if (index == 0) {
           // Navigate back to home
           Navigator.pop(context);
+        } else if (index == 2) {
+          // Navigate to Library/Dictionary
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const VisualDictionaryView(),
+            ),
+          );
+        } else if (index == 3) {
+          // Navigate to Profile
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfileView()),
+          );
         } else {
           setState(() {
             _selectedNavIndex = index;
           });
-          // TODO: Navigate to different pages
         }
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: EdgeInsets.all(12.w),
+        width: 50.w,
+        height: 50.w,
+        decoration: BoxDecoration(
+          color: isActive ? MyColors.white : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
         child: Icon(
           icon,
-          size: 28.sp,
-          color: isSelected ? Color(0xFF4ECDC4) : MyColors.textSecondary,
+          size: 26.sp,
+          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
         ),
       ),
     );

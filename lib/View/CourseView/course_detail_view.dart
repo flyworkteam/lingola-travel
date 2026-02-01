@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import '../LessonView/lesson_detail_view.dart';
+import '../VocabularyView/travel_vocabulary_view.dart';
+import '../DictionaryView/visual_dictionary_view.dart';
+import '../ProfileView/profile_view.dart';
 
 class CourseDetailView extends StatefulWidget {
   final Map<String, dynamic> courseData;
 
-  const CourseDetailView({
-    super.key,
-    required this.courseData,
-  });
+  const CourseDetailView({super.key, required this.courseData});
 
   @override
   State<CourseDetailView> createState() => _CourseDetailViewState();
@@ -51,39 +51,50 @@ class _CourseDetailViewState extends State<CourseDetailView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: MyColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // Header with background image
-          _buildHeader(),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Header with background image
+              _buildHeader(),
 
-          // Course info and lesson list
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Course info card
-                _buildCourseInfoCard(),
+              // Course info and lesson list
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Course info card
+                    _buildCourseInfoCard(),
 
-                SizedBox(height: 24.h),
+                    SizedBox(height: 24.h),
 
-                // Course content section
-                _buildCourseContentSection(),
+                    // Course content section
+                    _buildCourseContentSection(),
 
-                SizedBox(height: 24.h),
+                    SizedBox(height: 24.h),
 
-                // Resume button
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: _buildResumeButton(),
+                    // Resume button
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: _buildResumeButton(),
+                    ),
+
+                    SizedBox(height: 100.h), // Space for bottom nav
+                  ],
                 ),
+              ),
+            ],
+          ),
 
-                SizedBox(height: 20.h), // Space before bottom nav
-              ],
-            ),
+          // Floating bottom navigation
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 20.h,
+            child: _buildBottomNavigationBar(),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -126,10 +137,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                 ),
               ),
             ),
@@ -175,7 +183,10 @@ class _CourseDetailViewState extends State<CourseDetailView> {
           // Stats row
           Row(
             children: [
-              _buildStatItem(Icons.book_outlined, '${widget.courseData['lessons']} Lessons'),
+              _buildStatItem(
+                Icons.book_outlined,
+                '${widget.courseData['lessons']} Lessons',
+              ),
               SizedBox(width: 20.w),
               _buildStatItem(Icons.access_time, '45 Mins'),
               SizedBox(width: 20.w),
@@ -205,11 +216,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
   Widget _buildStatItem(IconData icon, String text) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18.sp,
-          color: Color(0xFF4ECDC4),
-        ),
+        Icon(icon, size: 18.sp, color: Color(0xFF4ECDC4)),
         SizedBox(width: 4.w),
         Text(
           text,
@@ -301,9 +308,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => LessonDetailView(
-                lessonData: lesson,
-              ),
+              builder: (context) => LessonDetailView(lessonData: lesson),
             ),
           );
         } else {
@@ -331,11 +336,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                 color: iconColor.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 24.sp,
-              ),
+              child: Icon(icon, color: iconColor, size: 24.sp),
             ),
 
             SizedBox(width: 12.w),
@@ -359,8 +360,8 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                     isCompleted
                         ? '${lesson['duration']} Mins • Completed'
                         : isInProgress
-                            ? '${lesson['duration']} Mins • In Progress'
-                            : '${lesson['duration']} Mins',
+                        ? '${lesson['duration']} Mins • In Progress'
+                        : '${lesson['duration']} Mins',
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w400,
@@ -408,11 +409,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.play_circle_filled,
-              color: MyColors.white,
-              size: 24.sp,
-            ),
+            Icon(Icons.play_circle_filled, color: MyColors.white, size: 24.sp),
             SizedBox(width: 8.w),
             Text(
               'RESUME LESSON 2',
@@ -432,52 +429,110 @@ class _CourseDetailViewState extends State<CourseDetailView> {
 
   /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 70.h,
-      margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: Offset(0, -5),
+    return Center(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 24.w),
+        height: 65.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(35.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(35.r),
+          child: Stack(
+            children: [
+              // Background image
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/home/altmenuarkaplan.png',
+                  fit: BoxFit.fill,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: MyColors.white,
+                        borderRadius: BorderRadius.circular(35.r),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Navigation items - centered
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+                      _buildNavItem(
+                        icon: Icons.flight_takeoff_rounded,
+                        index: 1,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.account_balance_rounded,
+                        index: 2,
+                      ),
+                      _buildNavItem(icon: Icons.person_rounded, index: 3),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.grid_view_rounded, 0),
-          _buildNavItem(Icons.flight_takeoff, 1),
-          _buildNavItem(Icons.account_balance, 2),
-          _buildNavItem(Icons.person_outline, 3),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedNavIndex == index;
+  Widget _buildNavItem({required IconData icon, required int index}) {
+    final bool isActive = _selectedNavIndex == index;
+
     return GestureDetector(
       onTap: () {
         if (index == 0) {
           // Navigate back to home
           Navigator.popUntil(context, (route) => route.isFirst);
+        } else if (index == 2) {
+          // Navigate to Dictionary
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const VisualDictionaryView(),
+            ),
+            (route) => route.isFirst,
+          );
+        } else if (index == 3) {
+          // Navigate to Profile
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfileView()),
+            (route) => route.isFirst,
+          );
         } else {
           setState(() {
             _selectedNavIndex = index;
           });
-          // TODO: Navigate to different pages
         }
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: EdgeInsets.all(12.w),
+        width: 50.w,
+        height: 50.w,
+        decoration: BoxDecoration(
+          color: isActive ? MyColors.white : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
         child: Icon(
           icon,
-          size: 28.sp,
-          color: isSelected ? Color(0xFF4ECDC4) : MyColors.textSecondary,
+          size: 26.sp,
+          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
         ),
       ),
     );

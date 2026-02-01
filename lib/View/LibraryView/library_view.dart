@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import '../HomeView/premium_home_view.dart';
+import '../DictionaryView/visual_dictionary_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../ProfileView/profile_view.dart';
 import 'library_folder_detail_view.dart';
@@ -93,19 +93,16 @@ class _LibraryViewState extends State<LibraryView> {
   void _onNavigationItemTapped(int index) {
     if (index == 0) {
       // Navigate to Home
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PremiumHomeView()),
-      );
+      Navigator.pop(context);
     } else if (index == 1) {
       // Navigate to Travel Vocabulary
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const TravelVocabularyView()),
       );
     } else if (index == 3) {
       // Navigate to Profile
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const ProfileView()),
       );

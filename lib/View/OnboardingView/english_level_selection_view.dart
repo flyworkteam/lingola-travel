@@ -9,19 +9,15 @@ import '../../Core/Routes/app_routes.dart';
 /// Pixel-perfect implementation from Figma
 class EnglishLevelSelectionView extends StatefulWidget {
   final String? selectedLanguage;
-  
-  const EnglishLevelSelectionView({
-    super.key,
-    this.selectedLanguage,
-  });
+
+  const EnglishLevelSelectionView({super.key, this.selectedLanguage});
 
   @override
   State<EnglishLevelSelectionView> createState() =>
       _EnglishLevelSelectionViewState();
 }
 
-class _EnglishLevelSelectionViewState
-    extends State<EnglishLevelSelectionView> {
+class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
   String? _selectedLevel;
 
   final List<Map<String, String>> _levels = [
@@ -40,7 +36,8 @@ class _EnglishLevelSelectionViewState
     {
       'id': 'intermediate',
       'title': 'Intermediate',
-      'description': 'Can deal with most situations likely to arise whilst traveling.',
+      'description':
+          'Can deal with most situations likely to arise whilst traveling.',
       'icon': 'assets/images/intermediate.svg',
     },
     {
@@ -59,10 +56,7 @@ class _EnglishLevelSelectionViewState
 
   void _onContinue() {
     if (_selectedLevel != null) {
-      Navigator.pushNamed(
-        context,
-        AppRoutes.dailyGoalSelection,
-      );
+      Navigator.pushNamed(context, AppRoutes.dailyGoalSelection);
     }
   }
 
@@ -141,9 +135,7 @@ class _EnglishLevelSelectionViewState
                   SizedBox(width: 12.w),
 
                   // Continue Button
-                  Expanded(
-                    child: _buildContinueButton(),
-                  ),
+                  Expanded(child: _buildContinueButton()),
                 ],
               ),
 
@@ -235,9 +227,7 @@ class _EnglishLevelSelectionViewState
               ? MyColors.lingolaPrimaryColor.withOpacity(0.1)
               : MyColors.white,
           border: Border.all(
-            color: isSelected
-                ? MyColors.lingolaPrimaryColor
-                : MyColors.grey300,
+            color: isSelected ? MyColors.lingolaPrimaryColor : MyColors.grey300,
             width: isSelected ? 2.w : 1.w,
           ),
           borderRadius: BorderRadius.circular(14.r),
@@ -313,16 +303,29 @@ class _EnglishLevelSelectionViewState
     return GestureDetector(
       onTap: _onBack,
       child: Container(
-        width: 50.w,
-        height: 50.h,
+        width: 56.w,
+        height: 56.h,
         decoration: BoxDecoration(
-          color: MyColors.grey200,
+          color: const Color(0xFFD1D5DB),
           borderRadius: BorderRadius.circular(14.r),
+          boxShadow: [
+            BoxShadow(
+              color: MyColors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Icon(
-          Icons.arrow_back,
-          color: MyColors.grey700,
-          size: 22.w,
+        child: Center(
+          child: Container(
+            width: 32.w,
+            height: 32.h,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(Icons.arrow_back, color: MyColors.white, size: 20.w),
+          ),
         ),
       ),
     );
@@ -334,12 +337,21 @@ class _EnglishLevelSelectionViewState
     return GestureDetector(
       onTap: isEnabled ? _onContinue : null,
       child: Container(
-        height: 50.h,
+        height: 56.h,
         decoration: BoxDecoration(
           color: isEnabled
               ? MyColors.lingolaPrimaryColor
-              : MyColors.grey300,
+              : const Color(0xFFD1D5DB),
           borderRadius: BorderRadius.circular(14.r),
+          boxShadow: isEnabled
+              ? [
+                  BoxShadow(
+                    color: MyColors.lingolaPrimaryColor.withOpacity(0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -352,11 +364,19 @@ class _EnglishLevelSelectionViewState
                 color: MyColors.white,
               ),
             ),
-            SizedBox(width: 6.w),
-            Icon(
-              Icons.arrow_forward,
-              color: MyColors.white,
-              size: 20.w,
+            SizedBox(width: 8.w),
+            Container(
+              width: 32.w,
+              height: 32.h,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                Icons.arrow_forward,
+                color: MyColors.white,
+                size: 20.w,
+              ),
             ),
           ],
         ),

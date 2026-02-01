@@ -10,8 +10,7 @@ class DailyGoalSelectionView extends StatefulWidget {
   const DailyGoalSelectionView({super.key});
 
   @override
-  State<DailyGoalSelectionView> createState() =>
-      _DailyGoalSelectionViewState();
+  State<DailyGoalSelectionView> createState() => _DailyGoalSelectionViewState();
 }
 
 class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
@@ -46,10 +45,7 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
 
   void _onContinue() {
     if (_selectedGoal != null) {
-      Navigator.pushNamed(
-        context,
-        AppRoutes.creatingPlan,
-      );
+      Navigator.pushNamed(context, AppRoutes.creatingPlan);
     }
   }
 
@@ -128,9 +124,7 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                   SizedBox(width: 12.w),
 
                   // Continue Button
-                  Expanded(
-                    child: _buildContinueButton(),
-                  ),
+                  Expanded(child: _buildContinueButton()),
                 ],
               ),
 
@@ -222,9 +216,7 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
               ? MyColors.lingolaPrimaryColor.withOpacity(0.1)
               : MyColors.white,
           border: Border.all(
-            color: isSelected
-                ? MyColors.lingolaPrimaryColor
-                : MyColors.grey300,
+            color: isSelected ? MyColors.lingolaPrimaryColor : MyColors.grey300,
             width: isSelected ? 2.w : 1.w,
           ),
           borderRadius: BorderRadius.circular(14.r),
@@ -254,7 +246,9 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                 width: 24.w,
                 height: 24.w,
                 fit: BoxFit.contain,
-                color: isSelected ? MyColors.white : MyColors.lingolaPrimaryColor,
+                color: isSelected
+                    ? MyColors.white
+                    : MyColors.lingolaPrimaryColor,
               ),
             ),
 
@@ -293,16 +287,29 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
     return GestureDetector(
       onTap: _onBack,
       child: Container(
-        width: 50.w,
-        height: 50.h,
+        width: 56.w,
+        height: 56.h,
         decoration: BoxDecoration(
-          color: MyColors.grey200,
+          color: const Color(0xFFD1D5DB),
           borderRadius: BorderRadius.circular(14.r),
+          boxShadow: [
+            BoxShadow(
+              color: MyColors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Icon(
-          Icons.arrow_back,
-          color: MyColors.grey700,
-          size: 22.w,
+        child: Center(
+          child: Container(
+            width: 32.w,
+            height: 32.h,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(Icons.arrow_back, color: MyColors.white, size: 20.w),
+          ),
         ),
       ),
     );
@@ -314,12 +321,21 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
     return GestureDetector(
       onTap: isEnabled ? _onContinue : null,
       child: Container(
-        height: 50.h,
+        height: 56.h,
         decoration: BoxDecoration(
           color: isEnabled
               ? MyColors.lingolaPrimaryColor
-              : MyColors.grey300,
+              : const Color(0xFFD1D5DB),
           borderRadius: BorderRadius.circular(14.r),
+          boxShadow: isEnabled
+              ? [
+                  BoxShadow(
+                    color: MyColors.lingolaPrimaryColor.withOpacity(0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -332,11 +348,19 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                 color: MyColors.white,
               ),
             ),
-            SizedBox(width: 6.w),
-            Icon(
-              Icons.arrow_forward,
-              color: MyColors.white,
-              size: 20.w,
+            SizedBox(width: 8.w),
+            Container(
+              width: 32.w,
+              height: 32.h,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                Icons.arrow_forward,
+                color: MyColors.white,
+                size: 20.w,
+              ),
             ),
           ],
         ),
