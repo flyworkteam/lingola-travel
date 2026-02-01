@@ -1,15 +1,14 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'lesson_result_view.dart';
 
 class LessonDetailView extends StatefulWidget {
   final Map<String, dynamic> lessonData;
 
-  const LessonDetailView({
-    super.key,
-    required this.lessonData,
-  });
+  const LessonDetailView({super.key, required this.lessonData});
 
   @override
   State<LessonDetailView> createState() => _LessonDetailViewState();
@@ -21,6 +20,12 @@ class _LessonDetailViewState extends State<LessonDetailView> {
   bool isBookmarked = false; // Bookmark state
   bool isRecording = false; // Recording state
   bool isPlaying = false; // Audio playing state
+  String recordedText = ''; // Recorded text from speech recognition
+  bool showResult = false; // Show result screen
+
+  // The correct sentence to match
+  final String targetSentence =
+      'I would like to check in for my flight to London';
 
   // Mock vocabulary data
   final List<Map<String, dynamic>> _vocabulary = [
@@ -28,13 +33,15 @@ class _LessonDetailViewState extends State<LessonDetailView> {
       'icon': Icons.location_on,
       'iconColor': Color(0xFF4ECDC4),
       'term': 'Check-in',
-      'definition': 'The process of reporting your arrival at an airport or hotel.',
+      'definition':
+          'The process of reporting your arrival at an airport or hotel.',
     },
     {
       'icon': Icons.confirmation_number,
       'iconColor': Color(0xFF4ECDC4),
       'term': 'Boarding Pass',
-      'definition': 'A document provided by an airline during check-in, giving a passenger permission to board.',
+      'definition':
+          'A document provided by an airline during check-in, giving a passenger permission to board.',
     },
   ];
 
@@ -43,62 +50,70 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Top bar with progress
-            _buildTopBar(),
+            // Main content
+            Column(
+              children: [
+                // Top bar with progress
+                _buildTopBar(),
 
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 20.h),
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 20.h),
 
-                    // Unit title
-                    _buildUnitTitle(),
+                        // Unit title
+                        _buildUnitTitle(),
 
-                    SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
 
-                    // Lesson image
-                    _buildLessonImage(),
+                        // Lesson image
+                        _buildLessonImage(),
 
-                    SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
 
-                    // Listen & Repeat badge
-                    _buildListenRepeatBadge(),
+                        // Listen & Repeat badge
+                        _buildListenRepeatBadge(),
 
-                    SizedBox(height: 16.h),
+                        SizedBox(height: 16.h),
 
-                    // Sentence with highlighted word
-                    _buildSentence(),
+                        // Sentence with highlighted word
+                        _buildSentence(),
 
-                    SizedBox(height: 32.h),
+                        SizedBox(height: 32.h),
 
-                    // Audio controls
-                    _buildAudioControls(),
+                        // Audio controls
+                        _buildAudioControls(),
 
-                    // Recording indicator (shown when recording)
-                    if (isRecording) ...[
-                      SizedBox(height: 16.h),
-                      _buildRecordingIndicator(),
-                    ],
+                        // Recording indicator (shown when recording)
+                        if (isRecording) ...[
+                          SizedBox(height: 16.h),
+                          _buildRecordingIndicator(),
+                        ],
 
-                    SizedBox(height: 40.h),
+                        SizedBox(height: 40.h),
 
-                    // Key Vocabulary section
-                    _buildVocabularySection(),
+                        // Key Vocabulary section
+                        _buildVocabularySection(),
 
-                    SizedBox(height: 100.h), // Space for bottom buttons
-                  ],
+                        SizedBox(height: 100.h), // Space for bottom buttons
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+
+                // Bottom navigation buttons
+                _buildBottomButtons(),
+              ],
             ),
 
-            // Bottom navigation buttons
-            _buildBottomButtons(),
+            // Result overlay with blur effect
+            if (showResult) _buildResultOverlay(),
           ],
         ),
       ),
@@ -307,15 +322,16 @@ class _LessonDetailViewState extends State<LessonDetailView> {
           color: Color(0xFF4ECDC4),
           iconColor: MyColors.white,
           onTap: () {
-            setState(() {
-              isRecording = !isRecording;
-            });
-            // TODO: Start/stop audio recording
-            // When backend is ready, this will:
-            // - Request microphone permission
-            // - Start recording audio
-            // - Send audio to backend for processing
-            // - Get pronunciation feedback
+            if (isRecording) {
+              // Stop recording and simulate speech recognition
+              _stopRecordingAndCheck();
+            } else {
+              // Start recording
+              setState(() {
+                isRecording = true;
+                recordedText = '';
+              });
+            }
           },
         ),
 
@@ -370,14 +386,14 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                 ),
               ),
             ),
-            
+
           // Progress arc for speaker button
           if (showProgress)
             CustomPaint(
               size: Size(size + 10.w, size + 10.w),
               painter: AudioProgressPainter(),
             ),
-          
+
           // Main button
           Container(
             width: size,
@@ -395,11 +411,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                     ]
                   : null,
             ),
-            child: Icon(
-              icon,
-              size: iconSize,
-              color: iconColor,
-            ),
+            child: Icon(icon, size: iconSize, color: iconColor),
           ),
         ],
       ),
@@ -448,11 +460,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               color: vocab['iconColor'].withOpacity(0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
-            child: Icon(
-              vocab['icon'],
-              size: 24.sp,
-              color: vocab['iconColor'],
-            ),
+            child: Icon(vocab['icon'], size: 24.sp, color: vocab['iconColor']),
           ),
 
           SizedBox(width: 12.w),
@@ -647,9 +655,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
           SizedBox(width: 16.w),
 
           // Waveform animation
-          Expanded(
-            child: _buildWaveform(),
-          ),
+          Expanded(child: _buildWaveform()),
 
           SizedBox(width: 16.w),
 
@@ -667,11 +673,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                 color: Color(0xFF4ECDC4),
                 borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Icon(
-                Icons.stop,
-                color: MyColors.white,
-                size: 24.sp,
-              ),
+              child: Icon(Icons.stop, color: MyColors.white, size: 24.sp),
             ),
           ),
         ],
@@ -688,19 +690,106 @@ class _LessonDetailViewState extends State<LessonDetailView> {
         // Create varying heights for waveform effect
         final heights = [4, 8, 12, 16, 20, 16, 12, 8, 4];
         final height = heights[index % heights.length].toDouble();
-        
+
         return Container(
           width: 2.w,
           height: height.h,
           margin: EdgeInsets.symmetric(horizontal: 1.w),
           decoration: BoxDecoration(
-            color: index % 3 == 0 
-                ? MyColors.textPrimary 
+            color: index % 3 == 0
+                ? MyColors.textPrimary
                 : MyColors.textSecondary,
             borderRadius: BorderRadius.circular(1.r),
           ),
         );
       }),
+    );
+  }
+
+  /// Stop recording and check text match
+  void _stopRecordingAndCheck() {
+    setState(() {
+      isRecording = false;
+    });
+
+    // Simulate speech recognition with delay
+    Future.delayed(Duration(milliseconds: 500), () {
+      // TODO: Replace with actual speech recognition
+      // For now, simulate random success/failure
+      final random = DateTime.now().millisecond % 2 == 0;
+
+      setState(() {
+        // Simulate recognized text
+        recordedText = random
+            ? 'I would like to check in for my flight to London'
+            : 'I would like to checking for my flight to London';
+        showResult = true;
+      });
+
+      // Auto-hide result after 2 seconds
+      final isSuccess = _checkTextMatch(
+        random
+            ? 'I would like to check in for my flight to London'
+            : 'I would like to checking for my flight to London',
+        targetSentence,
+      );
+
+      Future.delayed(Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            showResult = false;
+            recordedText = '';
+          });
+        }
+      });
+    });
+  }
+
+  /// Check if recorded text matches target sentence
+  bool _checkTextMatch(String recorded, String target) {
+    // Normalize both texts: lowercase, remove punctuation
+    String normalize(String text) {
+      return text.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').trim();
+    }
+
+    final normalizedRecorded = normalize(recorded);
+    final normalizedTarget = normalize(target);
+
+    return normalizedRecorded == normalizedTarget;
+  }
+
+  /// Build result overlay with blur effect
+  Widget _buildResultOverlay() {
+    final isSuccess = _checkTextMatch(recordedText, targetSentence);
+
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: Container(
+        color: Colors.black.withOpacity(0.3),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                isSuccess
+                    ? 'assets/images/success.png'
+                    : 'assets/images/tryagain.png',
+                fit: BoxFit.contain,
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                isSuccess ? 'Successful!' : 'Try Again!',
+                style: TextStyle(
+                  fontSize: 32.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Montserrat',
+                  color: isSuccess ? Color(0xFF2EC4B6) : Color(0xFFF44336),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
