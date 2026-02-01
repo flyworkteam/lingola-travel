@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import '../NotificationsView/notifications_view.dart';
+import '../ProfileView/profile_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
 import '../CourseView/course_view.dart';
@@ -26,17 +27,19 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       // Navigate to Travel Vocabulary (plane icon)
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const TravelVocabularyView(),
-        ),
+        MaterialPageRoute(builder: (context) => const TravelVocabularyView()),
       );
     } else if (index == 2) {
       // Navigate to Visual Dictionary (dictionary icon)
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const VisualDictionaryView(),
-        ),
+        MaterialPageRoute(builder: (context) => const VisualDictionaryView()),
+      );
+    } else if (index == 3) {
+      // Navigate to Profile
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileView()),
       );
     } else {
       setState(() {
@@ -69,45 +72,46 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 20.h),
-                          
+
                           // Greeting
                           _buildGreeting(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Quick Phrasebook
                           _buildQuickPhrasebook(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Questions
                           _buildQuestions(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Features
                           _buildFeatures(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Quick Actions
                           _buildQuickActions(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Course Cards
                           _buildCourseCards(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Visual Dictionary Card
                           _buildVisualDictionaryCard(),
-                          
+
                           SizedBox(height: 24.h),
-                          
+
                           // TODO: Add more sections here
-                          
-                          SizedBox(height: 100.h), // Bottom padding for floating nav
+                          SizedBox(
+                            height: 100.h,
+                          ), // Bottom padding for floating nav
                         ],
                       ),
                     ),
@@ -145,7 +149,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               // Premium Badge Icon
               _buildPremiumBadge(),
               SizedBox(width: 12.w),
-              
+
               // Notification Icon
               _buildNotificationIcon(),
               SizedBox(width: 12.w),
@@ -348,9 +352,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const NotificationsView(),
-          ),
+          MaterialPageRoute(builder: (context) => const NotificationsView()),
         );
       },
       child: Container(
@@ -385,9 +387,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             color: MyColors.textSecondary,
           ),
         ),
-        
+
         SizedBox(height: 8.h),
-        
+
         // Main title
         Text(
           'Master Languages\nWhile Exploring',
@@ -412,7 +414,10 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       {'icon': 'assets/images/accomo.png', 'label': 'Accommo...'},
       {'icon': 'assets/images/culture.png', 'label': 'Culture'},
       {'icon': 'assets/images/shope.png', 'label': 'Shop'},
-      {'icon': 'assets/images/direction.png', 'label': 'Direction &\nNavigation'},
+      {
+        'icon': 'assets/images/direction.png',
+        'label': 'Direction &\nNavigation',
+      },
       {'icon': 'assets/images/sport.png', 'label': 'Sport'},
       {'icon': 'assets/images/health.png', 'label': 'Health'},
       {'icon': 'assets/images/bussines.png', 'label': 'Business'},
@@ -452,9 +457,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             ),
           ],
         ),
-        
+
         SizedBox(height: 20.h),
-        
+
         // Horizontal scrollable categories
         SizedBox(
           height: 145.h,
@@ -464,7 +469,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             itemBuilder: (context, index) {
               final category = categories[index];
               final isFirst = index == 0;
-              
+
               return Padding(
                 padding: EdgeInsets.only(right: 20.w),
                 child: _buildPhrasebookCategory(
@@ -501,7 +506,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               shape: BoxShape.circle,
               color: MyColors.white,
               border: Border.all(
-                color: isSelected ? MyColors.lingolaPrimaryColor : MyColors.border,
+                color: isSelected
+                    ? MyColors.lingolaPrimaryColor
+                    : MyColors.border,
                 width: isSelected ? 3 : 1.5,
               ),
               boxShadow: [
@@ -521,9 +528,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               ),
             ),
           ),
-          
+
           SizedBox(height: 10.h),
-          
+
           // Label
           SizedBox(
             width: 90.w,
@@ -561,13 +568,17 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: questions.map((q) => Padding(
-        padding: EdgeInsets.only(bottom: 16.h),
-        child: _buildQuestionCard(
-          englishText: q['english']!,
-          turkishText: q['turkish']!,
-        ),
-      )).toList(),
+      children: questions
+          .map(
+            (q) => Padding(
+              padding: EdgeInsets.only(bottom: 16.h),
+              child: _buildQuestionCard(
+                englishText: q['english']!,
+                turkishText: q['turkish']!,
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -599,7 +610,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               fit: BoxFit.cover,
             ),
           ),
-          
+
           // Content
           Padding(
             padding: EdgeInsets.only(right: 40.w), // Space for bookmark button
@@ -617,9 +628,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                     height: 1.3,
                   ),
                 ),
-                
+
                 SizedBox(height: 8.h),
-                
+
                 // Turkish text
                 Text(
                   turkishText,
@@ -634,7 +645,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               ],
             ),
           ),
-          
+
           // Bookmark button
           Positioned(
             top: 0,
@@ -703,9 +714,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             ),
           ],
         ),
-        
+
         SizedBox(height: 20.h),
-        
+
         // Horizontal scrollable feature cards
         SizedBox(
           height: 300.h,
@@ -714,7 +725,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             itemCount: features.length,
             itemBuilder: (context, index) {
               final feature = features[index];
-              
+
               return Padding(
                 padding: EdgeInsets.only(right: 16.w),
                 child: _buildFeatureCard(
@@ -750,9 +761,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
           // Navigate to Course page for "Start Learning"
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const CourseView(),
-            ),
+            MaterialPageRoute(builder: (context) => const CourseView()),
           );
         } else {
           // TODO: Navigate to other feature pages
@@ -790,7 +799,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 ),
               ),
             ),
-            
+
             // Content
             Padding(
               padding: EdgeInsets.all(20.w),
@@ -814,9 +823,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       ),
                     ),
                   ),
-                  
+
                   SizedBox(height: 24.h),
-                  
+
                   // Title
                   Text(
                     title,
@@ -828,9 +837,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       height: 1.2,
                     ),
                   ),
-                  
+
                   SizedBox(height: 8.h),
-                  
+
                   // Subtitle
                   Text(
                     subtitle,
@@ -841,9 +850,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       color: Colors.white.withOpacity(0.9),
                     ),
                   ),
-                  
+
                   Spacer(),
-                  
+
                   // Swipe to start button
                   Container(
                     width: double.infinity,
@@ -910,9 +919,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             color: MyColors.textPrimary,
           ),
         ),
-        
+
         SizedBox(height: 20.h),
-        
+
         // Current Course Card
         _buildCurrentCourseCard(),
       ],
@@ -930,9 +939,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         // Navigate to Course page
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const CourseView(),
-          ),
+          MaterialPageRoute(builder: (context) => const CourseView()),
         );
       },
       child: Container(
@@ -974,9 +981,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       letterSpacing: 1.2,
                     ),
                   ),
-                  
+
                   SizedBox(height: 12.h),
-                  
+
                   // Course title
                   Text(
                     'Terminal Talks:\nAirport Basics',
@@ -988,9 +995,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       height: 1.2,
                     ),
                   ),
-                  
+
                   SizedBox(height: 20.h),
-                  
+
                   // Progress info
                   Row(
                     children: [
@@ -1015,9 +1022,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       ),
                     ],
                   ),
-                  
+
                   SizedBox(height: 12.h),
-                  
+
                   // Progress bar
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10.r),
@@ -1031,9 +1038,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 ],
               ),
             ),
-            
+
             SizedBox(width: 16.w),
-            
+
             // Play button
             Container(
               width: 64.w,
@@ -1087,7 +1094,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         itemCount: courses.length,
         itemBuilder: (context, index) {
           final course = courses[index];
-          
+
           return Padding(
             padding: EdgeInsets.only(right: 16.w),
             child: _buildCourseCard(
@@ -1116,9 +1123,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         // Navigate to Course page
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const CourseView(),
-          ),
+          MaterialPageRoute(builder: (context) => const CourseView()),
         );
       },
       child: Container(
@@ -1146,15 +1151,11 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(16.r),
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 28.sp,
-              ),
+              child: Icon(icon, color: iconColor, size: 28.sp),
             ),
-            
+
             SizedBox(height: 16.h),
-            
+
             // Title
             Text(
               title,
@@ -1166,9 +1167,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 height: 1.2,
               ),
             ),
-            
+
             Spacer(),
-            
+
             // Start Course button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1182,11 +1183,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                     color: MyColors.textSecondary,
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward,
-                  color: arrowColor,
-                  size: 20.sp,
-                ),
+                Icon(Icons.arrow_forward, color: arrowColor, size: 20.sp),
               ],
             ),
           ],
@@ -1194,7 +1191,6 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       ),
     );
   }
-
 
   /// Visual Dictionary Card
   Widget _buildVisualDictionaryCard() {
@@ -1236,9 +1232,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 ),
               ),
             ),
-            
+
             SizedBox(width: 16.w),
-            
+
             // Text content
             Expanded(
               child: Column(
@@ -1266,7 +1262,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 ],
               ),
             ),
-            
+
             // Arrow icon
             Icon(
               Icons.arrow_forward_ios,
@@ -1340,10 +1336,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildNavItem(
-                        icon: Icons.grid_view_rounded,
-                        index: 0,
-                      ),
+                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
                       _buildNavItem(
                         icon: Icons.flight_takeoff_rounded,
                         index: 1,
@@ -1352,10 +1345,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                         icon: Icons.account_balance_rounded,
                         index: 2,
                       ),
-                      _buildNavItem(
-                        icon: Icons.person_rounded,
-                        index: 3,
-                      ),
+                      _buildNavItem(icon: Icons.person_rounded, index: 3),
                     ],
                   ),
                 ),
@@ -1368,10 +1358,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   }
 
   /// Single navigation item - icon only with white circle for active
-  Widget _buildNavItem({
-    required IconData icon,
-    required int index,
-  }) {
+  Widget _buildNavItem({required IconData icon, required int index}) {
     final bool isActive = _selectedIndex == index;
 
     return GestureDetector(

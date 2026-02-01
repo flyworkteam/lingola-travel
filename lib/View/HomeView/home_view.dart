@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import '../NotificationsView/notifications_view.dart';
+import '../ProfileView/profile_view.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -19,10 +20,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Handle navigation item tap
   void _onNavigationItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    // TODO: Navigate to different pages based on index
+    if (index == 3) {
+      // Navigate to Profile
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileView()),
+      );
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+      // TODO: Navigate to different pages based on index
+    }
   }
 
   @override
@@ -48,50 +57,51 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 20.h),
-                          
+
                           // Greeting
                           _buildGreeting(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Quick Phrasebook
                           _buildQuickPhrasebook(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Questions
                           _buildQuestions(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Features
                           _buildFeatures(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Quick Actions
                           _buildQuickActions(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Course Cards
                           _buildCourseCards(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Premium Membership Card
                           _buildPremiumCard(),
-                          
+
                           SizedBox(height: 32.h),
-                          
+
                           // Visual Dictionary Card
                           _buildVisualDictionaryCard(),
-                          
+
                           SizedBox(height: 24.h),
-                          
+
                           // TODO: Add more sections here
-                          
-                          SizedBox(height: 100.h), // Bottom padding for floating nav
+                          SizedBox(
+                            height: 100.h,
+                          ), // Bottom padding for floating nav
                         ],
                       ),
                     ),
@@ -308,9 +318,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const NotificationsView(),
-          ),
+          MaterialPageRoute(builder: (context) => const NotificationsView()),
         );
       },
       child: Container(
@@ -345,9 +353,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
             color: MyColors.textSecondary,
           ),
         ),
-        
+
         SizedBox(height: 8.h),
-        
+
         // Main title
         Text(
           'Master Languages\nWhile Exploring',
@@ -372,7 +380,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
       {'icon': 'assets/images/accomo.png', 'label': 'Accommo...'},
       {'icon': 'assets/images/culture.png', 'label': 'Culture'},
       {'icon': 'assets/images/shope.png', 'label': 'Shop'},
-      {'icon': 'assets/images/direction.png', 'label': 'Direction &\nNavigation'},
+      {
+        'icon': 'assets/images/direction.png',
+        'label': 'Direction &\nNavigation',
+      },
       {'icon': 'assets/images/sport.png', 'label': 'Sport'},
       {'icon': 'assets/images/health.png', 'label': 'Health'},
       {'icon': 'assets/images/bussines.png', 'label': 'Business'},
@@ -412,9 +423,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ),
           ],
         ),
-        
+
         SizedBox(height: 20.h),
-        
+
         // Horizontal scrollable categories
         SizedBox(
           height: 145.h,
@@ -424,7 +435,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             itemBuilder: (context, index) {
               final category = categories[index];
               final isFirst = index == 0;
-              
+
               return Padding(
                 padding: EdgeInsets.only(right: 20.w),
                 child: _buildPhrasebookCategory(
@@ -461,7 +472,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
               shape: BoxShape.circle,
               color: MyColors.white,
               border: Border.all(
-                color: isSelected ? MyColors.lingolaPrimaryColor : MyColors.border,
+                color: isSelected
+                    ? MyColors.lingolaPrimaryColor
+                    : MyColors.border,
                 width: isSelected ? 3 : 1.5,
               ),
               boxShadow: [
@@ -481,9 +494,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ),
             ),
           ),
-          
+
           SizedBox(height: 10.h),
-          
+
           // Label
           SizedBox(
             width: 90.w,
@@ -521,13 +534,17 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: questions.map((q) => Padding(
-        padding: EdgeInsets.only(bottom: 16.h),
-        child: _buildQuestionCard(
-          englishText: q['english']!,
-          turkishText: q['turkish']!,
-        ),
-      )).toList(),
+      children: questions
+          .map(
+            (q) => Padding(
+              padding: EdgeInsets.only(bottom: 16.h),
+              child: _buildQuestionCard(
+                englishText: q['english']!,
+                turkishText: q['turkish']!,
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -559,7 +576,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               fit: BoxFit.cover,
             ),
           ),
-          
+
           // Content
           Padding(
             padding: EdgeInsets.only(right: 40.w), // Space for bookmark button
@@ -577,9 +594,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     height: 1.3,
                   ),
                 ),
-                
+
                 SizedBox(height: 8.h),
-                
+
                 // Turkish text
                 Text(
                   turkishText,
@@ -594,7 +611,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ],
             ),
           ),
-          
+
           // Bookmark button
           Positioned(
             top: 0,
@@ -663,9 +680,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ),
           ],
         ),
-        
+
         SizedBox(height: 20.h),
-        
+
         // Horizontal scrollable feature cards
         SizedBox(
           height: 300.h,
@@ -674,7 +691,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             itemCount: features.length,
             itemBuilder: (context, index) {
               final feature = features[index];
-              
+
               return Padding(
                 padding: EdgeInsets.only(right: 16.w),
                 child: _buildFeatureCard(
@@ -732,7 +749,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ),
             ),
-            
+
             // Content
             Padding(
               padding: EdgeInsets.all(20.w),
@@ -756,9 +773,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       ),
                     ),
                   ),
-                  
+
                   SizedBox(height: 24.h),
-                  
+
                   // Title
                   Text(
                     title,
@@ -770,9 +787,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       height: 1.2,
                     ),
                   ),
-                  
+
                   SizedBox(height: 8.h),
-                  
+
                   // Subtitle
                   Text(
                     subtitle,
@@ -783,9 +800,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       color: Colors.white.withOpacity(0.9),
                     ),
                   ),
-                  
+
                   Spacer(),
-                  
+
                   // Swipe to start button
                   Container(
                     width: double.infinity,
@@ -852,9 +869,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
             color: MyColors.textPrimary,
           ),
         ),
-        
+
         SizedBox(height: 20.h),
-        
+
         // Current Course Card
         _buildCurrentCourseCard(),
       ],
@@ -911,9 +928,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       letterSpacing: 1.2,
                     ),
                   ),
-                  
+
                   SizedBox(height: 12.h),
-                  
+
                   // Course title
                   Text(
                     'Terminal Talks:\nAirport Basics',
@@ -925,9 +942,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       height: 1.2,
                     ),
                   ),
-                  
+
                   SizedBox(height: 20.h),
-                  
+
                   // Progress info
                   Row(
                     children: [
@@ -952,9 +969,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       ),
                     ],
                   ),
-                  
+
                   SizedBox(height: 12.h),
-                  
+
                   // Progress bar
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10.r),
@@ -968,9 +985,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ],
               ),
             ),
-            
+
             SizedBox(width: 16.w),
-            
+
             // Play button
             Container(
               width: 64.w,
@@ -1024,7 +1041,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         itemCount: courses.length,
         itemBuilder: (context, index) {
           final course = courses[index];
-          
+
           return Padding(
             padding: EdgeInsets.only(right: 16.w),
             child: _buildCourseCard(
@@ -1078,15 +1095,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(16.r),
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 28.sp,
-              ),
+              child: Icon(icon, color: iconColor, size: 28.sp),
             ),
-            
+
             SizedBox(height: 16.h),
-            
+
             // Title
             Text(
               title,
@@ -1098,9 +1111,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 height: 1.2,
               ),
             ),
-            
+
             Spacer(),
-            
+
             // Start Course button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1114,11 +1127,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     color: MyColors.textSecondary,
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward,
-                  color: arrowColor,
-                  size: 20.sp,
-                ),
+                Icon(Icons.arrow_forward, color: arrowColor, size: 20.sp),
               ],
             ),
           ],
@@ -1164,7 +1173,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
               children: [
                 // PRO MEMBERSHIP badge
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   decoration: BoxDecoration(
                     color: Color(0xFFFFA726), // Orange
                     borderRadius: BorderRadius.circular(12.r),
@@ -1180,7 +1192,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     ),
                   ),
                 ),
-                
+
                 // Premium logo
                 Image.asset(
                   'assets/images/premiumlogo.png',
@@ -1190,9 +1202,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ],
             ),
-            
+
             SizedBox(height: 20.h),
-            
+
             // Title
             Text(
               'Unlimited Access',
@@ -1204,9 +1216,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 height: 1.2,
               ),
             ),
-            
+
             SizedBox(height: 12.h),
-            
+
             // Description
             Text(
               'Unlock live translator and all\ncity guides worldwide.',
@@ -1218,9 +1230,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 height: 1.4,
               ),
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             // UPGRADE NOW button
             Container(
               width: double.infinity,
@@ -1295,9 +1307,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ),
             ),
-            
+
             SizedBox(width: 16.w),
-            
+
             // Text content
             Expanded(
               child: Column(
@@ -1325,7 +1337,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ],
               ),
             ),
-            
+
             // Arrow icon
             Icon(
               Icons.arrow_forward_ios,
@@ -1399,10 +1411,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildNavItem(
-                        icon: Icons.grid_view_rounded,
-                        index: 0,
-                      ),
+                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
                       _buildNavItem(
                         icon: Icons.flight_takeoff_rounded,
                         index: 1,
@@ -1411,10 +1420,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         icon: Icons.account_balance_rounded,
                         index: 2,
                       ),
-                      _buildNavItem(
-                        icon: Icons.person_rounded,
-                        index: 3,
-                      ),
+                      _buildNavItem(icon: Icons.person_rounded, index: 3),
                     ],
                   ),
                 ),
@@ -1427,10 +1433,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
 
   /// Single navigation item - icon only with white circle for active
-  Widget _buildNavItem({
-    required IconData icon,
-    required int index,
-  }) {
+  Widget _buildNavItem({required IconData icon, required int index}) {
     final bool isActive = _selectedIndex == index;
 
     return GestureDetector(
