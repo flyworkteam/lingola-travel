@@ -6,6 +6,8 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import '../NotificationsView/notifications_view.dart';
 import '../ProfileView/profile_view.dart';
+import '../DictionaryView/visual_dictionary_view.dart';
+import '../LibraryView/library_view.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -20,7 +22,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Handle navigation item tap
   void _onNavigationItemTapped(int index) {
-    if (index == 3) {
+    if (index == 2) {
+      // Navigate to Library
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LibraryView()),
+      );
+    } else if (index == 3) {
       // Navigate to Profile
       Navigator.push(
         context,
@@ -30,7 +38,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
       setState(() {
         _selectedIndex = index;
       });
-      // TODO: Navigate to different pages based on index
     }
   }
 
@@ -1271,8 +1278,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Widget _buildVisualDictionaryCard() {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to visual dictionary page
-        print('Tapped on Visual Dictionary');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VisualDictionaryView()),
+        );
       },
       child: Container(
         width: double.infinity,

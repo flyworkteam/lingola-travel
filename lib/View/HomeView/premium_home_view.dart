@@ -9,6 +9,7 @@ import '../ProfileView/profile_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
 import '../CourseView/course_view.dart';
+import '../LibraryView/library_view.dart';
 
 class PremiumHomeView extends ConsumerStatefulWidget {
   const PremiumHomeView({super.key});
@@ -30,10 +31,10 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         MaterialPageRoute(builder: (context) => const TravelVocabularyView()),
       );
     } else if (index == 2) {
-      // Navigate to Visual Dictionary (dictionary icon)
+      // Navigate to Library
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const VisualDictionaryView()),
+        MaterialPageRoute(builder: (context) => const LibraryView()),
       );
     } else if (index == 3) {
       // Navigate to Profile
@@ -45,7 +46,6 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       setState(() {
         _selectedIndex = index;
       });
-      // TODO: Navigate to different pages based on index
     }
   }
 
@@ -1196,8 +1196,10 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   Widget _buildVisualDictionaryCard() {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to visual dictionary page
-        print('Tapped on Visual Dictionary');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VisualDictionaryView()),
+        );
       },
       child: Container(
         width: double.infinity,
