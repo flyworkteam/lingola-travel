@@ -6,6 +6,7 @@ import 'profile_settings_view.dart';
 import 'share_friend_view.dart';
 import 'faq_view.dart';
 import 'app_language_view.dart';
+import 'premium_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -98,7 +99,12 @@ class _ProfileViewState extends State<ProfileView> {
                         title: 'Premium',
                         badge: 'Passive',
                         onTap: () {
-                          // TODO: Navigate to premium
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PremiumView(),
+                            ),
+                          );
                         },
                       ),
                     ]),
