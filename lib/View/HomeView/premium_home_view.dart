@@ -81,7 +81,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                           // Quick Phrasebook
                           _buildQuickPhrasebook(),
 
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 16.h),
 
                           // Questions
                           _buildQuestions(),
@@ -500,8 +500,8 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         children: [
           // Icon container
           Container(
-            width: 90.w,
-            height: 90.h,
+            width: 56.w,
+            height: 56.h,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: MyColors.white,
@@ -522,18 +522,18 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             child: Center(
               child: Image.asset(
                 iconPath,
-                width: 45.w,
-                height: 45.h,
+                width: 28.w,
+                height: 28.h,
                 fit: BoxFit.contain,
               ),
             ),
           ),
 
-          SizedBox(height: 10.h),
+          SizedBox(height: 6.h),
 
           // Label
           SizedBox(
-            width: 90.w,
+            width: 56.w,
             child: Text(
               label,
               textAlign: TextAlign.center,

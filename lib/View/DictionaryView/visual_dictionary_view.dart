@@ -108,48 +108,42 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              SizedBox(height: 16.h),
+          SizedBox(height: 16.h),
 
-              // Search bar
-              _buildSearchBar(),
+          // Search bar
+          _buildSearchBar(),
 
-              SizedBox(height: 24.h),
+          SizedBox(height: 24.h),
 
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Category grid
-                      _buildCategoryGrid(),
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Category grid
+                  _buildCategoryGrid(),
 
-                      SizedBox(height: 32.h),
+                  SizedBox(height: 32.h),
 
-                      // Recent Search
-                      if (_recentSearches.isNotEmpty) _buildRecentSearch(),
+                  // Recent Search
+                  if (_recentSearches.isNotEmpty) _buildRecentSearch(),
 
-                      SizedBox(height: 100.h), // Space for bottom nav
-                    ],
-                  ),
-                ),
+                  SizedBox(height: 20.h), // Reduced space
+                ],
               ),
-            ],
-          ),
-
-          // Floating bottom navigation
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 20.h,
-            child: _buildBottomNavigationBar(),
+            ),
           ),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 10.h),
+          child: _buildBottomNavigationBar(),
+        ),
       ),
     );
   }
@@ -441,63 +435,57 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
 
   /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 24.w),
-        height: 65.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(35.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: Offset(0, 4),
+    return Container(
+      height: 65.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(35.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(35.r),
+        child: Stack(
+          children: [
+            // Background image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/home/altmenuarkaplan.png',
+                fit: BoxFit.fill,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: MyColors.white,
+                      borderRadius: BorderRadius.circular(35.r),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Navigation items - centered
+            Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+                    _buildNavItem(icon: Icons.flight_takeoff_rounded, index: 1),
+                    _buildNavItem(
+                      icon: Icons.account_balance_rounded,
+                      index: 2,
+                    ),
+                    _buildNavItem(icon: Icons.person_rounded, index: 3),
+                  ],
+                ),
+              ),
             ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(35.r),
-          child: Stack(
-            children: [
-              // Background image
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/home/altmenuarkaplan.png',
-                  fit: BoxFit.fill,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: MyColors.white,
-                        borderRadius: BorderRadius.circular(35.r),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Navigation items - centered
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                      _buildNavItem(
-                        icon: Icons.flight_takeoff_rounded,
-                        index: 1,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.account_balance_rounded,
-                        index: 2,
-                      ),
-                      _buildNavItem(icon: Icons.person_rounded, index: 3),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -518,6 +506,12 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
             MaterialPageRoute(
               builder: (context) => const TravelVocabularyView(),
             ),
+          );
+        } else if (index == 2) {
+          // Navigate to Library
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LibraryView()),
           );
         } else if (index == 3) {
           // Navigate to Profile

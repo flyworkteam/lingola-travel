@@ -87,191 +87,153 @@ class _SplashPageViewState extends State<SplashPageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: MyColors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // PageView Section with Crossfade Effect
-            Expanded(
-              flex: 6,
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                itemCount: _splashData.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24.w,
-                      vertical: 40.h,
+      body: Column(
+        children: [
+          // PageView Section with Crossfade Effect - Status bar'a girecek
+          Expanded(
+            flex: 3,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              itemCount: _splashData.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    left: 8.w,
+                    right: 8.w,
+                    top: 8.h,
+                    bottom: 0,
+                  ),
+                  child: AnimatedOpacity(
+                    opacity: _currentPage == index ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 400),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28.r),
+                      child: Image.asset(
+                        _splashData[index]['image']!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
                     ),
-                    child: AnimatedOpacity(
-                      opacity: _currentPage == index ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 400),
-                      child: Center(
-                        child: Container(
-                          width: 340.w,
-                          height: 480.h,
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Content Section
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 32.h),
+
+                // Progress Indicator - Fixed width dots
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _splashData.length,
+                    (index) => Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4.w),
+                      child: GestureDetector(
+                        onTap: () {
+                          _pageController.animateToPage(
+                            index,
+                            duration: const Duration(milliseconds: 600),
+                            curve: Curves.easeInOutCubic,
+                          );
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: 60.w,
+                          height: 6.h,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24.r),
-                            color: MyColors.splashImageBackground,
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24.r),
-                            child: Image.asset(
-                              _splashData[index]['image']!,
-                              width: 340.w,
-                              height: 480.h,
-                              fit: BoxFit.cover,
-                            ),
+                            color: _currentPage == index
+                                ? MyColors.lingolaPrimaryColor
+                                : MyColors.splashProgressInactive,
+                            borderRadius: BorderRadius.circular(3.r),
                           ),
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-
-            // Content Section
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32.w),
-                child: Column(
-                  children: [
-                    // Progress Indicator - Fixed width dots
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        _splashData.length,
-                        (index) => Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
-                          child: GestureDetector(
-                            onTap: () {
-                              _pageController.animateToPage(
-                                index,
-                                duration: const Duration(milliseconds: 600),
-                                curve: Curves.easeInOutCubic,
-                              );
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 60.w,
-                              height: 6.h,
-                              decoration: BoxDecoration(
-                                color: _currentPage == index
-                                    ? MyColors.lingolaPrimaryColor
-                                    : MyColors.splashProgressInactive,
-                                borderRadius: BorderRadius.circular(3.r),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 32.h),
-
-                    // Fixed Position Title
-                    SizedBox(
-                      height: 60.h,
-                      child: Stack(
-                        children: List.generate(
-                          _splashData.length,
-                          (index) => AnimatedOpacity(
-                            opacity: _currentPage == index ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 400),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: Text(
-                                  _splashData[index]['title']!,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 20.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: MyColors.splashTextPrimary,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 12.h),
-
-                    // Fixed Position Description
-                    SizedBox(
-                      height: 80.h,
-                      child: Stack(
-                        children: List.generate(
-                          _splashData.length,
-                          (index) => AnimatedOpacity(
-                            opacity: _currentPage == index ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 400),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: Text(
-                                  _splashData[index]['description']!,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: MyColors.splashTextSecondary,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    // Get Started / Next Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56.h,
-                      child: ElevatedButton(
-                        onPressed: _nextPage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: MyColors.lingolaPrimaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.r),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          _currentPage == _splashData.length - 1
-                              ? 'Get Started'
-                              : 'Next',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            color: MyColors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 32.h),
-                  ],
+                  ),
                 ),
-              ),
+
+                SizedBox(height: 24.h),
+
+                // Small header text (ince)
+                SizedBox(
+                  height: 28.h,
+                  child: Text(
+                    _splashData[_currentPage]['title']!,
+                    textAlign: TextAlign.left,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w400,
+                      color: MyColors.splashTextSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 14.h),
+
+                // Main title (kalın) - Sabit yükseklik
+                SizedBox(
+                  height: 110.h,
+                  child: Text(
+                    _splashData[_currentPage]['description']!,
+                    textAlign: TextAlign.left,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      color: MyColors.splashTextPrimary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 30.h),
+
+                // Get Started / Next Button - Sabit pozisyon
+                SizedBox(
+                  width: double.infinity,
+                  height: 54.h,
+                  child: ElevatedButton(
+                    onPressed: _nextPage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: MyColors.lingolaPrimaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      _currentPage == _splashData.length - 1
+                          ? 'Get Started'
+                          : 'Next',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: MyColors.white,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Bottom spacing
+                SizedBox(height: 48.h),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

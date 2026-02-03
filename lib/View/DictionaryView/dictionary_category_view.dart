@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
-import 'visual_dictionary_view.dart';
+import '../LibraryView/library_view.dart';
 import '../ProfileView/profile_view.dart';
 
 class DictionaryCategoryView extends StatefulWidget {
@@ -194,35 +194,29 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              SizedBox(height: 16.h),
+          SizedBox(height: 16.h),
 
-              // Search bar
-              _buildSearchBar(),
+          // Search bar
+          _buildSearchBar(),
 
-              SizedBox(height: 16.h),
+          SizedBox(height: 16.h),
 
-              // Item count
-              _buildItemCount(),
+          // Item count
+          _buildItemCount(),
 
-              SizedBox(height: 16.h),
+          SizedBox(height: 16.h),
 
-              // Word list
-              Expanded(child: _buildWordList()),
-            ],
-          ),
-
-          // Floating bottom navigation
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 20.h,
-            child: _buildBottomNavigationBar(),
-          ),
+          // Word list
+          Expanded(child: _buildWordList()),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 10.h),
+          child: _buildBottomNavigationBar(),
+        ),
       ),
     );
   }
@@ -312,7 +306,7 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
   /// Word list
   Widget _buildWordList() {
     return ListView.builder(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
       itemCount: _words.length,
       itemBuilder: (context, index) {
         final word = _words[index];
@@ -405,63 +399,57 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
 
   /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 24.w),
-        height: 65.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(35.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: Offset(0, 4),
+    return Container(
+      height: 65.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(35.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(35.r),
+        child: Stack(
+          children: [
+            // Background image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/home/altmenuarkaplan.png',
+                fit: BoxFit.fill,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: MyColors.white,
+                      borderRadius: BorderRadius.circular(35.r),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Navigation items - centered
+            Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+                    _buildNavItem(icon: Icons.flight_takeoff_rounded, index: 1),
+                    _buildNavItem(
+                      icon: Icons.account_balance_rounded,
+                      index: 2,
+                    ),
+                    _buildNavItem(icon: Icons.person_rounded, index: 3),
+                  ],
+                ),
+              ),
             ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(35.r),
-          child: Stack(
-            children: [
-              // Background image
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/home/altmenuarkaplan.png',
-                  fit: BoxFit.fill,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: MyColors.white,
-                        borderRadius: BorderRadius.circular(35.r),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Navigation items - centered
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                      _buildNavItem(
-                        icon: Icons.flight_takeoff_rounded,
-                        index: 1,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.account_balance_rounded,
-                        index: 2,
-                      ),
-                      _buildNavItem(icon: Icons.person_rounded, index: 3),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -485,8 +473,12 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
             (route) => route.isFirst,
           );
         } else if (index == 2) {
-          // Go back to Dictionary main view
-          Navigator.pop(context);
+          // Navigate to Library
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LibraryView()),
+            (route) => route.isFirst,
+          );
         } else if (index == 3) {
           // Navigate to Profile
           Navigator.pushAndRemoveUntil(

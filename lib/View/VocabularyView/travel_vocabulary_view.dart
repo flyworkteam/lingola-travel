@@ -93,39 +93,33 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              SizedBox(height: 16.h), // Added spacing from AppBar
-              // Search bar
-              _buildSearchBar(),
+          SizedBox(height: 16.h), // Added spacing from AppBar
+          // Search bar
+          _buildSearchBar(),
 
-              SizedBox(height: 16.h),
+          SizedBox(height: 16.h),
 
-              // Tab switcher
-              _buildTabSwitcher(),
+          // Tab switcher
+          _buildTabSwitcher(),
 
-              SizedBox(height: 20.h),
+          SizedBox(height: 20.h),
 
-              // Category filters
-              _buildCategoryFilters(),
+          // Category filters
+          _buildCategoryFilters(),
 
-              SizedBox(height: 20.h),
+          SizedBox(height: 20.h),
 
-              // Content
-              Expanded(child: _buildContent()),
-            ],
-          ),
-
-          // Floating bottom navigation
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 20.h,
-            child: _buildBottomNavigationBar(),
-          ),
+          // Content
+          Expanded(child: _buildContent()),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 10.h),
+          child: _buildBottomNavigationBar(),
+        ),
       ),
     );
   }
@@ -306,7 +300,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         : [_selectedCategory];
 
     return ListView.builder(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
       itemCount: categories.length * 2, // Category + items
       itemBuilder: (context, index) {
         final categoryIndex = index ~/ 2;
@@ -576,63 +570,57 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
 
   /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 24.w),
-        height: 65.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(35.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: Offset(0, 4),
+    return Container(
+      height: 65.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(35.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(35.r),
+        child: Stack(
+          children: [
+            // Background image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/home/altmenuarkaplan.png',
+                fit: BoxFit.fill,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: MyColors.white,
+                      borderRadius: BorderRadius.circular(35.r),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Navigation items - centered
+            Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+                    _buildNavItem(icon: Icons.flight_takeoff_rounded, index: 1),
+                    _buildNavItem(
+                      icon: Icons.account_balance_rounded,
+                      index: 2,
+                    ),
+                    _buildNavItem(icon: Icons.person_rounded, index: 3),
+                  ],
+                ),
+              ),
             ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(35.r),
-          child: Stack(
-            children: [
-              // Background image
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/home/altmenuarkaplan.png',
-                  fit: BoxFit.fill,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: MyColors.white,
-                        borderRadius: BorderRadius.circular(35.r),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Navigation items - centered
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                      _buildNavItem(
-                        icon: Icons.flight_takeoff_rounded,
-                        index: 1,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.account_balance_rounded,
-                        index: 2,
-                      ),
-                      _buildNavItem(icon: Icons.person_rounded, index: 3),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -647,12 +635,10 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
           // Navigate back to home
           Navigator.pop(context);
         } else if (index == 2) {
-          // Navigate to Library/Dictionary
+          // Navigate to Library
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => const VisualDictionaryView(),
-            ),
+            MaterialPageRoute(builder: (context) => const LibraryView()),
           );
         } else if (index == 3) {
           // Navigate to Profile

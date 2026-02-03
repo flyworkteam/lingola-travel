@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../Models/language.dart';
 
 class ProfileSettingsView extends StatefulWidget {
   const ProfileSettingsView({super.key});
@@ -11,7 +12,7 @@ class ProfileSettingsView extends StatefulWidget {
 
 class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   String _selectedGender = 'Male';
-  String _selectedLanguage = 'English';
+  Language _selectedLanguage = AppLanguages.all.first; // English
   final TextEditingController _nameController = TextEditingController(
     text: 'Alex Johnson',
   );
@@ -502,41 +503,173 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   }
 
   Widget _buildLanguageDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+    return GestureDetector(
+      onTap: _showLanguageSelector,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          child: Row(
+            children: [
+              // Flag image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4.r),
+                child: Image.asset(
+                  _selectedLanguage.flagAsset,
+                  width: 28.w,
+                  height: 28.w,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  _selectedLanguage.name,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat',
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 24.sp,
+                color: Color(0xFF9CA3AF),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        child: Row(
+    );
+  }
+
+  /// Show language selector bottom sheet
+  void _showLanguageSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.language_rounded, size: 22.sp, color: Color(0xFF6B7280)),
-            SizedBox(width: 12.w),
-            Expanded(
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 12.h),
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+
+            // Title
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.h),
               child: Text(
-                _selectedLanguage,
+                'Select Learn Language',
                 style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
                   fontFamily: 'Montserrat',
                   color: Color(0xFF1A1A1A),
                 ),
               ),
             ),
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 24.sp,
-              color: Color(0xFF9CA3AF),
+
+            // Language list
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: AppLanguages.all.length,
+                itemBuilder: (context, index) {
+                  final language = AppLanguages.all[index];
+                  final isSelected = language.code == _selectedLanguage.code;
+
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedLanguage = language;
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 12.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Color(0xFF4ECDC4).withOpacity(0.1)
+                            : Colors.transparent,
+                      ),
+                      child: Row(
+                        children: [
+                          // Flag
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4.r),
+                            child: Image.asset(
+                              language.flagAsset,
+                              width: 32.w,
+                              height: 32.w,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+
+                          // Language name
+                          Expanded(
+                            child: Text(
+                              language.name,
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                fontFamily: 'Montserrat',
+                                color: isSelected
+                                    ? Color(0xFF4ECDC4)
+                                    : Color(0xFF1A1A1A),
+                              ),
+                            ),
+                          ),
+
+                          // Checkmark
+                          if (isSelected)
+                            Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF4ECDC4),
+                              size: 24.sp,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
+
+            SizedBox(height: 20.h),
           ],
         ),
       ),

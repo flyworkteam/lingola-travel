@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
+import '../LibraryView/library_view.dart';
 import 'profile_settings_view.dart';
 import 'share_friend_view.dart';
 import 'faq_view.dart';
@@ -660,7 +661,7 @@ class _ProfileViewState extends State<ProfileView> {
 
     if (index == 0) {
       // Navigate back to Home
-      Navigator.pop(context);
+      Navigator.popUntil(context, (route) => route.isFirst);
     } else if (index == 1) {
       // Navigate to Vocabulary
       Navigator.pushReplacement(
@@ -668,10 +669,10 @@ class _ProfileViewState extends State<ProfileView> {
         MaterialPageRoute(builder: (context) => const TravelVocabularyView()),
       );
     } else if (index == 2) {
-      // Navigate to Dictionary
+      // Navigate to Library
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const VisualDictionaryView()),
+        MaterialPageRoute(builder: (context) => const LibraryView()),
       );
     }
     // index 3 is current page (Profile), do nothing
