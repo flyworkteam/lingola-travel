@@ -198,31 +198,41 @@ class _CourseViewState extends State<CourseView> {
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: MyColors.border, width: 1),
         ),
-        child: TextField(
-          controller: _searchController,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontFamily: 'Montserrat',
-            color: MyColors.textPrimary,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            textSelectionTheme: TextSelectionThemeData(
+              cursorColor: Color(0xFF4ECDC4),
+              selectionColor: Color(0xFF4ECDC4).withOpacity(0.3),
+              selectionHandleColor: Color(0xFF4ECDC4),
+            ),
           ),
-          decoration: InputDecoration(
-            hintText: 'Search words or phrases...',
-            hintStyle: TextStyle(
+          child: TextField(
+            controller: _searchController,
+            cursorColor: Color(0xFF4ECDC4),
+            style: TextStyle(
               fontSize: 14.sp,
               fontFamily: 'Montserrat',
-              color: MyColors.textSecondary,
+              color: MyColors.textPrimary,
             ),
-            prefixIcon: Icon(
-              Icons.search,
-              color: MyColors.textSecondary,
-              size: 20.sp,
+            decoration: InputDecoration(
+              hintText: 'Search words or phrases...',
+              hintStyle: TextStyle(
+                fontSize: 14.sp,
+                fontFamily: 'Montserrat',
+                color: MyColors.textSecondary,
+              ),
+              prefixIcon: Icon(
+                Icons.search,
+                color: MyColors.textSecondary,
+                size: 20.sp,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(vertical: 12.h),
             ),
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+            onChanged: (value) {
+              setState(() {});
+            },
           ),
-          onChanged: (value) {
-            setState(() {});
-          },
         ),
       ),
     );

@@ -22,6 +22,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
   bool isPlaying = false; // Audio playing state
   String recordedText = ''; // Recorded text from speech recognition
   bool showResult = false; // Show result screen
+  final GlobalKey _bookmarkButtonKey = GlobalKey(); // Key for bookmark button
 
   // The correct sentence to match
   final String targetSentence =
@@ -338,17 +339,18 @@ class _LessonDetailViewState extends State<LessonDetailView> {
         SizedBox(width: 24.w),
 
         // Bookmark button
-        _buildAudioButton(
-          icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-          size: 56.w,
-          iconSize: 28.sp,
-          color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.grey200,
-          iconColor: isBookmarked ? MyColors.white : MyColors.textSecondary,
-          onTap: () {
-            setState(() {
-              isBookmarked = !isBookmarked;
-            });
-          },
+        Container(
+          key: _bookmarkButtonKey,
+          child: _buildAudioButton(
+            icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+            size: 56.w,
+            iconSize: 28.sp,
+            color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.grey200,
+            iconColor: isBookmarked ? MyColors.white : MyColors.textSecondary,
+            onTap: () {
+              _showSaveDialog();
+            },
+          ),
         ),
       ],
     );
@@ -704,6 +706,100 @@ class _LessonDetailViewState extends State<LessonDetailView> {
         );
       }),
     );
+  }
+
+  /// Show save dropdown menu to choose Word or Phrase
+  void _showSaveDialog() async {
+    // Get the render box for positioning
+    final RenderBox? button =
+        _bookmarkButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (button == null) return;
+
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    final Offset buttonPosition = button.localToGlobal(
+      Offset.zero,
+      ancestor: overlay,
+    );
+
+    final RelativeRect position = RelativeRect.fromLTRB(
+      buttonPosition.dx - 35.w, // Position to the right-bottom of button
+      buttonPosition.dy + button.size.height + 4.h, // Just below button
+      MediaQuery.of(context).size.width - 20.w,
+      buttonPosition.dy,
+    );
+
+    final result = await showMenu<String>(
+      context: context,
+      position: position,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.05),
+      constraints: BoxConstraints(minWidth: 95.w, maxWidth: 95.w),
+      items: [
+        PopupMenuItem<String>(
+          value: 'word',
+          height: 36.h,
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          child: Text(
+            'Word',
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Montserrat',
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'phrase',
+          height: 36.h,
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          child: Text(
+            'Phrases',
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Montserrat',
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (result != null) {
+      _saveItem(result);
+    }
+  }
+
+  /// Save item to library
+  void _saveItem(String type) {
+    setState(() {
+      isBookmarked = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          type == 'word'
+              ? 'Word saved to library!'
+              : 'Phrase saved to library!',
+          style: TextStyle(fontFamily: 'Montserrat'),
+        ),
+        backgroundColor: Color(0xFF4ECDC4),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+      ),
+    );
+
+    // TODO: Actually save to library with type
+    print('Saved as $type');
   }
 
   /// Stop recording and check text match

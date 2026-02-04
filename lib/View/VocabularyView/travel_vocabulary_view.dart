@@ -131,6 +131,8 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
     return AppBar(
       backgroundColor: MyColors.white,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: MyColors.textPrimary, size: 24.sp),
         onPressed: () => Navigator.pop(context),
@@ -224,7 +226,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       child: Container(
         margin: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          color: isSelected ? MyColors.white : Color(0xFF4ECDC4),
+          color: isSelected ? MyColors.white : Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(10.r),
         ),
         child: Center(
@@ -234,7 +236,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
               fontFamily: 'Montserrat',
-              color: isSelected ? Color(0xFF4ECDC4) : Colors.white,
+              color: isSelected ? Color(0xFF4ECDC4) : MyColors.textPrimary,
             ),
           ),
         ),

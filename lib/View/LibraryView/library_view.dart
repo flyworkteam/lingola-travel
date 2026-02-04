@@ -18,70 +18,70 @@ class _LibraryViewState extends State<LibraryView> {
     {
       'name': 'My Airport\nEssentials',
       'items': 12,
-      'icon': '✈️',
+      'icon': 'assets/icons/airport.png',
       'color': Color(0xFFE3F2FD),
       'iconColor': Color(0xFF2196F3),
     },
     {
       'name': 'My Hotel\nEssentials',
       'items': 20,
-      'icon': '🏨',
+      'icon': 'assets/icons/accommodation.png',
       'color': Color(0xFFFFE4CC),
       'iconColor': Color(0xFFFF6B35),
     },
     {
       'name': 'Transport\nEssentials',
       'items': 35,
-      'icon': '🚕',
+      'icon': 'assets/icons/transportation.png',
       'color': Color(0xFFFFF9C4),
       'iconColor': Color(0xFFFBC02D),
     },
     {
       'name': 'My Food\nEssentials',
       'items': 8,
-      'icon': '🍽️',
+      'icon': 'assets/icons/food_drink.png',
       'color': Color(0xFFFFCDD2),
       'iconColor': Color(0xFFE53935),
     },
     {
       'name': 'My Shopping\nEssentials',
       'items': 21,
-      'icon': '🛒',
+      'icon': 'assets/icons/shopping.png',
       'color': Color(0xFFC8E6C9),
       'iconColor': Color(0xFF43A047),
     },
     {
       'name': 'Culture\nEssentials',
       'items': 10,
-      'icon': '🏛️',
+      'icon': 'assets/icons/culture.png',
       'color': Color(0xFFB3E5FC),
       'iconColor': Color(0xFF0288D1),
     },
     {
       'name': 'Meeting\nEssentials',
       'items': 32,
-      'icon': '👥',
+      'icon': 'assets/icons/meeting.png',
       'color': Color(0xFFD7CCC8),
       'iconColor': Color(0xFF6D4C41),
     },
     {
       'name': 'Sport\nEssentials',
       'items': 18,
-      'icon': '🏐',
+      'icon': 'assets/icons/sport.png',
       'color': Color(0xFFF8BBD0),
       'iconColor': Color(0xFFE91E63),
     },
     {
       'name': 'Health\nEssentials',
       'items': 8,
-      'icon': '🏥',
+      'icon': 'assets/icons/health.png',
       'color': Color(0xFFC5E1A5),
       'iconColor': Color(0xFF7CB342),
     },
     {
       'name': 'Business\nEssentials',
       'items': 5,
-      'icon': '💼',
+      'icon': 'assets/icons/business.png',
       'color': Color(0xFFBBDEFB),
       'iconColor': Color(0xFF1976D2),
     },
@@ -186,8 +186,8 @@ class _LibraryViewState extends State<LibraryView> {
     required Color iconColor,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => LibraryFolderDetailView(
@@ -197,6 +197,38 @@ class _LibraryViewState extends State<LibraryView> {
             ),
           ),
         );
+
+        // Eğer folder ismi değiştirilirse güncelle
+        if (result != null && result is Map) {
+          setState(() {
+            final newName = result['newName'] as String;
+            final oldName = result['oldName'] as String;
+
+            // Eski isimle eşleşen folder'ı bul (newline karakterlerine dikkate al)
+            final folderIndex = _folders.indexWhere(
+              (f) =>
+                  f['name'].replaceAll('\n', ' ').trim() ==
+                  oldName.replaceAll('\n', ' ').trim(),
+            );
+
+            if (folderIndex != -1) {
+              // Yeni ismi eski format'a göre ayarla (newline'ı koru)
+              if (oldName.contains('\n')) {
+                final parts = newName.split(' ');
+                if (parts.length > 1) {
+                  _folders[folderIndex]['name'] =
+                      parts.sublist(0, parts.length - 2).join(' ') +
+                      '\n' +
+                      parts.sublist(parts.length - 2).join(' ');
+                } else {
+                  _folders[folderIndex]['name'] = newName;
+                }
+              } else {
+                _folders[folderIndex]['name'] = newName;
+              }
+            }
+          });
+        }
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
@@ -223,7 +255,12 @@ class _LibraryViewState extends State<LibraryView> {
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: Center(
-                child: Text(icon, style: TextStyle(fontSize: 28.sp)),
+                child: Image.asset(
+                  icon,
+                  width: 20.w,
+                  height: 20.h,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 

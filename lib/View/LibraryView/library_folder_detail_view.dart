@@ -24,7 +24,6 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
     with SingleTickerProviderStateMixin {
   int _selectedTab = 0; // 0: All, 1: Words, 2: Phrases
   String? _playingItemId;
-  String? _expandedItemId;
   bool _isEditMode = false;
   List<Map<String, dynamic>> _allItems = [];
   late String _currentFolderName;
@@ -208,12 +207,12 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
     });
   }
 
-  void _showEditNameDialog() {
+  void _showEditNameDialog() async {
     final TextEditingController controller = TextEditingController(
       text: _currentFolderName.replaceAll('\n', ' '),
     );
 
-    showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
@@ -229,21 +228,31 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
             color: Color(0xFF1A1A1A),
           ),
         ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Enter folder name',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Color(0xFF4ECDC4), width: 2),
+        content: Theme(
+          data: Theme.of(context).copyWith(
+            textSelectionTheme: TextSelectionThemeData(
+              cursorColor: Color(0xFF4ECDC4),
+              selectionColor: Color(0xFF4ECDC4).withOpacity(0.3),
+              selectionHandleColor: Color(0xFF4ECDC4),
             ),
           ),
-          style: TextStyle(fontSize: 16.sp, fontFamily: 'Montserrat'),
+          child: TextField(
+            controller: controller,
+            autofocus: true,
+            cursorColor: Color(0xFF4ECDC4),
+            decoration: InputDecoration(
+              hintText: 'Enter folder name',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: Color(0xFF4ECDC4), width: 2),
+              ),
+            ),
+            style: TextStyle(fontSize: 16.sp, fontFamily: 'Montserrat'),
+          ),
         ),
         actions: [
           TextButton(
@@ -268,10 +277,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
             child: TextButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
-                  setState(() {
-                    _currentFolderName = controller.text.trim();
-                  });
-                  Navigator.pop(context);
+                  Navigator.pop(context, controller.text.trim());
                 }
               },
               child: Text(
@@ -288,6 +294,12 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
         ],
       ),
     );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _currentFolderName = result;
+      });
+    }
   }
 
   void _playAudio(String itemId) {
@@ -322,10 +334,6 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
   }
 
   void _showItemDetail(Map<String, dynamic> item) {
-    setState(() {
-      _expandedItemId = item['id'];
-    });
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -398,11 +406,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
           ),
         );
       },
-    ).whenComplete(() {
-      setState(() {
-        _expandedItemId = null;
-      });
-    });
+    );
   }
 
   Widget _buildActionButton({
@@ -427,163 +431,176 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
   Widget build(BuildContext context) {
     final filteredItems = _getFilteredItems();
 
-    return Scaffold(
-      backgroundColor: MyColors.background,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                // Header
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 16.h,
-                  ),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Icon(Icons.arrow_back_ios_new, size: 24.sp),
-                      ),
-                      SizedBox(width: 12.w),
-                      if (_isEditMode)
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop && _currentFolderName != widget.folderName) {
+          // Sayfa kapandıktan sonra result null olabilir, bu yüzden burada handle edemeyiz
+        }
+      },
+      child: Scaffold(
+        backgroundColor: MyColors.background,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  // Header
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 16.h,
+                    ),
+                    child: Row(
+                      children: [
                         GestureDetector(
-                          onTap: _showEditNameDialog,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 8.w),
-                            child: Icon(
-                              Icons.edit,
-                              size: 20.sp,
+                          onTap: () {
+                            Navigator.pop(context, {
+                              'newName': _currentFolderName,
+                              'oldName': widget.folderName,
+                            });
+                          },
+                          child: Icon(Icons.arrow_back_ios_new, size: 24.sp),
+                        ),
+                        SizedBox(width: 12.w),
+                        if (_isEditMode)
+                          GestureDetector(
+                            onTap: _showEditNameDialog,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 8.w),
+                              child: Icon(
+                                Icons.edit,
+                                size: 20.sp,
+                                color: Color(0xFF4ECDC4),
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: _isEditMode ? _showEditNameDialog : null,
+                            child: Text(
+                              _currentFolderName.replaceAll('\n', ' '),
+                              style: TextStyle(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Montserrat',
+                                color: Color(0xFF1A1A1A),
+                              ),
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isEditMode = !_isEditMode;
+                            });
+                          },
+                          child: Text(
+                            _isEditMode ? 'Done' : 'Edit',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Montserrat',
                               color: Color(0xFF4ECDC4),
                             ),
                           ),
                         ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: _isEditMode ? _showEditNameDialog : null,
-                          child: Text(
-                            _currentFolderName.replaceAll('\n', ' '),
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Montserrat',
-                              color: Color(0xFF1A1A1A),
-                            ),
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isEditMode = !_isEditMode;
-                          });
-                        },
-                        child: Text(
-                          _isEditMode ? 'Done' : 'Edit',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Montserrat',
-                            color: Color(0xFF4ECDC4),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Tabs
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Row(
-                    children: [
-                      _buildTab('All', 0),
-                      SizedBox(width: 32.w),
-                      _buildTab('Words', 1),
-                      SizedBox(width: 32.w),
-                      _buildTab('Phrases', 2),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 16.h),
-
-                // Items list
-                Expanded(
-                  child: filteredItems.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          padding: EdgeInsets.only(
-                            left: 24.w,
-                            right: 24.w,
-                            top: 8.h,
-                            bottom: 100.h,
-                          ),
-                          itemCount: filteredItems.length,
-                          itemBuilder: (context, index) {
-                            final item = filteredItems[index];
-                            final isPlaying = _playingItemId == item['id'];
-
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: 16.h),
-                              child: _buildItemCard(item, isPlaying),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-
-            // Bottom Navigation Bar
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 20.h,
-              child: CustomBottomNavBar(
-                currentIndex: 2,
-                isPremium: widget.isPremium,
-              ),
-            ),
-
-            // Floating Action Button (Edit Mode Only)
-            if (_isEditMode)
-              Positioned(
-                right: 24.w,
-                bottom: 100.h,
-                child: GestureDetector(
-                  onTap: () {
-                    // TODO: Add new item functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Add new item'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 56.w,
-                    height: 56.w,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF4ECDC4).withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: Offset(0, 4),
-                        ),
                       ],
                     ),
-                    child: Icon(Icons.add, color: Colors.white, size: 28.sp),
                   ),
+
+                  // Tabs
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Row(
+                      children: [
+                        _buildTab('All', 0),
+                        SizedBox(width: 32.w),
+                        _buildTab('Words', 1),
+                        SizedBox(width: 32.w),
+                        _buildTab('Phrases', 2),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 16.h),
+
+                  // Items list
+                  Expanded(
+                    child: filteredItems.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                            padding: EdgeInsets.only(
+                              left: 24.w,
+                              right: 24.w,
+                              top: 8.h,
+                              bottom: 100.h,
+                            ),
+                            itemCount: filteredItems.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredItems[index];
+                              final isPlaying = _playingItemId == item['id'];
+
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 16.h),
+                                child: _buildItemCard(item, isPlaying),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+
+              // Bottom Navigation Bar
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 20.h,
+                child: CustomBottomNavBar(
+                  currentIndex: 2,
+                  isPremium: widget.isPremium,
                 ),
               ),
-          ],
+
+              // Floating Action Button (Edit Mode Only)
+              if (_isEditMode)
+                Positioned(
+                  right: 24.w,
+                  bottom: 100.h,
+                  child: GestureDetector(
+                    onTap: () {
+                      // TODO: Add new item functionality
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Add new item'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 56.w,
+                      height: 56.w,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF4ECDC4).withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(Icons.add, color: Colors.white, size: 28.sp),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -664,7 +681,10 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
             GestureDetector(
               onTap: () {
                 // Navigate to lessons or close
-                Navigator.pop(context);
+                Navigator.pop(context, {
+                  'newName': _currentFolderName,
+                  'oldName': widget.folderName,
+                });
               },
               child: Container(
                 width: double.infinity,
@@ -704,129 +724,131 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
   Widget _buildItemCard(Map<String, dynamic> item, bool isPlaying) {
     return GestureDetector(
       onTap: _isEditMode ? null : () => _showItemDetail(item),
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (_isEditMode)
-                  Padding(
-                    padding: EdgeInsets.only(right: 12.w),
-                    child: GestureDetector(
-                      onTap: () => _deleteItem(item['id']),
-                      child: Container(
-                        width: 24.w,
-                        height: 24.w,
-                        decoration: BoxDecoration(
-                          color: Color(0xFFFF3B30),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.remove,
-                          size: 16.sp,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item['english'],
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Montserrat',
-                          color: Color(0xFF1A1A1A),
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        item['turkish'],
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'Montserrat',
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                    ],
-                  ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
-                SizedBox(width: 12.w),
-                if (!_isEditMode)
-                  GestureDetector(
-                    onTap: () => _playAudio(item['id']),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFE0F7F4),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Icon(
-                        isPlaying ? Icons.pause : Icons.volume_up,
-                        size: 22.sp,
-                        color: Color(0xFF4ECDC4),
-                      ),
-                    ),
-                  ),
-                SizedBox(width: 8.w),
-                if (!_isEditMode)
-                  GestureDetector(
-                    onTap: () => _toggleBookmark(item['id']),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFE0F7F4),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Icon(
-                        Icons.bookmark,
-                        size: 22.sp,
-                        color: Color(0xFF4ECDC4),
-                      ),
-                    ),
-                  ),
               ],
             ),
-            if (isPlaying) ...[
-              SizedBox(height: 12.h),
-              AnimatedBuilder(
-                animation: _progressController,
-                builder: (context, child) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(2.r),
-                    child: LinearProgressIndicator(
-                      value: _progressController.value,
-                      backgroundColor: Color(0xFFE5E7EB),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFF4ECDC4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item['english'],
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Montserrat',
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            item['turkish'],
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Montserrat',
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
                       ),
-                      minHeight: 4.h,
                     ),
-                  );
-                },
+                    SizedBox(width: 12.w),
+                    if (!_isEditMode)
+                      GestureDetector(
+                        onTap: () => _playAudio(item['id']),
+                        child: Container(
+                          width: 40.w,
+                          height: 40.w,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFE0F7F4),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Icon(
+                            isPlaying ? Icons.pause : Icons.volume_up,
+                            size: 22.sp,
+                            color: Color(0xFF4ECDC4),
+                          ),
+                        ),
+                      ),
+                    SizedBox(width: 8.w),
+                    if (!_isEditMode)
+                      GestureDetector(
+                        onTap: () => _toggleBookmark(item['id']),
+                        child: Container(
+                          width: 40.w,
+                          height: 40.w,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFE0F7F4),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Icon(
+                            Icons.bookmark,
+                            size: 22.sp,
+                            color: Color(0xFF4ECDC4),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                if (isPlaying) ...[
+                  SizedBox(height: 12.h),
+                  AnimatedBuilder(
+                    animation: _progressController,
+                    builder: (context, child) {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(2.r),
+                        child: LinearProgressIndicator(
+                          value: _progressController.value,
+                          backgroundColor: Color(0xFFE5E7EB),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFF4ECDC4),
+                          ),
+                          minHeight: 4.h,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (_isEditMode)
+            Positioned(
+              top: -8.w,
+              left: 4.w,
+              child: GestureDetector(
+                onTap: () => _deleteItem(item['id']),
+                child: Container(
+                  width: 24.w,
+                  height: 24.w,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE53935),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.remove, size: 12.sp, color: Colors.white),
+                ),
               ),
-            ],
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
