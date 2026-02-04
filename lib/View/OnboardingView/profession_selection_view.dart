@@ -135,9 +135,9 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
               ),
             ),
 
-            // Content Section
+            // Content Section - Scrollable
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,119 +171,118 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                     SizedBox(height: 10.h),
 
                     // Profession Cards Grid
-                    Expanded(
-                      child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12.w,
-                          mainAxisSpacing: 8.h,
-                          childAspectRatio: 1.0,
-                        ),
-                        itemCount: professions.length,
-                        itemBuilder: (context, index) {
-                          final profession = professions[index];
-                          final isSelected =
-                              selectedProfession == profession['name'];
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12.w,
+                        mainAxisSpacing: 8.h,
+                        childAspectRatio: 1.0,
+                      ),
+                      itemCount: professions.length,
+                      itemBuilder: (context, index) {
+                        final profession = professions[index];
+                        final isSelected =
+                            selectedProfession == profession['name'];
 
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedProfession = profession['name'];
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedProfession = profession['name'];
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFE0F7F5)
+                                  : MyColors.white,
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFFE0F7F5)
-                                    : MyColors.white,
-                                borderRadius: BorderRadius.circular(20.r),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? MyColors.lingolaPrimaryColor
-                                      : MyColors.grey200,
-                                  width: isSelected ? 2.5 : 1.5,
+                                    ? MyColors.lingolaPrimaryColor
+                                    : MyColors.grey200,
+                                width: isSelected ? 2.5 : 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 10.h,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Icon with background card
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // Background card - dark when selected, light when not
+                                      Container(
+                                        width: 70.w,
+                                        height: 70.h,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? MyColors.lingolaPrimaryColor
+                                              : const Color(0xFFE0F7F5),
+                                          borderRadius: BorderRadius.circular(
+                                            16.r,
+                                          ),
+                                        ),
+                                      ),
+                                      // Icon logo - white when selected, turquoise when not
+                                      Image.asset(
+                                        profession['icon']!,
+                                        width: 36.w,
+                                        height: 36.h,
+                                        fit: BoxFit.contain,
+                                        color: isSelected
+                                            ? MyColors.white
+                                            : const Color(0xFF2EC4B6),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6.h),
+                                  // Title (centered)
+                                  Text(
+                                    profession['name']!,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: MyColors.black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  // Subtitle (centered)
+                                  Text(
+                                    profession['subtitle']!,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w400,
+                                      color: MyColors.textSecondary,
+                                      height: 1.2,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10.w,
-                                  vertical: 10.h,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    // Icon with background card
-                                    Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        // Background card - dark when selected, light when not
-                                        Container(
-                                          width: 70.w,
-                                          height: 70.h,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? MyColors.lingolaPrimaryColor
-                                                : const Color(0xFFE0F7F5),
-                                            borderRadius: BorderRadius.circular(
-                                              16.r,
-                                            ),
-                                          ),
-                                        ),
-                                        // Icon logo - white when selected, turquoise when not
-                                        Image.asset(
-                                          profession['icon']!,
-                                          width: 36.w,
-                                          height: 36.h,
-                                          fit: BoxFit.contain,
-                                          color: isSelected
-                                              ? MyColors.white
-                                              : const Color(0xFF2EC4B6),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 6.h),
-                                    // Title (centered)
-                                    Text(
-                                      profession['name']!,
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: MyColors.black,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    // Subtitle (centered)
-                                    Text(
-                                      profession['subtitle']!,
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: MyColors.textSecondary,
-                                        height: 1.2,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
 
                     SizedBox(height: 10.h),

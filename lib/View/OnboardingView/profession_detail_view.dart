@@ -129,6 +129,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
               // Text Input
               TextField(
                 controller: _professionController,
+                cursorColor: MyColors.lingolaPrimaryColor,
                 onChanged: (value) {
                   setState(() {
                     _hasText = value.isNotEmpty;

@@ -14,7 +14,6 @@ class SplashPageView extends StatefulWidget {
 }
 
 class _SplashPageViewState extends State<SplashPageView> {
-  final PageController _pageController = PageController();
   int _currentPage = 0;
   Timer? _autoScrollTimer;
 
@@ -48,35 +47,27 @@ class _SplashPageViewState extends State<SplashPageView> {
   @override
   void dispose() {
     _autoScrollTimer?.cancel();
-    _pageController.dispose();
     super.dispose();
   }
 
   void _startAutoScroll() {
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_currentPage < _splashData.length - 1) {
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOutCubic,
-        );
-      } else {
-        _autoScrollTimer?.cancel();
-      }
-    });
-  }
-
-  void _onPageChanged(int index) {
-    setState(() {
-      _currentPage = index;
+      setState(() {
+        if (_currentPage < _splashData.length - 1) {
+          _currentPage++;
+        } else {
+          // Loop back to the first page
+          _currentPage = 0;
+        }
+      });
     });
   }
 
   void _nextPage() {
     if (_currentPage < _splashData.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOutCubic,
-      );
+      setState(() {
+        _currentPage++;
+      });
     } else {
       // Navigate to Sign In (Onboarding)
       Navigator.pushReplacementNamed(context, '/onboarding');
@@ -87,40 +78,40 @@ class _SplashPageViewState extends State<SplashPageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: MyColors.white,
-      body: Column(
-        children: [
-          // PageView Section with Crossfade Effect - Status bar'a girecek
-          Expanded(
-            flex: 3,
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: _onPageChanged,
-              itemCount: _splashData.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: 8.w,
-                    right: 8.w,
-                    top: 8.h,
-                    bottom: 0,
-                  ),
-                  child: AnimatedOpacity(
-                    opacity: _currentPage == index ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 400),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28.r),
-                      child: Image.asset(
-                        _splashData[index]['image']!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Image Section with CrossFade Effect
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 8.w,
+                  right: 8.w,
+                  top: 8.h,
+                  bottom: 0,
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 600),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                  },
+                  child: ClipRRect(
+                    key: ValueKey<int>(_currentPage),
+                    borderRadius: BorderRadius.circular(28.r),
+                    child: Image.asset(
+                      _splashData[_currentPage]['image']!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
-          ),
 
           // Content Section
           Padding(
@@ -131,34 +122,43 @@ class _SplashPageViewState extends State<SplashPageView> {
               children: [
                 SizedBox(height: 32.h),
 
-                // Progress Indicator - Fixed width dots
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    _splashData.length,
-                    (index) => Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4.w),
-                      child: GestureDetector(
-                        onTap: () {
-                          _pageController.animateToPage(
-                            index,
-                            duration: const Duration(milliseconds: 600),
-                            curve: Curves.easeInOutCubic,
-                          );
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          width: 60.w,
-                          height: 6.h,
-                          decoration: BoxDecoration(
-                            color: _currentPage == index
-                                ? MyColors.lingolaPrimaryColor
-                                : MyColors.splashProgressInactive,
-                            borderRadius: BorderRadius.circular(3.r),
+                // Progress Indicator - Match image width, thinner bars
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Calculate available width (same as image container)
+                      final totalWidth = constraints.maxWidth;
+                      // Total spacing between indicators (2 gaps × 6.w each)
+                      final totalSpacing = 12.w;
+                      // Width for each indicator
+                      final indicatorWidth = (totalWidth - totalSpacing) / _splashData.length;
+                      
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(
+                          _splashData.length,
+                          (index) => GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _currentPage = index;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: indicatorWidth,
+                              height: 3.h,
+                              decoration: BoxDecoration(
+                                color: _currentPage == index
+                                    ? MyColors.lingolaPrimaryColor
+                                    : MyColors.splashProgressInactive,
+                                borderRadius: BorderRadius.circular(1.5.r),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
 
@@ -176,7 +176,8 @@ class _SplashPageViewState extends State<SplashPageView> {
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w400,
                       color: MyColors.splashTextSecondary,
-                      height: 1.4,
+                      height: 1,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ),
@@ -195,7 +196,8 @@ class _SplashPageViewState extends State<SplashPageView> {
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
                       color: MyColors.splashTextPrimary,
-                      height: 1.4,
+                      height: 1,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ),
@@ -234,6 +236,7 @@ class _SplashPageViewState extends State<SplashPageView> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

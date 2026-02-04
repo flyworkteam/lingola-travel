@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
@@ -27,7 +28,7 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
       'id': 'regular',
       'title': 'Regular',
       'duration': '15 mins/day',
-      'icon': 'assets/images/regular.png',
+      'icon': 'assets/images/regular.svg',
     },
     {
       'id': 'serious',
@@ -119,12 +120,101 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
               Row(
                 children: [
                   // Back Button
-                  _buildBackButton(),
-
+                  Expanded(
+                    flex: 2,
+                    child: SizedBox(
+                      height: 50.h,
+                      child: ElevatedButton(
+                        onPressed: _onBack,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD1D5DB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 32.w,
+                              height: 32.h,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.arrow_back,
+                                  color: MyColors.white,
+                                  size: 20.sp,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'Back',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                                color: MyColors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   SizedBox(width: 12.w),
-
                   // Continue Button
-                  Expanded(child: _buildContinueButton()),
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: 50.h,
+                      child: ElevatedButton(
+                        onPressed: _selectedGoal != null ? _onContinue : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2EC4B6),
+                          disabledBackgroundColor: const Color(0xFFD1D5DB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Continue',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                                color: MyColors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Container(
+                              width: 32.w,
+                              height: 32.h,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.arrow_forward,
+                                  color: MyColors.white,
+                                  size: 20.sp,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
 
@@ -241,15 +331,27 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                     : MyColors.grey200,
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Image.asset(
-                goal['icon']!,
-                width: 24.w,
-                height: 24.w,
-                fit: BoxFit.contain,
-                color: isSelected
-                    ? MyColors.white
-                    : MyColors.lingolaPrimaryColor,
-              ),
+              child: goal['icon']!.endsWith('.svg')
+                  ? SvgPicture.asset(
+                      goal['icon']!,
+                      width: 24.w,
+                      height: 24.w,
+                      colorFilter: ColorFilter.mode(
+                        isSelected
+                            ? MyColors.white
+                            : MyColors.lingolaPrimaryColor,
+                        BlendMode.srcIn,
+                      ),
+                    )
+                  : Image.asset(
+                      goal['icon']!,
+                      width: 24.w,
+                      height: 24.w,
+                      fit: BoxFit.contain,
+                      color: isSelected
+                          ? MyColors.white
+                          : MyColors.lingolaPrimaryColor,
+                    ),
             ),
 
             SizedBox(width: 16.w),
@@ -276,91 +378,6 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBackButton() {
-    return GestureDetector(
-      onTap: _onBack,
-      child: Container(
-        width: 56.w,
-        height: 56.h,
-        decoration: BoxDecoration(
-          color: const Color(0xFFD1D5DB),
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: [
-            BoxShadow(
-              color: MyColors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Container(
-            width: 32.w,
-            height: 32.h,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(Icons.arrow_back, color: MyColors.white, size: 20.w),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContinueButton() {
-    final isEnabled = _selectedGoal != null;
-
-    return GestureDetector(
-      onTap: isEnabled ? _onContinue : null,
-      child: Container(
-        height: 56.h,
-        decoration: BoxDecoration(
-          color: isEnabled
-              ? MyColors.lingolaPrimaryColor
-              : const Color(0xFFD1D5DB),
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: isEnabled
-              ? [
-                  BoxShadow(
-                    color: MyColors.lingolaPrimaryColor.withOpacity(0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Continue',
-              style: GoogleFonts.montserrat(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: MyColors.white,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Container(
-              width: 32.w,
-              height: 32.h,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                Icons.arrow_forward,
-                color: MyColors.white,
-                size: 20.w,
-              ),
             ),
           ],
         ),
