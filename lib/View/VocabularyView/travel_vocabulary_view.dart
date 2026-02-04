@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import '../DictionaryView/visual_dictionary_view.dart';
-import '../LibraryView/library_view.dart';
-import '../ProfileView/profile_view.dart';
+import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 
 class TravelVocabularyView extends StatefulWidget {
   const TravelVocabularyView({super.key});
@@ -18,7 +16,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
   String _selectedCategory = 'All Topics';
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {};
-  int _selectedNavIndex = 1; // Travel vocabulary is index 1
+
 
   // Categories
   final List<Map<String, dynamic>> _categories = [
@@ -91,34 +89,38 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: MyColors.white, // Consistent white background
       appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          SizedBox(height: 16.h), // Added spacing from AppBar
-          // Search bar
-          _buildSearchBar(),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Main content
+            Column(
+              children: [
+                SizedBox(height: 16.h), // Added spacing from AppBar
+                // Search bar
+                _buildSearchBar(),
 
-          SizedBox(height: 16.h),
+                SizedBox(height: 16.h),
 
-          // Tab switcher
-          _buildTabSwitcher(),
+                // Tab switcher
+                _buildTabSwitcher(),
 
-          SizedBox(height: 20.h),
+                SizedBox(height: 20.h),
 
-          // Category filters
-          _buildCategoryFilters(),
+                // Category filters
+                _buildCategoryFilters(),
 
-          SizedBox(height: 20.h),
+                SizedBox(height: 20.h),
 
-          // Content
-          Expanded(child: _buildContent()),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 10.h),
-          child: _buildBottomNavigationBar(),
+                // Content
+                Expanded(child: _buildContent()),
+              ],
+            ),
+
+            // Bottom Navigation Bar
+            CustomBottomNavBar(currentIndex: 1),
+          ],
         ),
       ),
     );
@@ -194,8 +196,9 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       child: Container(
         height: 48.h,
         decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5),
+          color: MyColors.white, // Changed from gray to white for consistency
           borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: MyColors.border, width: 1), // Added border for visibility
         ),
         child: Row(
           children: [
@@ -297,7 +300,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         : [_selectedCategory];
 
     return ListView.builder(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h), // Space for bottom nav
       itemCount: categories.length * 2, // Category + items
       itemBuilder: (context, index) {
         final categoryIndex = index ~/ 2;
@@ -568,104 +571,5 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
     );
   }
 
-  /// Bottom Navigation Bar
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 65.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(35.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(35.r),
-        child: Stack(
-          children: [
-            // Background image
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/home/altmenuarkaplan.png',
-                fit: BoxFit.fill,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: MyColors.white,
-                      borderRadius: BorderRadius.circular(35.r),
-                    ),
-                  );
-                },
-              ),
-            ),
 
-            // Navigation items - centered
-            Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                    _buildNavItem(icon: Icons.flight_takeoff_rounded, index: 1),
-                    _buildNavItem(
-                      icon: Icons.account_balance_rounded,
-                      index: 2,
-                    ),
-                    _buildNavItem(icon: Icons.person_rounded, index: 3),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required int index}) {
-    final bool isActive = _selectedNavIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        if (index == 0) {
-          // Navigate back to home
-          Navigator.pop(context);
-        } else if (index == 2) {
-          // Navigate to Library
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LibraryView()),
-          );
-        } else if (index == 3) {
-          // Navigate to Profile
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const ProfileView()),
-          );
-        } else {
-          setState(() {
-            _selectedNavIndex = index;
-          });
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 50.w,
-        height: 50.w,
-        decoration: BoxDecoration(
-          color: isActive ? MyColors.white : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 26.sp,
-          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
-        ),
-      ),
-    );
-  }
 }

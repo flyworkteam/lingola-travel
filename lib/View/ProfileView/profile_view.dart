@@ -2,9 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import '../VocabularyView/travel_vocabulary_view.dart';
-import '../DictionaryView/visual_dictionary_view.dart';
-import '../LibraryView/library_view.dart';
+import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'profile_settings_view.dart';
 import 'share_friend_view.dart';
 import 'faq_view.dart';
@@ -20,7 +18,6 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   bool _notificationsEnabled = true;
-  int _selectedNavIndex = 3; // Profile is index 3
 
   @override
   Widget build(BuildContext context) {
@@ -205,12 +202,7 @@ class _ProfileViewState extends State<ProfileView> {
             ),
 
             // Floating bottom navigation
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 16.h, // SafeArea padding
-              child: _buildBottomNavigationBar(),
-            ),
+            CustomBottomNavBar(currentIndex: 3),
           ],
         ),
       ),
@@ -567,118 +559,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  /// Bottom Navigation Bar - Floating with oval background
-  Widget _buildBottomNavigationBar() {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 24.w),
-        height: 65.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(35.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(35.r),
-          child: Stack(
-            children: [
-              // Background image
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/home/altmenuarkaplan.png',
-                  fit: BoxFit.fill,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: MyColors.white,
-                        borderRadius: BorderRadius.circular(35.r),
-                      ),
-                    );
-                  },
-                ),
-              ),
 
-              // Navigation items - centered
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                      _buildNavItem(
-                        icon: Icons.flight_takeoff_rounded,
-                        index: 1,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.account_balance_rounded,
-                        index: 2,
-                      ),
-                      _buildNavItem(icon: Icons.person_rounded, index: 3),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Single navigation item - icon only with white circle for active
-  Widget _buildNavItem({required IconData icon, required int index}) {
-    final bool isActive = _selectedNavIndex == index;
-
-    return GestureDetector(
-      onTap: () => _onNavigationItemTapped(index),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 50.w,
-        height: 50.w,
-        decoration: BoxDecoration(
-          color: isActive ? MyColors.white : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 26.sp,
-          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
-        ),
-      ),
-    );
-  }
-
-  /// Handle navigation bar taps
-  void _onNavigationItemTapped(int index) {
-    if (index == _selectedNavIndex) {
-      // Already on this page
-      return;
-    }
-
-    if (index == 0) {
-      // Navigate back to Home (just pop current page)
-      Navigator.pop(context);
-    } else if (index == 1) {
-      // Navigate to Vocabulary
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const TravelVocabularyView()),
-      );
-    } else if (index == 2) {
-      // Navigate to Library
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LibraryView()),
-      );
-    }
-    // index 3 is current page (Profile), do nothing
-  }
 
   /// Show logout confirmation dialog
   void _showLogoutDialog() {

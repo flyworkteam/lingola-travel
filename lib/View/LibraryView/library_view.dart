@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import '../DictionaryView/visual_dictionary_view.dart';
-import '../VocabularyView/travel_vocabulary_view.dart';
-import '../ProfileView/profile_view.dart';
+import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'library_folder_detail_view.dart';
 
 class LibraryView extends StatefulWidget {
@@ -14,7 +12,6 @@ class LibraryView extends StatefulWidget {
 }
 
 class _LibraryViewState extends State<LibraryView> {
-  int _selectedNavIndex = 2; // Library is index 2
 
   // Folder data
   final List<Map<String, dynamic>> _folders = [
@@ -90,28 +87,7 @@ class _LibraryViewState extends State<LibraryView> {
     },
   ];
 
-  void _onNavigationItemTapped(int index) {
-    if (index == 0) {
-      // Navigate to Home
-      Navigator.pop(context);
-    } else if (index == 1) {
-      // Navigate to Travel Vocabulary
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const TravelVocabularyView()),
-      );
-    } else if (index == 3) {
-      // Navigate to Profile
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileView()),
-      );
-    } else {
-      setState(() {
-        _selectedNavIndex = index;
-      });
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -197,77 +173,7 @@ class _LibraryViewState extends State<LibraryView> {
             ),
 
             // Bottom Navigation Bar
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 20.h,
-              child: Center(
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 24.w),
-                  height: 65.h,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(35.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 20,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(35.r),
-                    child: Stack(
-                      children: [
-                        // Background image
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/images/home/altmenuarkaplan.png',
-                            fit: BoxFit.fill,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: MyColors.white,
-                                  borderRadius: BorderRadius.circular(35.r),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        // Navigation items - centered
-                        Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildNavItem(
-                                  icon: Icons.grid_view_rounded,
-                                  index: 0,
-                                ),
-                                _buildNavItem(
-                                  icon: Icons.flight_takeoff_rounded,
-                                  index: 1,
-                                ),
-                                _buildNavItem(
-                                  icon: Icons.account_balance_rounded,
-                                  index: 2,
-                                ),
-                                _buildNavItem(
-                                  icon: Icons.person_rounded,
-                                  index: 3,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            CustomBottomNavBar(currentIndex: 2),
           ],
         ),
       ),
@@ -365,25 +271,5 @@ class _LibraryViewState extends State<LibraryView> {
     );
   }
 
-  Widget _buildNavItem({required IconData icon, required int index}) {
-    final bool isActive = _selectedNavIndex == index;
 
-    return GestureDetector(
-      onTap: () => _onNavigationItemTapped(index),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 50.w,
-        height: 50.h,
-        decoration: BoxDecoration(
-          color: isActive ? MyColors.white : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 26.sp,
-          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
-        ),
-      ),
-    );
-  }
 }

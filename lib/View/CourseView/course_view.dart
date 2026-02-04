@@ -2,10 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'course_detail_view.dart';
-import '../VocabularyView/travel_vocabulary_view.dart';
-import '../DictionaryView/visual_dictionary_view.dart';
-import '../ProfileView/profile_view.dart';
 
 class CourseView extends StatefulWidget {
   const CourseView({super.key});
@@ -17,7 +15,6 @@ class CourseView extends StatefulWidget {
 class _CourseViewState extends State<CourseView> {
   final TextEditingController _searchController = TextEditingController();
   int _selectedFilterIndex = 0;
-  int _selectedNavIndex = 1; // Course is index 1 (plane icon)
 
   final List<String> _filters = [
     'All Courses',
@@ -161,7 +158,7 @@ class _CourseViewState extends State<CourseView> {
               left: 0,
               right: 0,
               bottom: 20.h,
-              child: _buildBottomNavigationBar(),
+              child: CustomBottomNavBar(currentIndex: 2),
             ),
           ],
         ),
@@ -484,115 +481,6 @@ class _CourseViewState extends State<CourseView> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  /// Bottom Navigation Bar
-  Widget _buildBottomNavigationBar() {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 24.w),
-        height: 65.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(35.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(35.r),
-          child: Stack(
-            children: [
-              // Background image
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/home/altmenuarkaplan.png',
-                  fit: BoxFit.fill,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: MyColors.white,
-                        borderRadius: BorderRadius.circular(35.r),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Navigation items - centered
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                      _buildNavItem(
-                        icon: Icons.flight_takeoff_rounded,
-                        index: 1,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.account_balance_rounded,
-                        index: 2,
-                      ),
-                      _buildNavItem(icon: Icons.person_rounded, index: 3),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required int index}) {
-    final bool isActive = _selectedNavIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        if (index == 0) {
-          // Navigate back to home
-          Navigator.pop(context);
-        } else if (index == 2) {
-          // Navigate to Dictionary
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const VisualDictionaryView(),
-            ),
-          );
-        } else if (index == 3) {
-          // Navigate to Profile
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const ProfileView()),
-          );
-        } else {
-          setState(() {
-            _selectedNavIndex = index;
-          });
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 50.w,
-        height: 50.w,
-        decoration: BoxDecoration(
-          color: isActive ? MyColors.white : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 26.sp,
-          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
         ),
       ),
     );

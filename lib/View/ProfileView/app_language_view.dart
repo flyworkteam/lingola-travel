@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:lingola_travel/Models/language_model.dart';
+import 'package:lingola_travel/Models/language.dart';
 
 class AppLanguageView extends StatefulWidget {
   const AppLanguageView({super.key});
@@ -10,8 +10,7 @@ class AppLanguageView extends StatefulWidget {
 }
 
 class _AppLanguageViewState extends State<AppLanguageView> {
-  String _selectedLanguageCode = 'en';
-  final List<Language> _languages = Language.getAllLanguages();
+  Language _selectedLanguage = AppLanguages.all.first; // Default to English
 
   @override
   Widget build(BuildContext context) {
@@ -89,17 +88,20 @@ class _AppLanguageViewState extends State<AppLanguageView> {
                     SizedBox(height: 32.h),
 
                     // Language List
-                    ...List.generate(_languages.length, (index) {
-                      final language = _languages[index];
-                      final isSelected = _selectedLanguageCode == language.code;
-                      final isLast = index == _languages.length - 1;
+                    ...List.generate(AppLanguages.all.length, (index) {
+                      final language = AppLanguages.all[index];
+                      final isSelected =
+                          _selectedLanguage.code == language.code;
+                      final isLast = index == AppLanguages.all.length - 1;
 
                       return Column(
                         children: [
                           _buildLanguageItem(
-                            flag: language.flag,
-                            name: language.name,
-                            code: language.code,
+                            flagAsset: language.flagAsset,
+                            name: language.getLocalizedName(
+                              _selectedLanguage.code,
+                            ), // Use localized name
+                            language: language,
                             isSelected: isSelected,
                           ),
                           if (!isLast) SizedBox(height: 12.h),
@@ -164,15 +166,15 @@ class _AppLanguageViewState extends State<AppLanguageView> {
   }
 
   Widget _buildLanguageItem({
-    required String flag,
+    required String flagAsset,
     required String name,
-    required String code,
+    required Language language,
     required bool isSelected,
   }) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedLanguageCode = code;
+          _selectedLanguage = language;
         });
       },
       child: AnimatedContainer(
@@ -204,7 +206,15 @@ class _AppLanguageViewState extends State<AppLanguageView> {
         child: Row(
           children: [
             // Flag
-            Text(flag, style: TextStyle(fontSize: 32.sp)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4.r),
+              child: Image.asset(
+                flagAsset,
+                width: 32.w,
+                height: 32.w,
+                fit: BoxFit.cover,
+              ),
+            ),
             SizedBox(width: 16.w),
             // Language Name
             Expanded(

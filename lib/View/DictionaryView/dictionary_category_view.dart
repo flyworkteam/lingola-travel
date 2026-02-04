@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import '../VocabularyView/travel_vocabulary_view.dart';
-import '../LibraryView/library_view.dart';
-import '../ProfileView/profile_view.dart';
+import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 
 class DictionaryCategoryView extends StatefulWidget {
   final String categoryName;
@@ -17,7 +15,6 @@ class DictionaryCategoryView extends StatefulWidget {
 class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {};
-  int _selectedNavIndex = 2; // Dictionary is index 2
 
   // Mock data for different categories
   final Map<String, List<Map<String, String>>> _categoryWords = {
@@ -194,29 +191,33 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
-      body: Column(
+      body: Stack(
         children: [
-          SizedBox(height: 16.h),
+          // Main content
+          Column(
+            children: [
+              SizedBox(height: 16.h),
 
-          // Search bar
-          _buildSearchBar(),
+              // Search bar
+              _buildSearchBar(),
 
-          SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
 
-          // Item count
-          _buildItemCount(),
+              // Item count
+              _buildItemCount(),
 
-          SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
 
-          // Word list
-          Expanded(child: _buildWordList()),
+              // Word list
+              Expanded(child: _buildWordList()),
+
+              SizedBox(height: 100.h), // Space for bottom nav
+            ],
+          ),
+
+          // Floating bottom navigation
+          CustomBottomNavBar(currentIndex: 2),
         ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 10.h),
-          child: _buildBottomNavigationBar(),
-        ),
       ),
     );
   }
@@ -393,114 +394,6 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  /// Bottom Navigation Bar
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 65.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(35.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(35.r),
-        child: Stack(
-          children: [
-            // Background image
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/home/altmenuarkaplan.png',
-                fit: BoxFit.fill,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: MyColors.white,
-                      borderRadius: BorderRadius.circular(35.r),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Navigation items - centered
-            Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                    _buildNavItem(icon: Icons.flight_takeoff_rounded, index: 1),
-                    _buildNavItem(
-                      icon: Icons.account_balance_rounded,
-                      index: 2,
-                    ),
-                    _buildNavItem(icon: Icons.person_rounded, index: 3),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required int index}) {
-    final bool isActive = _selectedNavIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        if (index == 0) {
-          // Navigate back to home
-          Navigator.popUntil(context, (route) => route.isFirst);
-        } else if (index == 1) {
-          // Navigate to Travel Vocabulary
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TravelVocabularyView(),
-            ),
-            (route) => route.isFirst,
-          );
-        } else if (index == 2) {
-          // Navigate to Library
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LibraryView()),
-            (route) => route.isFirst,
-          );
-        } else if (index == 3) {
-          // Navigate to Profile
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const ProfileView()),
-            (route) => route.isFirst,
-          );
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 50.w,
-        height: 50.w,
-        decoration: BoxDecoration(
-          color: isActive ? MyColors.white : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 26.sp,
-          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
-        ),
       ),
     );
   }

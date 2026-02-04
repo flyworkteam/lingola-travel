@@ -2,10 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../LessonView/lesson_detail_view.dart';
-import '../HomeView/home_view.dart';
-import '../LibraryView/library_view.dart';
-import '../ProfileView/profile_view.dart';
 
 class CourseDetailView extends StatefulWidget {
   final Map<String, dynamic> courseData;
@@ -17,7 +15,6 @@ class CourseDetailView extends StatefulWidget {
 }
 
 class _CourseDetailViewState extends State<CourseDetailView> {
-  int _selectedNavIndex = 1;
   final ScrollController _scrollController = ScrollController();
   double _scrollOffset = 0.0;
 
@@ -260,7 +257,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
             left: 0,
             right: 0,
             bottom: 20.h,
-            child: _buildBottomNavigationBar(),
+            child: CustomBottomNavBar(currentIndex: 2),
           ),
         ],
       ),
@@ -427,81 +424,6 @@ class _CourseDetailViewState extends State<CourseDetailView> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 24.w),
-        height: 68.h,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(34.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-            _buildNavItem(icon: Icons.flight_takeoff_rounded, index: 1),
-            _buildNavItem(icon: Icons.account_balance_rounded, index: 2),
-            _buildNavItem(icon: Icons.person_rounded, index: 3),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required int index}) {
-    final bool isActive = _selectedNavIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        if (index == 0) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeView()),
-            (route) => false,
-          );
-        } else if (index == 2) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LibraryView()),
-            (route) => route.isFirst,
-          );
-        } else if (index == 3) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const ProfileView()),
-            (route) => route.isFirst,
-          );
-        } else {
-          setState(() {
-            _selectedNavIndex = index;
-          });
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 50.w,
-        height: 50.w,
-        decoration: BoxDecoration(
-          color: isActive ? MyColors.white : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 26.sp,
-          color: isActive ? MyColors.lingolaPrimaryColor : MyColors.grey400,
         ),
       ),
     );
