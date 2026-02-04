@@ -42,7 +42,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: SingleChildScrollView(
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -109,7 +109,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   /// Header with language selector, notification, and profile
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -399,7 +399,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const TravelVocabularyView(isPremium: false),
+                    builder: (context) =>
+                        const TravelVocabularyView(isPremium: false),
                   ),
                 );
               },
