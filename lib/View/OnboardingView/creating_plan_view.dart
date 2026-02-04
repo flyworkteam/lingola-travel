@@ -54,29 +54,33 @@ class _CreatingPlanViewState extends State<CreatingPlanView>
       vsync: this,
     );
 
-    _progressAnimation = Tween<double>(begin: 0, end: 100).animate(
-      CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.easeInOut,
-      ),
-    )..addListener(() {
-        setState(() {
-          _currentProgress = _progressAnimation.value.toInt();
-          
-          // Update status message based on progress
-          if (_currentProgress < 20) {
-            _currentStatus = _statusMessages[0];
-          } else if (_currentProgress < 40) {
-            _currentStatus = _statusMessages[1];
-          } else if (_currentProgress < 60) {
-            _currentStatus = _statusMessages[2];
-          } else if (_currentProgress < 80) {
-            _currentStatus = _statusMessages[3];
-          } else {
-            _currentStatus = _statusMessages[4];
-          }
+    _progressAnimation =
+        Tween<double>(begin: 0, end: 100).animate(
+          CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
+        )..addListener(() {
+          setState(() {
+            _currentProgress = _progressAnimation.value.toInt();
+
+            // Update status message based on progress
+            if (_currentProgress < 20) {
+              _currentStatus = _statusMessages[0];
+            } else if (_currentProgress < 40) {
+              _currentStatus = _statusMessages[1];
+            } else if (_currentProgress < 60) {
+              _currentStatus = _statusMessages[2];
+            } else if (_currentProgress < 80) {
+              _currentStatus = _statusMessages[3];
+            } else {
+              _currentStatus = _statusMessages[4];
+            }
+
+            // Stop rotation animations when 100% complete
+            if (_currentProgress >= 100) {
+              _rotationController1.stop();
+              _rotationController2.stop();
+            }
+          });
         });
-      });
 
     // Start progress after a short delay
     Future.delayed(const Duration(milliseconds: 500), () {
@@ -145,41 +149,63 @@ class _CreatingPlanViewState extends State<CreatingPlanView>
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Outer ring - rotating clockwise
-                    AnimatedBuilder(
-                      animation: _rotationController1,
-                      builder: (context, child) {
-                        return Transform.rotate(
-                          angle: _rotationController1.value * 2 * 3.14159,
-                          child: CustomPaint(
+                    // Outer ring - rotating clockwise (stops at 100%)
+                    _currentProgress >= 100
+                        ? CustomPaint(
                             size: Size(240.w, 240.w),
                             painter: CircularProgressPainter(
-                              progress: 0.65, // Fixed 65% arc
+                              progress: 1.0, // Full circle when complete
                               color: MyColors.lingolaPrimaryColor,
                               strokeWidth: 3.w,
                             ),
+                          )
+                        : AnimatedBuilder(
+                            animation: _rotationController1,
+                            builder: (context, child) {
+                              return Transform.rotate(
+                                angle: _rotationController1.value * 2 * 3.14159,
+                                child: CustomPaint(
+                                  size: Size(240.w, 240.w),
+                                  painter: CircularProgressPainter(
+                                    progress: 0.65, // Fixed 65% arc
+                                    color: MyColors.lingolaPrimaryColor,
+                                    strokeWidth: 3.w,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
 
-                    // Middle ring - rotating counter-clockwise
-                    AnimatedBuilder(
-                      animation: _rotationController2,
-                      builder: (context, child) {
-                        return Transform.rotate(
-                          angle: -_rotationController2.value * 2 * 3.14159,
-                          child: CustomPaint(
+                    // Middle ring - rotating counter-clockwise (stops at 100%)
+                    _currentProgress >= 100
+                        ? CustomPaint(
                             size: Size(200.w, 200.w),
                             painter: CircularProgressPainter(
-                              progress: 0.5, // Fixed 50% arc
-                              color: MyColors.lingolaPrimaryColor.withOpacity(0.4),
+                              progress: 1.0, // Full circle when complete
+                              color: MyColors.lingolaPrimaryColor.withOpacity(
+                                0.4,
+                              ),
                               strokeWidth: 3.w,
                             ),
+                          )
+                        : AnimatedBuilder(
+                            animation: _rotationController2,
+                            builder: (context, child) {
+                              return Transform.rotate(
+                                angle:
+                                    -_rotationController2.value * 2 * 3.14159,
+                                child: CustomPaint(
+                                  size: Size(200.w, 200.w),
+                                  painter: CircularProgressPainter(
+                                    progress: 0.5, // Fixed 50% arc
+                                    color: MyColors.lingolaPrimaryColor
+                                        .withOpacity(0.4),
+                                    strokeWidth: 3.w,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
 
                     // Inner circle background
                     Container(

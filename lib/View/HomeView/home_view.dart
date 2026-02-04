@@ -325,7 +325,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const NotificationsView()),
+          MaterialPageRoute(
+            builder: (context) => const NotificationsView(
+              isPremiumUser: false, // Free user
+            ),
+          ),
         );
       },
       child: Container(

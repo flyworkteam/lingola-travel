@@ -352,7 +352,11 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const NotificationsView()),
+          MaterialPageRoute(
+            builder: (context) => const NotificationsView(
+              isPremiumUser: true, // Premium user
+            ),
+          ),
         );
       },
       child: Container(

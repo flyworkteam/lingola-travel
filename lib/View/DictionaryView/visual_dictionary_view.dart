@@ -18,57 +18,67 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
   int _selectedNavIndex = 2; // Dictionary is index 2
   List<String> _recentSearches = ['Accommodation', 'Airport'];
 
-  // Categories data
-  final List<Map<String, dynamic>> _categories = [
+  // Categories data - using getter to avoid initializer issues
+  List<Map<String, dynamic>> get _categories => [
     {
       'name': 'Airport',
       'items': 1240,
-      'icon': '🛫',
-      'color': Color(0xFFE3F2FD),
+      'icon': 'assets/icons/airport.png',
+      'color': Color(0xFF2E48F0).withOpacity(0.2),
     },
     {
       'name': 'Accommodation',
       'items': 1000,
-      'icon': '🏨',
-      'color': Color(0xFFFFE0B2),
+      'icon': 'assets/icons/accommodation.png',
+      'color': Color(0xFFF0722E).withOpacity(0.2),
     },
     {
       'name': 'Transportation',
       'items': 980,
-      'icon': '🚕',
-      'color': Color(0xFFFFF9C4),
+      'icon': 'assets/icons/transportation.png',
+      'color': Color(0xFFF0CC2E).withOpacity(0.2),
     },
     {
       'name': 'Food & Drink',
       'items': 1250,
-      'icon': '🍽️',
-      'color': Color(0xFFFFCDD2),
+      'icon': 'assets/icons/food_drink.png',
+      'color': Color(0xFFF02E2E).withOpacity(0.2),
     },
     {
       'name': 'Shopping',
       'items': 1520,
-      'icon': '🛒',
-      'color': Color(0xFFC8E6C9),
+      'icon': 'assets/icons/shopping.png',
+      'color': Color(0xFF8BD99D).withOpacity(0.2),
     },
     {
       'name': 'Culture',
       'items': 550,
-      'icon': '🏛️',
-      'color': Color(0xFFB2EBF2),
+      'icon': 'assets/icons/culture.png',
+      'color': Color(0xFF70CDBB).withOpacity(0.2),
     },
     {
       'name': 'Meeting',
       'items': 1520,
-      'icon': '👥',
-      'color': Color(0xFFD1C4E9),
+      'icon': 'assets/icons/meeting.png',
+      'color': Color(0xFFFDB0B0).withOpacity(0.2),
     },
-    {'name': 'Sport', 'items': 1550, 'icon': '🏐', 'color': Color(0xFFF8BBD0)},
-    {'name': 'Health', 'items': 1520, 'icon': '🏥', 'color': Color(0xFFC8E6C9)},
+    {
+      'name': 'Sport',
+      'items': 1550,
+      'icon': 'assets/icons/sport.png',
+      'color': Color(0xFFFCD5F0),
+    },
+    {
+      'name': 'Health',
+      'items': 1520,
+      'icon': 'assets/icons/health.png',
+      'color': Color(0xFF86E17C).withOpacity(0.3),
+    },
     {
       'name': 'Business',
       'items': 1550,
-      'icon': '💼',
-      'color': Color(0xFFBBDEFB),
+      'icon': 'assets/icons/business.png',
+      'color': Color(0xFF53BAF5).withOpacity(0.25),
     },
   ];
 
@@ -256,9 +266,12 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Center(
-                child: Text(
+                child: Image.asset(
                   category['icon'],
-                  style: TextStyle(fontSize: 24.sp),
+                  width: 20.w,
+                  height: 20.h,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high, // HD quality
                 ),
               ),
             ),

@@ -196,7 +196,9 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                     ),
 
-                    SizedBox(height: 100.h), // Space for bottom nav
+                    SizedBox(
+                      height: 110.h,
+                    ), // Space for bottom nav (65h bar + 20h bottom + 25h extra)
                   ],
                 ),
               ),
@@ -206,7 +208,7 @@ class _ProfileViewState extends State<ProfileView> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 20.h,
+              bottom: 16.h, // SafeArea padding
               child: _buildBottomNavigationBar(),
             ),
           ],
@@ -660,8 +662,8 @@ class _ProfileViewState extends State<ProfileView> {
     }
 
     if (index == 0) {
-      // Navigate back to Home
-      Navigator.popUntil(context, (route) => route.isFirst);
+      // Navigate back to Home (just pop current page)
+      Navigator.pop(context);
     } else if (index == 1) {
       // Navigate to Vocabulary
       Navigator.pushReplacement(

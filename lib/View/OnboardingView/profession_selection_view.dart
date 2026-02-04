@@ -9,11 +9,8 @@ import 'profession_detail_view.dart';
 /// User selects their profession/background
 class ProfessionSelectionView extends StatefulWidget {
   final String? selectedLanguage;
-  
-  const ProfessionSelectionView({
-    super.key,
-    this.selectedLanguage,
-  });
+
+  const ProfessionSelectionView({super.key, this.selectedLanguage});
 
   @override
   State<ProfessionSelectionView> createState() =>
@@ -34,7 +31,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
       'name': 'Professional',
       'subtitle': 'Corporate or\nfreelance',
       'icon': 'assets/images/professional.png',
-      'background': 'assets/images/professionalcard.png', // Professional card
+      'background': 'assets/images/littlecard.png', // Same as others
     },
     {
       'name': 'Technology',
@@ -228,22 +225,26 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                                     Stack(
                                       alignment: Alignment.center,
                                       children: [
-                                        // Background card image
-                                        Image.asset(
-                                          profession['background']!,
+                                        // Background card - dark when selected, light when not
+                                        Container(
                                           width: 70.w,
                                           height: 70.h,
-                                          fit: BoxFit.contain,
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? MyColors.lingolaPrimaryColor
+                                                : const Color(0xFFE0F7F5),
+                                            borderRadius: BorderRadius.circular(
+                                              16.r,
+                                            ),
+                                          ),
                                         ),
-                                        // Icon logo - Professional'da beyaz, diğerlerinde #2EC4B6
+                                        // Icon logo - white when selected, turquoise when not
                                         Image.asset(
                                           profession['icon']!,
                                           width: 36.w,
                                           height: 36.h,
                                           fit: BoxFit.contain,
-                                          color:
-                                              profession['name'] ==
-                                                  'Professional'
+                                          color: isSelected
                                               ? MyColors.white
                                               : const Color(0xFF2EC4B6),
                                         ),
