@@ -6,11 +6,13 @@ import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 class LibraryFolderDetailView extends StatefulWidget {
   final String folderName;
   final String icon;
+  final bool isPremium;
 
   const LibraryFolderDetailView({
     super.key,
     required this.folderName,
     required this.icon,
+    this.isPremium = false,
   });
 
   @override
@@ -538,7 +540,10 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
               left: 0,
               right: 0,
               bottom: 20.h,
-              child: CustomBottomNavBar(currentIndex: 2),
+              child: CustomBottomNavBar(
+                currentIndex: 2,
+                isPremium: widget.isPremium,
+              ),
             ),
 
             // Floating Action Button (Edit Mode Only)

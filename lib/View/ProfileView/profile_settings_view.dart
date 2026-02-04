@@ -640,7 +640,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                           // Language name
                           Expanded(
                             child: Text(
-                              language.name,
+                              language.getLocalizedName(_selectedLanguage.code),
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: isSelected

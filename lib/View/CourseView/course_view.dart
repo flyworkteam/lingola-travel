@@ -6,7 +6,8 @@ import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'course_detail_view.dart';
 
 class CourseView extends StatefulWidget {
-  const CourseView({super.key});
+  final bool isPremium;
+  const CourseView({super.key, this.isPremium = false});
 
   @override
   State<CourseView> createState() => _CourseViewState();
@@ -158,7 +159,10 @@ class _CourseViewState extends State<CourseView> {
               left: 0,
               right: 0,
               bottom: 20.h,
-              child: CustomBottomNavBar(currentIndex: 2),
+              child: CustomBottomNavBar(
+                currentIndex: 2,
+                isPremium: widget.isPremium,
+              ),
             ),
           ],
         ),
@@ -447,8 +451,10 @@ class _CourseViewState extends State<CourseView> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      CourseDetailView(courseData: course),
+                                  builder: (context) => CourseDetailView(
+                                    courseData: course,
+                                    isPremium: widget.isPremium,
+                                  ),
                                 ),
                               );
                             } else {

@@ -7,7 +7,7 @@ import '../../View/OnboardingView/profession_selection_view.dart';
 import '../../View/OnboardingView/english_level_selection_view.dart';
 import '../../View/OnboardingView/daily_goal_selection_view.dart';
 import '../../View/OnboardingView/creating_plan_view.dart';
-import '../../View/HomeView/home_view.dart'; // Free version with CustomBottomNavBar
+import '../../View/HomeView/premium_home_view.dart'; // Premium version
 
 /// App Routes - Named route definitions
 class AppRoutes {
@@ -81,7 +81,7 @@ class AppRoutes {
       englishLevelSelection: (context) => const EnglishLevelSelectionView(),
       dailyGoalSelection: (context) => const DailyGoalSelectionView(),
       creatingPlan: (context) => const CreatingPlanView(),
-      home: (context) => const HomeView(), // Free version with new bottom nav
+      home: (context) => const PremiumHomeView(), // Premium version for testing
       // TODO: Add more routes as views are created
       // etc.
     };

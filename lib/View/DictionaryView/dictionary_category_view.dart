@@ -5,8 +5,13 @@ import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 
 class DictionaryCategoryView extends StatefulWidget {
   final String categoryName;
+  final bool isPremium;
 
-  const DictionaryCategoryView({super.key, required this.categoryName});
+  const DictionaryCategoryView({
+    super.key,
+    required this.categoryName,
+    this.isPremium = false,
+  });
 
   @override
   State<DictionaryCategoryView> createState() => _DictionaryCategoryViewState();
@@ -216,7 +221,7 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
           ),
 
           // Floating bottom navigation
-          CustomBottomNavBar(currentIndex: 2),
+          CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
         ],
       ),
     );

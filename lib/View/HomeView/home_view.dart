@@ -935,7 +935,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CourseView()),
+          MaterialPageRoute(
+            builder: (context) => const CourseView(isPremium: false),
+          ),
         );
       },
       child: Container(
@@ -1330,7 +1332,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const VisualDictionaryView()),
+          MaterialPageRoute(
+            builder: (context) => const VisualDictionaryView(isPremium: false),
+          ),
         );
       },
       child: Container(

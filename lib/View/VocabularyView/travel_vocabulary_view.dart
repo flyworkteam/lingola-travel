@@ -4,7 +4,8 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 
 class TravelVocabularyView extends StatefulWidget {
-  const TravelVocabularyView({super.key});
+  final bool isPremium;
+  const TravelVocabularyView({super.key, this.isPremium = false});
 
   @override
   State<TravelVocabularyView> createState() => _TravelVocabularyViewState();
@@ -16,7 +17,6 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
   String _selectedCategory = 'All Topics';
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {};
-
 
   // Categories
   final List<Map<String, dynamic>> _categories = [
@@ -119,7 +119,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
             ),
 
             // Bottom Navigation Bar
-            CustomBottomNavBar(currentIndex: 1),
+            CustomBottomNavBar(currentIndex: 1, isPremium: widget.isPremium),
           ],
         ),
       ),
@@ -198,7 +198,10 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         decoration: BoxDecoration(
           color: MyColors.white, // Changed from gray to white for consistency
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: MyColors.border, width: 1), // Added border for visibility
+          border: Border.all(
+            color: MyColors.border,
+            width: 1,
+          ), // Added border for visibility
         ),
         child: Row(
           children: [
@@ -300,7 +303,11 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         : [_selectedCategory];
 
     return ListView.builder(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h), // Space for bottom nav
+      padding: EdgeInsets.only(
+        left: 20.w,
+        right: 20.w,
+        bottom: 100.h,
+      ), // Space for bottom nav
       itemCount: categories.length * 2, // Category + items
       itemBuilder: (context, index) {
         final categoryIndex = index ~/ 2;
@@ -570,6 +577,4 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       ),
     );
   }
-
-
 }

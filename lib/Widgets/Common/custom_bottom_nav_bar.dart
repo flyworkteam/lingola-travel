@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/View/HomeView/home_view.dart';
+import 'package:lingola_travel/View/HomeView/premium_home_view.dart';
 import 'package:lingola_travel/View/VocabularyView/travel_vocabulary_view.dart';
 import 'package:lingola_travel/View/LibraryView/library_view.dart';
 import 'package:lingola_travel/View/ProfileView/profile_view.dart';
@@ -12,8 +13,14 @@ import 'package:lingola_travel/View/ProfileView/profile_view.dart';
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int)? onTap;
+  final bool isPremium;
 
-  const CustomBottomNavBar({super.key, required this.currentIndex, this.onTap});
+  const CustomBottomNavBar({
+    super.key,
+    required this.currentIndex,
+    this.onTap,
+    this.isPremium = false,
+  });
 
   void _handleNavigation(BuildContext context, int index) {
     // If custom onTap is provided, use it
@@ -28,16 +35,16 @@ class CustomBottomNavBar extends StatelessWidget {
     Widget destination;
     switch (index) {
       case 0:
-        destination = const HomeView();
+        destination = isPremium ? const PremiumHomeView() : const HomeView();
         break;
       case 1:
-        destination = const TravelVocabularyView();
+        destination = TravelVocabularyView(isPremium: isPremium);
         break;
       case 2:
-        destination = const LibraryView();
+        destination = LibraryView(isPremium: isPremium);
         break;
       case 3:
-        destination = const ProfileView();
+        destination = ProfileView(isPremium: isPremium);
         break;
       default:
         return;

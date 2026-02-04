@@ -10,7 +10,8 @@ import 'app_language_view.dart';
 import 'premium_view.dart';
 
 class ProfileView extends StatefulWidget {
-  const ProfileView({super.key});
+  final bool isPremium;
+  const ProfileView({super.key, this.isPremium = false});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -202,7 +203,7 @@ class _ProfileViewState extends State<ProfileView> {
             ),
 
             // Floating bottom navigation
-            CustomBottomNavBar(currentIndex: 3),
+            CustomBottomNavBar(currentIndex: 3, isPremium: widget.isPremium),
           ],
         ),
       ),
@@ -558,8 +559,6 @@ class _ProfileViewState extends State<ProfileView> {
       ),
     );
   }
-
-
 
   /// Show logout confirmation dialog
   void _showLogoutDialog() {

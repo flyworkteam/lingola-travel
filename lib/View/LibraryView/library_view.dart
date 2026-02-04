@@ -5,14 +5,14 @@ import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'library_folder_detail_view.dart';
 
 class LibraryView extends StatefulWidget {
-  const LibraryView({super.key});
+  final bool isPremium;
+  const LibraryView({super.key, this.isPremium = false});
 
   @override
   State<LibraryView> createState() => _LibraryViewState();
 }
 
 class _LibraryViewState extends State<LibraryView> {
-
   // Folder data
   final List<Map<String, dynamic>> _folders = [
     {
@@ -86,8 +86,6 @@ class _LibraryViewState extends State<LibraryView> {
       'iconColor': Color(0xFF1976D2),
     },
   ];
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +171,7 @@ class _LibraryViewState extends State<LibraryView> {
             ),
 
             // Bottom Navigation Bar
-            CustomBottomNavBar(currentIndex: 2),
+            CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
           ],
         ),
       ),
@@ -192,8 +190,11 @@ class _LibraryViewState extends State<LibraryView> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                LibraryFolderDetailView(folderName: name, icon: icon),
+            builder: (context) => LibraryFolderDetailView(
+              folderName: name,
+              icon: icon,
+              isPremium: widget.isPremium,
+            ),
           ),
         );
       },
@@ -270,6 +271,4 @@ class _LibraryViewState extends State<LibraryView> {
       ),
     );
   }
-
-
 }

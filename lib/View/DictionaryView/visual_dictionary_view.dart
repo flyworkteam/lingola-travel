@@ -5,7 +5,8 @@ import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'dictionary_category_view.dart';
 
 class VisualDictionaryView extends StatefulWidget {
-  const VisualDictionaryView({super.key});
+  final bool isPremium;
+  const VisualDictionaryView({super.key, this.isPremium = false});
 
   @override
   State<VisualDictionaryView> createState() => _VisualDictionaryViewState();
@@ -104,8 +105,10 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            DictionaryCategoryView(categoryName: categoryName),
+        builder: (context) => DictionaryCategoryView(
+          categoryName: categoryName,
+          isPremium: widget.isPremium,
+        ),
       ),
     );
   }
@@ -151,7 +154,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
           ),
 
           // Floating bottom navigation
-          CustomBottomNavBar(currentIndex: 2),
+          CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
         ],
       ),
     );

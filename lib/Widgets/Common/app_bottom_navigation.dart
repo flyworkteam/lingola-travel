@@ -138,14 +138,18 @@ class AppBottomNavigation extends StatelessWidget {
 
       case 1: // Travel Vocabulary (plane icon)
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const TravelVocabularyView()),
+          MaterialPageRoute(
+            builder: (context) => TravelVocabularyView(isPremium: isPremium),
+          ),
           (route) => false,
         );
         break;
 
       case 2: // Courses (building icon)
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const CourseView()),
+          MaterialPageRoute(
+            builder: (context) => CourseView(isPremium: isPremium),
+          ),
           (route) => false,
         );
         break;

@@ -7,8 +7,13 @@ import '../LessonView/lesson_detail_view.dart';
 
 class CourseDetailView extends StatefulWidget {
   final Map<String, dynamic> courseData;
+  final bool isPremium;
 
-  const CourseDetailView({super.key, required this.courseData});
+  const CourseDetailView({
+    super.key,
+    required this.courseData,
+    this.isPremium = false,
+  });
 
   @override
   State<CourseDetailView> createState() => _CourseDetailViewState();
@@ -257,7 +262,10 @@ class _CourseDetailViewState extends State<CourseDetailView> {
             left: 0,
             right: 0,
             bottom: 20.h,
-            child: CustomBottomNavBar(currentIndex: 2),
+            child: CustomBottomNavBar(
+              currentIndex: 2,
+              isPremium: widget.isPremium,
+            ),
           ),
         ],
       ),

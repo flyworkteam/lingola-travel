@@ -99,7 +99,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               left: 0,
               right: 0,
               bottom: 20.h,
-              child: CustomBottomNavBar(currentIndex: 0),
+              child: CustomBottomNavBar(currentIndex: 0, isPremium: true),
             ),
           ],
         ),
@@ -737,14 +737,16 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const TravelVocabularyView(),
+              builder: (context) => const TravelVocabularyView(isPremium: true),
             ),
           );
         } else if (title.contains('Learning')) {
           // Navigate to Course page for "Start Learning"
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CourseView()),
+            MaterialPageRoute(
+              builder: (context) => const CourseView(isPremium: true),
+            ),
           );
         } else {
           // TODO: Navigate to other feature pages
@@ -1162,7 +1164,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         // Navigate to Course page
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CourseView()),
+          MaterialPageRoute(
+            builder: (context) => const CourseView(isPremium: true),
+          ),
         );
       },
       child: Container(
@@ -1237,7 +1241,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const VisualDictionaryView()),
+          MaterialPageRoute(
+            builder: (context) => const VisualDictionaryView(isPremium: true),
+          ),
         );
       },
       child: Container(
