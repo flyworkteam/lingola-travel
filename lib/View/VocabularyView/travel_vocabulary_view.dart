@@ -218,7 +218,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       child: Container(
         margin: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xFF4ECDC4) : Colors.transparent,
+          color: MyColors.white,
           borderRadius: BorderRadius.circular(10.r),
         ),
         child: Center(
@@ -228,7 +228,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
               fontFamily: 'Montserrat',
-              color: isSelected ? Colors.white : MyColors.textPrimary,
+              color: isSelected ? Color(0xFF4ECDC4) : MyColors.textPrimary,
             ),
           ),
         ),
@@ -261,10 +261,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                 decoration: BoxDecoration(
                   color: isSelected ? Color(0xFF4ECDC4) : MyColors.white,
                   borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(
-                    color: isSelected ? Color(0xFF4ECDC4) : MyColors.border,
-                    width: 1,
-                  ),
+                  border: Border.all(color: MyColors.border, width: 1),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -555,6 +552,9 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         onPressed: () {
           print('Load more items');
         },
+        style: TextButton.styleFrom(
+          overlayColor: Colors.transparent, // No splash/overlay effect
+        ),
         child: Text(
           '+ Load More',
           style: TextStyle(

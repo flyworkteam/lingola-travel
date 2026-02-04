@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import '../LessonView/lesson_detail_view.dart';
-import '../VocabularyView/travel_vocabulary_view.dart';
-import '../DictionaryView/visual_dictionary_view.dart';
+import '../HomeView/home_view.dart';
+import '../LibraryView/library_view.dart';
 import '../ProfileView/profile_view.dart';
 
 class CourseDetailView extends StatefulWidget {
@@ -17,9 +17,26 @@ class CourseDetailView extends StatefulWidget {
 }
 
 class _CourseDetailViewState extends State<CourseDetailView> {
-  int _selectedNavIndex = 1; // Course is index 1 (plane icon)
+  int _selectedNavIndex = 1;
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
 
-  // Mock lesson data
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   final List<Map<String, dynamic>> _lessons = [
     {
       'number': 1,
@@ -49,44 +66,196 @@ class _CourseDetailViewState extends State<CourseDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate blur amount based on scroll - more aggressive
+    final blurAmount = (_scrollOffset / 50).clamp(0.0, 15.0);
+    final opacity = (_scrollOffset / 100).clamp(0.0, 0.7);
+
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          CustomScrollView(
-            slivers: [
-              // Header with background image
-              _buildHeader(),
-
-              // Course info and lesson list
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Course info card
-                    _buildCourseInfoCard(),
-
-                    SizedBox(height: 24.h),
-
-                    // Course content section
-                    _buildCourseContentSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // Resume button
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: _buildResumeButton(),
-                    ),
-
-                    SizedBox(height: 100.h), // Space for bottom nav
-                  ],
+          // Background image with blur
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 320.h,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Base image
+                Image.asset(
+                  widget.courseData['image'],
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: MyColors.grey200,
+                      child: Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 48.sp,
+                          color: MyColors.grey400,
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ],
+                // Blur layer - always visible when scrolling
+                if (_scrollOffset > 5)
+                  ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: blurAmount,
+                        sigmaY: blurAmount,
+                      ),
+                      child: Container(
+                        color: Colors.black.withOpacity(opacity),
+                      ),
+                    ),
+                  ),
+                // Gradient overlay
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.3),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          // Floating bottom navigation
+          // Scrollable content
+          SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                // Spacer for image
+                SizedBox(height: 290.h),
+
+                // White curved card
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(30.r),
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 140.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        'Terminal Talk:\nAirport Basics',
+                        style: TextStyle(
+                          fontSize: 28.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Montserrat',
+                          color: Colors.black,
+                          height: 1.2,
+                        ),
+                      ),
+
+                      SizedBox(height: 20.h),
+
+                      // Stats row
+                      Row(
+                        children: [
+                          _buildStatChip(Icons.book_outlined, '12 Lessons'),
+                          SizedBox(width: 16.w),
+                          _buildStatChip(Icons.access_time_rounded, '45 Mins'),
+                        ],
+                      ),
+
+                      SizedBox(height: 12.h),
+
+                      // Level chip
+                      _buildStatChip(Icons.signal_cellular_alt, 'Intermediate'),
+
+                      SizedBox(height: 20.h),
+
+                      // Description
+                      Text(
+                        'Master the essential English phrases you\'ll need from the moment you step off the plane. Focus on vocabulary used in real-world airport scenarios.',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w400,
+                          fontFamily: 'Montserrat',
+                          color: Color(0xFF666666),
+                          height: 1.6,
+                        ),
+                      ),
+
+                      SizedBox(height: 32.h),
+
+                      // Course Content header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Course Content',
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Montserrat',
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            '65% Completed',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Montserrat',
+                              color: Color(0xFF4ECDC4),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 20.h),
+
+                      // Lessons list
+                      ..._lessons.map((lesson) => _buildLessonItem(lesson)),
+
+                      SizedBox(height: 24.h),
+
+                      // Resume button
+                      _buildResumeButton(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Back button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8.h,
+            left: 16.w,
+            child: Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.arrow_back, color: Colors.white, size: 22.sp),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+
+          // Bottom navigation
           Positioned(
             left: 0,
             right: 0,
@@ -98,113 +267,25 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     );
   }
 
-  /// Header with background image
-  Widget _buildHeader() {
-    return SliverAppBar(
-      expandedHeight: 250.h,
-      pinned: true,
-      backgroundColor: MyColors.lingolaPrimaryColor,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: MyColors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Background image
-            Image.asset(
-              widget.courseData['image'],
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: MyColors.grey200,
-                  child: Center(
-                    child: Icon(
-                      Icons.image_not_supported,
-                      size: 48.sp,
-                      color: MyColors.grey400,
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            // Gradient overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Course info card
-  Widget _buildCourseInfoCard() {
+  Widget _buildStatChip(IconData icon, String text) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
+        color: Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(20.r),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Title
+          Icon(icon, size: 16.sp, color: Color(0xFF4ECDC4)),
+          SizedBox(width: 6.w),
           Text(
-            '${widget.courseData['category']}: ${widget.courseData['title']}',
+            text,
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
               fontFamily: 'Montserrat',
-              color: MyColors.textPrimary,
-              height: 1.2,
-            ),
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Stats row
-          Row(
-            children: [
-              _buildStatItem(
-                Icons.book_outlined,
-                '${widget.courseData['lessons']} Lessons',
-              ),
-              SizedBox(width: 20.w),
-              _buildStatItem(Icons.access_time, '45 Mins'),
-              SizedBox(width: 20.w),
-              _buildStatItem(Icons.bar_chart, 'Intermediate'),
-            ],
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Description
-          Text(
-            'Master the essential English phrases you\'ll need from the moment you step off the plane. Focus on vocabulary used in real-world airport scenarios.',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w400,
-              fontFamily: 'Montserrat',
-              color: MyColors.textSecondary,
-              height: 1.5,
+              color: Color(0xFF666666),
             ),
           ),
         ],
@@ -212,134 +293,62 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     );
   }
 
-  /// Single stat item
-  Widget _buildStatItem(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 18.sp, color: Color(0xFF4ECDC4)),
-        SizedBox(width: 4.w),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Montserrat',
-            color: MyColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Course content section
-  Widget _buildCourseContentSection() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Course Content',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textPrimary,
-                ),
-              ),
-              Text(
-                '${widget.courseData['progress']}% Completed',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF4ECDC4),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Lesson list
-          ..._lessons.map((lesson) => _buildLessonCard(lesson)).toList(),
-        ],
-      ),
-    );
-  }
-
-  /// Single lesson card
-  Widget _buildLessonCard(Map<String, dynamic> lesson) {
+  Widget _buildLessonItem(Map<String, dynamic> lesson) {
     final status = lesson['status'];
     final isCompleted = status == 'completed';
     final isInProgress = status == 'in_progress';
     final isLocked = status == 'locked';
 
     Color bgColor;
-    Color iconColor;
-    IconData icon;
-    Color? borderColor;
+    Color iconBgColor;
+    Widget iconWidget;
 
     if (isCompleted) {
-      bgColor = Color(0xFFE8F5E9); // Light green
-      iconColor = Color(0xFF4CAF50); // Green
-      icon = Icons.check_circle;
-      borderColor = null;
+      bgColor = Color(0xFFF0F9FF);
+      iconBgColor = Color(0xFF4ECDC4);
+      iconWidget = Icon(Icons.check, color: Colors.white, size: 24.sp);
     } else if (isInProgress) {
-      bgColor = Color(0xFFE0F7F4); // Light turquoise
-      iconColor = Color(0xFF4ECDC4); // Turquoise
-      icon = Icons.play_circle_filled;
-      borderColor = Color(0xFF4ECDC4);
+      bgColor = Color(0xFFE8F9F7);
+      iconBgColor = Color(0xFF4ECDC4);
+      iconWidget = Icon(Icons.play_arrow, color: Colors.white, size: 28.sp);
     } else {
-      bgColor = Color(0xFFF5F5F5); // Light gray
-      iconColor = MyColors.grey400;
-      icon = Icons.lock;
-      borderColor = null;
+      bgColor = Color(0xFFF9F9F9);
+      iconBgColor = Color(0xFFE0E0E0);
+      iconWidget = Icon(Icons.lock, color: Color(0xFFBDBDBD), size: 20.sp);
     }
 
     return GestureDetector(
       onTap: () {
         if (!isLocked) {
-          // Navigate to lesson detail
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => LessonDetailView(lessonData: lesson),
             ),
           );
-        } else {
-          print('Lesson locked: ${lesson['title']}');
-          // TODO: Show premium dialog
         }
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
+        margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(16.r),
-          border: borderColor != null
-              ? Border.all(color: borderColor, width: 2)
-              : null,
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Row(
           children: [
-            // Icon
+            // Icon circle
             Container(
               width: 48.w,
               height: 48.w,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.2),
+                color: iconBgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: iconColor, size: 24.sp),
+              child: Center(child: iconWidget),
             ),
 
-            SizedBox(width: 12.w),
+            SizedBox(width: 16.w),
 
             // Lesson info
             Expanded(
@@ -349,10 +358,10 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                   Text(
                     '${lesson['number']}. ${lesson['title']}',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Montserrat',
-                      color: MyColors.textPrimary,
+                      color: isLocked ? Color(0xFFBDBDBD) : Colors.black,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -366,7 +375,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w400,
                       fontFamily: 'Montserrat',
-                      color: MyColors.textSecondary,
+                      color: Color(0xFF999999),
                     ),
                   ),
                 ],
@@ -378,17 +387,13 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     );
   }
 
-  /// Resume button
   Widget _buildResumeButton() {
     return GestureDetector(
       onTap: () {
-        // Navigate to lesson 2 detail
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LessonDetailView(
-              lessonData: _lessons[1], // Lesson 2 (in progress)
-            ),
+            builder: (context) => LessonDetailView(lessonData: _lessons[1]),
           ),
         );
       },
@@ -400,24 +405,24 @@ class _CourseDetailViewState extends State<CourseDetailView> {
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF4ECDC4).withOpacity(0.4),
-              blurRadius: 16,
-              offset: Offset(0, 8),
+              color: Color(0xFF4ECDC4).withOpacity(0.3),
+              blurRadius: 12,
+              offset: Offset(0, 6),
             ),
           ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.play_circle_filled, color: MyColors.white, size: 24.sp),
-            SizedBox(width: 8.w),
+            Icon(Icons.play_circle_filled, color: Colors.white, size: 24.sp),
+            SizedBox(width: 10.w),
             Text(
               'RESUME LESSON 2',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: 15.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
-                color: MyColors.white,
+                color: Colors.white,
                 letterSpacing: 0.5,
               ),
             ),
@@ -427,14 +432,14 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     );
   }
 
-  /// Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
     return Center(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 24.w),
-        height: 65.h,
+        height: 68.h,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(35.r),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(34.r),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -443,49 +448,14 @@ class _CourseDetailViewState extends State<CourseDetailView> {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(35.r),
-          child: Stack(
-            children: [
-              // Background image
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/home/altmenuarkaplan.png',
-                  fit: BoxFit.fill,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: MyColors.white,
-                        borderRadius: BorderRadius.circular(35.r),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Navigation items - centered
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
-                      _buildNavItem(
-                        icon: Icons.flight_takeoff_rounded,
-                        index: 1,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.account_balance_rounded,
-                        index: 2,
-                      ),
-                      _buildNavItem(icon: Icons.person_rounded, index: 3),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavItem(icon: Icons.grid_view_rounded, index: 0),
+            _buildNavItem(icon: Icons.flight_takeoff_rounded, index: 1),
+            _buildNavItem(icon: Icons.account_balance_rounded, index: 2),
+            _buildNavItem(icon: Icons.person_rounded, index: 3),
+          ],
         ),
       ),
     );
@@ -497,19 +467,18 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     return GestureDetector(
       onTap: () {
         if (index == 0) {
-          // Navigate back to home
-          Navigator.popUntil(context, (route) => route.isFirst);
-        } else if (index == 2) {
-          // Navigate to Dictionary
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(
-              builder: (context) => const VisualDictionaryView(),
-            ),
+            MaterialPageRoute(builder: (context) => const HomeView()),
+            (route) => false,
+          );
+        } else if (index == 2) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LibraryView()),
             (route) => route.isFirst,
           );
         } else if (index == 3) {
-          // Navigate to Profile
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const ProfileView()),
