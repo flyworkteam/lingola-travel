@@ -224,7 +224,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       child: Container(
         margin: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          color: MyColors.white,
+          color: isSelected ? MyColors.white : Color(0xFF4ECDC4),
           borderRadius: BorderRadius.circular(10.r),
         ),
         child: Center(
@@ -234,7 +234,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
               fontFamily: 'Montserrat',
-              color: isSelected ? Color(0xFF4ECDC4) : MyColors.textPrimary,
+              color: isSelected ? Color(0xFF4ECDC4) : Colors.white,
             ),
           ),
         ),
@@ -269,23 +269,14 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                   borderRadius: BorderRadius.circular(22.r),
                   border: Border.all(color: MyColors.border, width: 1),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (category['icon'] != null) ...[
-                      Text(category['icon'], style: TextStyle(fontSize: 16.sp)),
-                      SizedBox(width: 6.w),
-                    ],
-                    Text(
-                      category['name'],
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Montserrat',
-                        color: isSelected ? Colors.white : MyColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  category['name'],
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat',
+                    color: isSelected ? Colors.white : MyColors.textPrimary,
+                  ),
                 ),
               ),
             ),
@@ -355,7 +346,13 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
       child: Row(
         children: [
-          Text(categoryIcon, style: TextStyle(fontSize: 20.sp)),
+          // Category icon - use image for Airport and Accommodation
+          if (categoryName == 'Airport')
+            Image.asset('assets/images/trip.png', width: 20.w, height: 20.h)
+          else if (categoryName == 'Accommodation')
+            Image.asset('assets/images/accomo.png', width: 20.w, height: 20.h)
+          else
+            Text(categoryIcon, style: TextStyle(fontSize: 20.sp)),
           SizedBox(width: 8.w),
           Text(
             categoryName,
@@ -451,10 +448,20 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
           // Bookmark button
           GestureDetector(
             onTap: () => _toggleBookmark(id),
-            child: Icon(
-              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.textSecondary,
-              size: 24.sp,
+            child: Container(
+              width: 40.w,
+              height: 40.h,
+              decoration: BoxDecoration(
+                color: isBookmarked ? Color(0x3D2989E9) : Color(0xFFE8E8E8),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.bookmark,
+                  size: 20.sp,
+                  color: isBookmarked ? Color(0xFF2989E9) : Color(0xFF9E9E9E),
+                ),
+              ),
             ),
           ),
         ],
@@ -538,12 +545,24 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                   // Bookmark button
                   GestureDetector(
                     onTap: () => _toggleBookmark(id),
-                    child: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked
-                          ? Color(0xFF4ECDC4)
-                          : MyColors.textSecondary,
-                      size: 24.sp,
+                    child: Container(
+                      width: 40.w,
+                      height: 40.h,
+                      decoration: BoxDecoration(
+                        color: isBookmarked
+                            ? Color(0x3D2989E9)
+                            : Color(0xFFE8E8E8),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.bookmark,
+                          size: 20.sp,
+                          color: isBookmarked
+                              ? Color(0xFF2989E9)
+                              : Color(0xFF9E9E9E),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -572,6 +591,8 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
             fontWeight: FontWeight.w600,
             fontFamily: 'Montserrat',
             color: Color(0xFF4ECDC4),
+            decoration: TextDecoration.underline,
+            decorationColor: Color(0xFF4ECDC4),
           ),
         ),
       ),

@@ -74,12 +74,12 @@ class _NotificationsViewState extends State<NotificationsView> {
       builder: (BuildContext context) {
         return Dialog(
           alignment: Alignment.bottomCenter,
-          insetPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 40.h),
+          insetPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 24.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24.r),
@@ -102,10 +102,10 @@ class _NotificationsViewState extends State<NotificationsView> {
                       ),
                     ],
                   ),
-                  child: Icon(
-                    Icons.delete_outline,
-                    color: Color(0xFFE53935), // Red
-                    size: 32.sp,
+                  child: Image.asset(
+                    'assets/images/deleteicon.png',
+                    width: 32.w,
+                    height: 32.h,
                   ),
                 ),
 
@@ -116,7 +116,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                   'Delete All Notifications?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 22.sp,
+                    fontSize: 20.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
@@ -131,7 +131,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                   'Are you sure you want to delete all\nyour notifications? This action\ncannot be undone',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -151,7 +151,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                           Navigator.of(context).pop();
                         },
                         child: Container(
-                          height: 56.h,
+                          height: 48.h,
                           decoration: BoxDecoration(
                             color: Color(0xFFE0E0E0), // Light gray
                             borderRadius: BorderRadius.circular(16.r),
@@ -181,7 +181,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                           Navigator.of(context).pop();
                         },
                         child: Container(
-                          height: 56.h,
+                          height: 48.h,
                           decoration: BoxDecoration(
                             color: Color(0xFFE53935), // Red
                             borderRadius: BorderRadius.circular(16.r),
@@ -257,16 +257,16 @@ class _NotificationsViewState extends State<NotificationsView> {
                 value: 'delete_all',
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.delete_outline,
-                      color: Color(0xFFE53935),
-                      size: 20.sp,
+                    Image.asset(
+                      'assets/images/deleteicon.png',
+                      width: 24.w,
+                      height: 24.h,
                     ),
                     SizedBox(width: 12.w),
                     Text(
                       'Delete All',
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w500,
                         fontFamily: 'Montserrat',
                         color: Color(0xFFE53935),
@@ -303,7 +303,7 @@ class _NotificationsViewState extends State<NotificationsView> {
               ),
             )
           : ListView.builder(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
               itemCount: widget.isPremiumUser
                   ? notifications.length
                   : notifications.length +

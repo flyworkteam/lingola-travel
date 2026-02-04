@@ -6,6 +6,7 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../NotificationsView/notifications_view.dart';
+import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
 import '../CourseView/course_view.dart';
 import '../ProfileView/premium_view.dart';
@@ -41,7 +42,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: SingleChildScrollView(
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.only(left: 24.w, right: 24.w),
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -50,7 +51,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           // Greeting
                           _buildGreeting(),
 
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
 
                           // Quick Phrasebook
                           _buildQuickPhrasebook(),
@@ -60,27 +61,27 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           // Questions
                           _buildQuestions(),
 
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
 
                           // Features
                           _buildFeatures(),
 
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
 
                           // Quick Actions
                           _buildQuickActions(),
 
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
 
                           // Course Cards
                           _buildCourseCards(),
 
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
 
                           // Premium Membership Card
                           _buildPremiumCard(),
 
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
 
                           // Visual Dictionary Card
                           _buildVisualDictionaryCard(),
@@ -333,7 +334,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         Text(
           'Hey, Alex 👋',
           style: TextStyle(
-            fontSize: 20.sp,
+            fontSize: 16.sp,
             fontWeight: FontWeight.w400,
             fontFamily: 'Montserrat',
             color: MyColors.textSecondary,
@@ -346,7 +347,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         Text(
           'Master Languages\nWhile Exploring',
           style: TextStyle(
-            fontSize: 32.sp,
+            fontSize: 26.sp,
             fontWeight: FontWeight.w700,
             fontFamily: 'Montserrat',
             color: MyColors.textPrimary,
@@ -386,7 +387,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             Text(
               'Quick Phrasebook',
               style: TextStyle(
-                fontSize: 24.sp,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
                 color: MyColors.textPrimary,
@@ -394,13 +395,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ),
             GestureDetector(
               onTap: () {
-                // TODO: Navigate to all phrasebook categories
-                print('Tapped on See All - Phrasebook');
+                // Navigate to Travel Vocabulary
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TravelVocabularyView(isPremium: false),
+                  ),
+                );
               },
               child: Text(
                 'See All',
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Montserrat',
                   color: MyColors.textSecondary,
@@ -576,7 +582,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 Text(
                   englishText,
                   style: TextStyle(
-                    fontSize: 18.sp,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
@@ -590,7 +596,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 Text(
                   turkishText,
                   style: TextStyle(
-                    fontSize: 15.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -646,7 +652,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             Text(
               'Features',
               style: TextStyle(
-                fontSize: 24.sp,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
                 color: MyColors.textPrimary,
@@ -660,7 +666,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               child: Text(
                 'See All',
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Montserrat',
                   color: MyColors.textSecondary,
@@ -718,7 +724,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             end: Alignment.bottomRight,
             colors: gradientColors,
           ),
-          borderRadius: BorderRadius.circular(24.r),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
               color: gradientColors[0].withOpacity(0.3),
@@ -732,11 +738,49 @@ class _HomeViewState extends ConsumerState<HomeView> {
             // Background pattern
             Positioned.fill(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24.r),
+                borderRadius: BorderRadius.circular(16.r),
                 child: Image.asset(
                   'assets/images/messageboxarkaplan.png',
                   fit: BoxFit.cover,
                   opacity: AlwaysStoppedAnimation(0.3),
+                ),
+              ),
+            ),
+
+            // Decorative circles
+            Positioned(
+              bottom: -30.h,
+              right: -20.w,
+              child: Container(
+                width: 150.w,
+                height: 150.h,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 40.h,
+              right: 60.w,
+              child: Container(
+                width: 80.w,
+                height: 80.h,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 100.h,
+              left: -40.w,
+              child: Container(
+                width: 120.w,
+                height: 120.h,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.06),
                 ),
               ),
             ),
@@ -771,7 +815,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 28.sp,
+                      fontSize: 24.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Montserrat',
                       color: Colors.white,
@@ -785,7 +829,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w400,
                       fontFamily: 'Montserrat',
                       color: Colors.white.withOpacity(0.9),
@@ -873,16 +917,20 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                   ),
                                 ),
                               ),
-                              // Text
-                              Center(
-                                child: Text(
-                                  'SWIPE TO START',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Montserrat',
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
+                              // Text - Aligned to left to avoid being hidden by button
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 50.w),
+                                  child: Text(
+                                    'SWIPE TO START',
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Montserrat',
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -910,7 +958,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         Text(
           'Quick Actions',
           style: TextStyle(
-            fontSize: 24.sp,
+            fontSize: 20.sp,
             fontWeight: FontWeight.w700,
             fontFamily: 'Montserrat',
             color: MyColors.textPrimary,
@@ -972,7 +1020,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   Text(
                     'CURRENT COURSE',
                     style: TextStyle(
-                      fontSize: 12.sp,
+                      fontSize: 11.sp,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Montserrat',
                       color: Colors.white.withOpacity(0.9),
@@ -986,7 +1034,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   Text(
                     'Terminal Talks:\nAirport Basics',
                     style: TextStyle(
-                      fontSize: 24.sp,
+                      fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Montserrat',
                       color: Colors.white,
@@ -1002,7 +1050,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       Text(
                         '${(progress * 100).toInt()}% Progress',
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'Montserrat',
                           color: Colors.white,
@@ -1012,7 +1060,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       Text(
                         '$currentLesson/$totalLessons Lessons',
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w400,
                           fontFamily: 'Montserrat',
                           color: Colors.white.withOpacity(0.9),
@@ -1155,7 +1203,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             Text(
               title,
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
                 color: MyColors.textPrimary,
@@ -1172,7 +1220,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 Text(
                   'Start Course',
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -1235,7 +1283,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: Text(
                     'PRO MEMBERSHIP',
                     style: TextStyle(
-                      fontSize: 12.sp,
+                      fontSize: 11.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Montserrat',
                       color: Colors.white,
@@ -1260,7 +1308,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             Text(
               'Unlimited Access',
               style: TextStyle(
-                fontSize: 28.sp,
+                fontSize: 24.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
                 color: Colors.white,
@@ -1274,7 +1322,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             Text(
               'Unlock live translator and all\ncity guides worldwide.',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'Montserrat',
                 color: Colors.white.withOpacity(0.85),
@@ -1310,7 +1358,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: Text(
                     'UPGRADE NOW',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Montserrat',
                       color: Color(0xFF1A2332),
@@ -1381,7 +1429,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   Text(
                     'Visual Dictionary',
                     style: TextStyle(
-                      fontSize: 20.sp,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Montserrat',
                       color: MyColors.textPrimary,
@@ -1391,7 +1439,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   Text(
                     '20,000+ Translated Items',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w400,
                       fontFamily: 'Montserrat',
                       color: MyColors.textSecondary,
