@@ -21,6 +21,9 @@ class PremiumHomeView extends ConsumerStatefulWidget {
 class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   int _selectedIndex = 0;
   Language _selectedLanguage = AppLanguages.all.first; // Default to English
+  int _selectedCategoryIndex = 0; // Track selected phrasebook category
+  Map<int, double> _swipeProgressMap =
+      {}; // Track swipe progress for each feature card
 
   /// Handle navigation item tap
   void _onNavigationItemTapped(int index) {
@@ -71,32 +74,32 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 20.h),
+                          SizedBox(height: 16.h),
 
                           // Greeting
                           _buildGreeting(),
 
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 24.h),
 
                           // Quick Phrasebook
                           _buildQuickPhrasebook(),
 
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 4.h),
 
                           // Questions
                           _buildQuestions(),
 
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 24.h),
 
                           // Features
                           _buildFeatures(),
 
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 24.h),
 
                           // Quick Actions
                           _buildQuickActions(),
 
-                          SizedBox(height: 32.h),
+                          SizedBox(height: 24.h),
 
                           // Course Cards
                           _buildCourseCards(),
@@ -136,7 +139,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   /// Header with language selector, premium badge, notification, and profile
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -189,7 +192,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             ),
             SizedBox(width: 8.w),
             Text(
-              _selectedLanguage.name,
+              _selectedLanguage.getLocalizedName(_selectedLanguage.code),
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
@@ -288,10 +291,10 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                           ),
                           SizedBox(width: 12.w),
 
-                          // Language name
+                          // Language name - localized
                           Expanded(
                             child: Text(
-                              language.name,
+                              language.getLocalizedName(_selectedLanguage.code),
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: isSelected
@@ -462,24 +465,29 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
           ],
         ),
 
-        SizedBox(height: 20.h),
+        SizedBox(height: 12.h),
 
         // Horizontal scrollable categories
         SizedBox(
-          height: 145.h,
+          height: 100.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
-              final isFirst = index == 0;
+              final isSelected = _selectedCategoryIndex == index;
 
               return Padding(
                 padding: EdgeInsets.only(right: 20.w),
                 child: _buildPhrasebookCategory(
                   iconPath: category['icon']!,
                   label: category['label']!,
-                  isSelected: isFirst,
+                  isSelected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      _selectedCategoryIndex = index;
+                    });
+                  },
                 ),
               );
             },
@@ -494,12 +502,10 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
     required String iconPath,
     required String label,
     required bool isSelected,
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to category detail page
-        print('Tapped on category: $label');
-      },
+      onTap: onTap,
       child: Column(
         children: [
           // Icon container
@@ -719,7 +725,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
           ],
         ),
 
-        SizedBox(height: 20.h),
+        SizedBox(height: 16.h),
 
         // Horizontal scrollable feature cards
         SizedBox(
@@ -731,11 +737,12 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               final feature = features[index];
 
               return Padding(
-                padding: EdgeInsets.only(right: 16.w),
+                padding: EdgeInsets.only(right: 20.w),
                 child: _buildFeatureCard(
                   title: feature['title'] as String,
                   subtitle: feature['subtitle'] as String,
                   gradientColors: feature['gradient'] as List<Color>,
+                  cardIndex: index,
                 ),
               );
             },
@@ -750,6 +757,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
     required String title,
     required String subtitle,
     required List<Color> gradientColors,
+    required int cardIndex,
   }) {
     return GestureDetector(
       onTap: () {
@@ -857,47 +865,103 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
 
                   Spacer(),
 
-                  // Swipe to start button
-                  Container(
-                    width: double.infinity,
-                    height: 56.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(28.r),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.4),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 40.w,
-                          height: 40.h,
+                  // Swipe to start button - SlideAction style
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final currentProgress =
+                          _swipeProgressMap[cardIndex] ?? 0.0;
+                      return GestureDetector(
+                        onHorizontalDragUpdate: (details) {
+                          setState(() {
+                            final newProgress =
+                                currentProgress + details.delta.dx;
+                            _swipeProgressMap[cardIndex] = newProgress.clamp(
+                              0.0,
+                              constraints.maxWidth - 60.w,
+                            );
+                          });
+                        },
+                        onHorizontalDragEnd: (details) {
+                          if (currentProgress > constraints.maxWidth * 0.7) {
+                            // Success - Navigate
+                            print('Swipe completed! Navigating...');
+                            // TODO: Add navigation to course
+                          }
+                          setState(() {
+                            _swipeProgressMap[cardIndex] = 0;
+                          });
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 56.h,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(28.r),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.4),
+                              width: 1.5,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.arrow_forward,
-                            color: gradientColors[0],
-                            size: 20.sp,
+                          child: Stack(
+                            children: [
+                              // Background progress
+                              if (currentProgress > 0)
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: currentProgress + 48.w,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.35),
+                                      borderRadius: BorderRadius.circular(28.r),
+                                    ),
+                                  ),
+                                ),
+                              // Slider button
+                              AnimatedPositioned(
+                                duration: Duration(milliseconds: 200),
+                                left: currentProgress,
+                                top: 8.h,
+                                bottom: 8.h,
+                                child: Container(
+                                  width: 40.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_forward,
+                                    color: gradientColors[0],
+                                    size: 20.sp,
+                                  ),
+                                ),
+                              ),
+                              // Text
+                              Center(
+                                child: Text(
+                                  'SWIPE TO START',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Montserrat',
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(width: 12.w),
-                        Text(
-                          'SWIPE TO START',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Montserrat',
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -948,7 +1012,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       },
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(24.w),
+        padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,

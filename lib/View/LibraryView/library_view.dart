@@ -120,66 +120,57 @@ class _LibraryViewState extends State<LibraryView> {
       body: SafeArea(
         child: Stack(
           children: [
-            // Main content
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 20.h),
+            // Main content with smooth scrolling
+            SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20.h),
 
-                // Header
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'YOUR COLLECTION',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Montserrat',
-                          color: Color(0xFF4ECDC4),
-                          letterSpacing: 1.5,
-                        ),
+                    // Header
+                    Text(
+                      'YOUR COLLECTION',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Montserrat',
+                        color: Color(0xFF4ECDC4),
+                        letterSpacing: 1.5,
                       ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'My Library',
-                        style: TextStyle(
-                          fontSize: 32.sp,
-                          fontWeight: FontWeight.w800,
-                          fontFamily: 'Montserrat',
-                          color: Color(0xFF1A1A1A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 32.h),
-
-                // Folders Section
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Text(
-                    'Folders',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF1A1A1A),
                     ),
-                  ),
-                ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'My Library',
+                      style: TextStyle(
+                        fontSize: 32.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Montserrat',
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
 
-                SizedBox(height: 16.h),
+                    SizedBox(height: 32.h),
 
-                // Folders Grid
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    child: GridView.builder(
-                      padding: EdgeInsets.only(bottom: 100.h),
+                    // Folders Section Title
+                    Text(
+                      'Folders',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // Folders Grid
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 16.w,
@@ -198,9 +189,11 @@ class _LibraryViewState extends State<LibraryView> {
                         );
                       },
                     ),
-                  ),
+
+                    SizedBox(height: 100.h), // Space for bottom nav
+                  ],
                 ),
-              ],
+              ),
             ),
 
             // Bottom Navigation Bar
