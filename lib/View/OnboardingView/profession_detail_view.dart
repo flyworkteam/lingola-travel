@@ -191,27 +191,26 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          padding: EdgeInsets.only(left: 4.w, right: 16.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              width: 32.w,
-                              height: 32.h,
+                              width: 40.w,
+                              height: 40.h,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(8.r),
+                                color: Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
                                 child: Icon(
                                   Icons.arrow_back,
                                   color: MyColors.white,
-                                  size: 20.sp,
+                                  size: 22.sp,
                                 ),
                               ),
                             ),
-                            SizedBox(width: 8.w),
+                            SizedBox(width: 12.w),
                             Text(
                               'Back',
                               style: GoogleFonts.montserrat(
@@ -237,9 +236,11 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => EnglishLevelSelectionView(
-                                      selectedLanguage: widget.selectedLanguage,
-                                    ),
+                                    builder: (context) =>
+                                        EnglishLevelSelectionView(
+                                          selectedLanguage:
+                                              widget.selectedLanguage,
+                                        ),
                                   ),
                                 );
                               }
@@ -251,11 +252,12 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          padding: EdgeInsets.only(left: 16.w, right: 4.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            SizedBox(width: 40.w),
                             Text(
                               'Continue',
                               style: GoogleFonts.montserrat(
@@ -264,19 +266,18 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                                 color: MyColors.white,
                               ),
                             ),
-                            SizedBox(width: 8.w),
                             Container(
-                              width: 32.w,
-                              height: 32.h,
+                              width: 40.w,
+                              height: 40.h,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(8.r),
+                                color: Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
                                 child: Icon(
                                   Icons.arrow_forward,
                                   color: MyColors.white,
-                                  size: 20.sp,
+                                  size: 22.sp,
                                 ),
                               ),
                             ),
