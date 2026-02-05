@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 
@@ -463,29 +464,62 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                           child: Icon(Icons.arrow_back_ios_new, size: 24.sp),
                         ),
                         SizedBox(width: 12.w),
-                        if (_isEditMode)
-                          GestureDetector(
-                            onTap: _showEditNameDialog,
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 8.w),
-                              child: Icon(
-                                Icons.edit,
-                                size: 20.sp,
-                                color: Color(0xFF4ECDC4),
-                              ),
-                            ),
-                          ),
                         Expanded(
-                          child: GestureDetector(
-                            onTap: _isEditMode ? _showEditNameDialog : null,
-                            child: Text(
-                              _currentFolderName.replaceAll('\n', ' '),
-                              style: TextStyle(
-                                fontSize: 20.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Montserrat',
-                                color: Color(0xFF1A1A1A),
-                              ),
+                          child: Center(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 36.w, top: 4.h, bottom: 4.h),
+                                  child: Text(
+                                    _currentFolderName.replaceAll('\n', ' '),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 20.sp,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Montserrat',
+                                      color: Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                ),
+                                if (_isEditMode)
+                                  Positioned(
+                                    left: 0,
+                                    top: -8.h,
+                                    child: GestureDetector(
+                                      onTap: _showEditNameDialog,
+                                      behavior: HitTestBehavior.opaque,
+                                      child: Container(
+                                        width: 36.w,
+                                        height: 36.w,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                              blurRadius: 8,
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: SvgPicture.asset(
+                                            'assets/icons/editpen.svg',
+                                            width: 16.w,
+                                            height: 16.h,
+                                            colorFilter: ColorFilter.mode(
+                                              Color(0xFF4ECDC4),
+                                              BlendMode.srcIn,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),

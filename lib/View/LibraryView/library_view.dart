@@ -278,7 +278,7 @@ class _LibraryViewState extends State<LibraryView> {
               ),
             ),
 
-            SizedBox(height: 8.h),
+            SizedBox(height: 4.h),
 
             // Items count
             Text(
@@ -291,7 +291,7 @@ class _LibraryViewState extends State<LibraryView> {
               ),
             ),
 
-            SizedBox(height: 4.h),
+            SizedBox(height: 2.h),
 
             // Updated time
             Text(
