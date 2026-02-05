@@ -74,7 +74,7 @@ class _NotificationsViewState extends State<NotificationsView> {
       builder: (BuildContext context) {
         return Dialog(
           alignment: Alignment.bottomCenter,
-          insetPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 24.h),
+          insetPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 8.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
           ),
