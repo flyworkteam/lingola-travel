@@ -392,7 +392,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                 Text(
                   notification.title,
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Montserrat',
                     color: Colors.white,
@@ -402,7 +402,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                 Text(
                   notification.message,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: Colors.white.withOpacity(0.9),
@@ -460,7 +460,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                 Text(
                   notification.title,
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
@@ -470,7 +470,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                 Text(
                   notification.message,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
