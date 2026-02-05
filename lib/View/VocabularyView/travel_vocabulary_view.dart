@@ -198,12 +198,8 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       child: Container(
         height: 48.h,
         decoration: BoxDecoration(
-          color: MyColors.white, // Changed from gray to white for consistency
+          color: Color(0xFFF5F5F5), // Gray background for container
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: MyColors.border,
-            width: 1,
-          ), // Added border for visibility
         ),
         child: Row(
           children: [
@@ -226,7 +222,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       child: Container(
         margin: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          color: isSelected ? MyColors.white : Color(0xFFF5F5F5),
+          color: isSelected ? MyColors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(10.r),
         ),
         child: Center(
