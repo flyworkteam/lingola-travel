@@ -98,7 +98,7 @@ class _LibraryViewState extends State<LibraryView> {
             SingleChildScrollView(
               physics: BouncingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -141,27 +141,50 @@ class _LibraryViewState extends State<LibraryView> {
 
                     SizedBox(height: 16.h),
 
-                    // Folders Grid
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16.w,
-                        mainAxisSpacing: 16.h,
-                        childAspectRatio: 0.85,
-                      ),
-                      itemCount: _folders.length,
-                      itemBuilder: (context, index) {
-                        final folder = _folders[index];
-                        return _buildFolderCard(
-                          name: folder['name'],
-                          items: folder['items'],
-                          icon: folder['icon'],
-                          color: folder['color'],
-                          iconColor: folder['iconColor'],
-                        );
-                      },
+                    // Folders Grid replacement with Staggered layout and Layout Variations
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left Column
+                        Expanded(
+                          child: Column(
+                            children: [
+                              for (int i = 0; i < _folders.length; i += 2)
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 16.h),
+                                  child: _buildFolderCard(
+                                    name: _folders[i]['name'],
+                                    items: _folders[i]['items'],
+                                    icon: _folders[i]['icon'],
+                                    color: _folders[i]['color'],
+                                    iconColor: _folders[i]['iconColor'],
+                                    isVertical: i % 4 == 0 || i % 4 == 3,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        // Right Column
+                        Expanded(
+                          child: Column(
+                            children: [
+                              for (int i = 1; i < _folders.length; i += 2)
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 16.h),
+                                  child: _buildFolderCard(
+                                    name: _folders[i]['name'],
+                                    items: _folders[i]['items'],
+                                    icon: _folders[i]['icon'],
+                                    color: _folders[i]['color'],
+                                    iconColor: _folders[i]['iconColor'],
+                                    isVertical: i % 4 == 0 || i % 4 == 3,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
 
                     SizedBox(height: 100.h), // Space for bottom nav
@@ -184,7 +207,61 @@ class _LibraryViewState extends State<LibraryView> {
     required String icon,
     required Color color,
     required Color iconColor,
+    required bool isVertical,
   }) {
+    final folderName = Text(
+      name.replaceAll('\n', ' '),
+      style: TextStyle(
+        fontSize: 16.sp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Montserrat',
+        color: Color(0xFF1A1A1A),
+        height: 1.2,
+      ),
+    );
+
+    final itemInfo = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$items items',
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Montserrat',
+            color: Color(0xFFB8BCC8),
+          ),
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          'Updated 2d ago',
+          style: TextStyle(
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w400,
+            fontFamily: 'Montserrat',
+            color: Color(0xFFB8BCC8),
+          ),
+        ),
+      ],
+    );
+
+    final iconWidget = Container(
+      width: 44.w,
+      height: 44.w,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Center(
+        child: Image.asset(
+          icon,
+          width: 22.w,
+          height: 22.w,
+          fit: BoxFit.contain,
+        ),
+      ),
+    );
+
     return GestureDetector(
       onTap: () async {
         final result = await Navigator.push(
@@ -212,99 +289,52 @@ class _LibraryViewState extends State<LibraryView> {
             );
 
             if (folderIndex != -1) {
-              // Yeni ismi eski format'a göre ayarla (newline'ı koru)
-              if (oldName.contains('\n')) {
-                final parts = newName.split(' ');
-                if (parts.length > 1) {
-                  _folders[folderIndex]['name'] =
-                      parts.sublist(0, parts.length - 2).join(' ') +
-                      '\n' +
-                      parts.sublist(parts.length - 2).join(' ');
-                } else {
-                  _folders[folderIndex]['name'] = newName;
-                }
-              } else {
-                _folders[folderIndex]['name'] = newName;
-              }
+              _folders[folderIndex]['name'] = newName;
             }
           });
         }
       },
       child: Container(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(24.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 15,
+              offset: Offset(0, 5),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon
-            Container(
-              width: 56.w,
-              height: 56.w,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(16.r),
+        child: isVertical
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  iconWidget,
+                  SizedBox(height: 20.h),
+                  folderName,
+                  SizedBox(height: 12.h),
+                  itemInfo,
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      iconWidget,
+                      SizedBox(width: 8.w),
+                      Expanded(child: folderName),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+                  itemInfo,
+                ],
               ),
-              child: Center(
-                child: Image.asset(
-                  icon,
-                  width: 20.w,
-                  height: 20.h,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-
-            Spacer(),
-
-            // Folder name
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Montserrat',
-                color: Color(0xFF1A1A1A),
-                height: 1.2,
-              ),
-            ),
-
-            SizedBox(height: 4.h),
-
-            // Items count
-            Text(
-              '$items items',
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Montserrat',
-                color: Color(0xFF9CA3AF),
-              ),
-            ),
-
-            SizedBox(height: 2.h),
-
-            // Updated time
-            Text(
-              'Updated 2d ago',
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w400,
-                fontFamily: 'Montserrat',
-                color: Color(0xFFB8BCC8),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
