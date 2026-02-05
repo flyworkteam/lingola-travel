@@ -140,7 +140,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
                       // Category grid
                       _buildCategoryGrid(),
 
-                      SizedBox(height: 32.h),
+                      SizedBox(height: 16.h),
 
                       // Recent Search
                       if (_recentSearches.isNotEmpty) _buildRecentSearch(),
