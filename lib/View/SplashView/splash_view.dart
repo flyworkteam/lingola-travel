@@ -56,8 +56,8 @@ class _SplashViewState extends State<SplashView> {
             // LAYER 2: WORLD MAP 1 (SOL ÜST) - Tam Kapsama
             // ========================================
             Positioned(
-              top: 80.h,
-              left: -30.w,
+              top: 20.h,
+              left: -80.w,
               child: Opacity(
                 opacity: 0.15,
                 child: SvgPicture.asset(
@@ -77,8 +77,8 @@ class _SplashViewState extends State<SplashView> {
             // LAYER 3: WORLD MAP 2 (SAĞ ÜST) - Tam Kapsama
             // ========================================
             Positioned(
-              top: 50.h,
-              right: -10.w,
+              top: 0.h,
+              right: -60.w,
               child: Opacity(
                 opacity: 0.15,
                 child: SvgPicture.asset(
