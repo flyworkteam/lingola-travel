@@ -30,67 +30,55 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       body: SafeArea(
         child: Stack(
           children: [
-            // Main content
-            Column(
-              children: [
-                // Header
-                _buildHeader(),
+            // Main scrollable content
+            SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  _buildHeader(),
 
-                // Content - Scrollable
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                          // Greeting
-                          _buildGreeting(),
+                  // Greeting
+                  _buildGreeting(),
 
-                          SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                          // Quick Phrasebook
-                          _buildQuickPhrasebook(),
+                  // Quick Phrasebook
+                  _buildQuickPhrasebook(),
 
-                          SizedBox(height: 4.h),
+                  SizedBox(height: 4.h),
 
-                          // Questions
-                          _buildQuestions(),
+                  // Questions
+                  _buildQuestions(),
 
-                          SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                          // Features
-                          _buildFeatures(),
+                  // Features
+                  _buildFeatures(),
 
-                          SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                          // Quick Actions
-                          _buildQuickActions(),
+                  // Quick Actions
+                  _buildQuickActions(),
 
-                          SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                          // Course Cards
-                          _buildCourseCards(),
+                  // Course Cards
+                  _buildCourseCards(),
 
-                          SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                          // Visual Dictionary Card
-                          _buildVisualDictionaryCard(),
+                  // Visual Dictionary Card
+                  _buildVisualDictionaryCard(),
 
-                          SizedBox(height: 16.h),
+                  SizedBox(height: 20.h),
 
-                          // TODO: Add more sections here
-                          SizedBox(
-                            height: 100.h,
-                          ), // Bottom padding for floating nav
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                  // Bottom padding for floating nav
+                  SizedBox(height: 100.h),
+                ],
+              ),
             ),
 
             // Floating bottom navigation
@@ -109,7 +97,6 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   /// Header with language selector, premium badge, notification, and profile
   Widget _buildHeader() {
     return Container(
-      color: MyColors.background,
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
