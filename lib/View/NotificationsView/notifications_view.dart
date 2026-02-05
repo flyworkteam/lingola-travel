@@ -320,33 +320,35 @@ class _NotificationsViewState extends State<NotificationsView> {
                     : index - 1;
                 final notification = notifications[notificationIndex];
 
-                return Dismissible(
-                  key: Key(notification.id),
-                  direction: DismissDirection.endToStart,
-                  onDismissed: (direction) {
-                    _deleteNotification(notification.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Notification deleted'),
-                        duration: Duration(seconds: 2),
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16.r),
+                    child: Dismissible(
+                      key: Key(notification.id),
+                      direction: DismissDirection.endToStart,
+                      onDismissed: (direction) {
+                        _deleteNotification(notification.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Notification deleted'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: EdgeInsets.only(right: 20.w),
+                        color: Color(0xFFE53935),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: Colors.white,
+                          size: 28.sp,
+                        ),
                       ),
-                    );
-                  },
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: EdgeInsets.only(right: 20.w),
-                    margin: EdgeInsets.only(bottom: 12.h),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFE53935),
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline,
-                      color: Colors.white,
-                      size: 28.sp,
+                      child: _buildNotificationCard(notification),
                     ),
                   ),
-                  child: _buildNotificationCard(notification),
                 );
               },
             ),
@@ -431,11 +433,9 @@ class _NotificationsViewState extends State<NotificationsView> {
 
   Widget _buildNotificationCard(NotificationItem notification) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
