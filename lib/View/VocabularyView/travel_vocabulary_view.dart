@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 
@@ -22,8 +23,8 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
   final List<Map<String, dynamic>> _categories = [
     {'name': 'All Topics', 'icon': '✈️'},
     {'name': 'Airport', 'icon': '🛫'},
-    {'name': 'Accommodation', 'icon': '🏨'},
-    {'name': 'Transportation', 'icon': '🚕'},
+    {'name': 'Hotel', 'icon': '🏨'},
+    {'name': 'Taxi', 'icon': '🚕'},
     {'name': 'Food & Drink', 'icon': '🍽️'},
     {'name': 'Shopping', 'icon': '🛒'},
     {'name': 'Culture', 'icon': '🏛️'},
@@ -40,7 +41,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       {'title': 'Custom Declaration', 'translation': 'Gümrük Beyanı'},
       {'title': 'Carry-on Baggage', 'translation': 'El Bagajı'},
     ],
-    'Accommodation': [
+    'Hotel': [
       {'title': 'Late Check-out', 'translation': 'Geç Çıkış'},
       {'title': 'Housekeeping', 'translation': 'Oda Servisi/Temizlik'},
     ],
@@ -58,7 +59,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
         'translation': 'Güvenlik sırası bu mu?',
       },
     ],
-    'Accommodation': [
+    'Hotel': [
       {
         'question': 'What time is breakfast served?',
         'translation': 'Kahvaltı saat kaçta servis ediliyor?',
@@ -344,11 +345,19 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
       child: Row(
         children: [
-          // Category icon - use image for Airport and Accommodation
+          // Category icon - use SVG for Airport and Hotel
           if (categoryName == 'Airport')
-            Image.asset('assets/images/trip.png', width: 20.w, height: 20.h)
-          else if (categoryName == 'Accommodation')
-            Image.asset('assets/images/accomo.png', width: 20.w, height: 20.h)
+            SvgPicture.asset(
+              'assets/images/tvairport.svg',
+              width: 20.w,
+              height: 20.h,
+            )
+          else if (categoryName == 'Hotel')
+            SvgPicture.asset(
+              'assets/images/tvhotel.svg',
+              width: 20.w,
+              height: 20.h,
+            )
           else
             Text(categoryIcon, style: TextStyle(fontSize: 20.sp)),
           SizedBox(width: 8.w),
