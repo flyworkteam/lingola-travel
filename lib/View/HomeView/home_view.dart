@@ -42,7 +42,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: SingleChildScrollView(
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -109,6 +108,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   /// Header with language selector, notification, and profile
   Widget _buildHeader() {
     return Container(
+      color: MyColors.background,
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -316,10 +316,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
           shape: BoxShape.circle,
           border: Border.all(color: MyColors.border, width: 1),
         ),
-        child: Icon(
-          Icons.notifications_outlined,
-          size: 24.sp,
-          color: MyColors.textPrimary,
+        child: Center(
+          child: SvgPicture.asset(
+            'assets/images/zil.svg',
+            width: 18.w,
+            height: 18.h,
+          ),
         ),
       ),
     );
@@ -327,34 +329,37 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Greeting section
   Widget _buildGreeting() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Greeting text
-        Text(
-          'Hey, Alex 👋',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w400,
-            fontFamily: 'Montserrat',
-            color: MyColors.textSecondary,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Greeting text
+          Text(
+            'Hey, Alex 👋',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Montserrat',
+              color: MyColors.textSecondary,
+            ),
           ),
-        ),
 
-        SizedBox(height: 8.h),
+          SizedBox(height: 8.h),
 
-        // Main title
-        Text(
-          'Master Languages\nWhile Exploring',
-          style: TextStyle(
-            fontSize: 26.sp,
-            fontWeight: FontWeight.w700,
-            fontFamily: 'Montserrat',
-            color: MyColors.textPrimary,
-            height: 1.2,
+          // Main title
+          Text(
+            'Master Languages\nWhile Exploring',
+            style: TextStyle(
+              fontSize: 26.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Montserrat',
+              color: MyColors.textPrimary,
+              height: 1.2,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -380,57 +385,61 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Quick Phrasebook',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Montserrat',
-                color: MyColors.textPrimary,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                // Navigate to Travel Vocabulary
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const TravelVocabularyView(isPremium: false),
-                  ),
-                );
-              },
-              child: Text(
-                'See All',
+        // Header with padding
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Quick Phrasebook',
                 style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w700,
                   fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
+                  color: MyColors.textPrimary,
                 ),
               ),
-            ),
-          ],
+              GestureDetector(
+                onTap: () {
+                  // Navigate to Travel Vocabulary
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const TravelVocabularyView(isPremium: false),
+                    ),
+                  );
+                },
+                child: Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
 
         SizedBox(height: 12.h),
 
-        // Horizontal scrollable categories
+        // Horizontal scrollable categories - full width
         SizedBox(
           height: 100.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.only(left: 16.w),
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
               final isSelected = _selectedCategoryIndex == index;
 
               return Padding(
-                padding: EdgeInsets.only(right: 8.w),
+                padding: EdgeInsets.only(right: 16.w),
                 child: _buildPhrasebookCategory(
                   iconPath: category['icon']!,
                   label: category['label']!,
@@ -528,19 +537,22 @@ class _HomeViewState extends ConsumerState<HomeView> {
       },
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: questions
-          .map(
-            (q) => Padding(
-              padding: EdgeInsets.only(bottom: 16.h),
-              child: _buildQuestionCard(
-                englishText: q['english']!,
-                turkishText: q['turkish']!,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: questions
+            .map(
+              (q) => Padding(
+                padding: EdgeInsets.only(bottom: 16.h),
+                child: _buildQuestionCard(
+                  englishText: q['english']!,
+                  turkishText: q['turkish']!,
+                ),
               ),
-            ),
-          )
-          .toList(),
+            )
+            .toList(),
+      ),
     );
   }
 
@@ -646,50 +658,54 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Features',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Montserrat',
-                color: MyColors.textPrimary,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                // TODO: Navigate to all features
-                print('Tapped on See All - Features');
-              },
-              child: Text(
-                'See All',
+        // Header with padding
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Features',
                 style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w700,
                   fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
+                  color: MyColors.textPrimary,
                 ),
               ),
-            ),
-          ],
+              GestureDetector(
+                onTap: () {
+                  // TODO: Navigate to all features
+                  print('Tapped on See All - Features');
+                },
+                child: Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
 
         SizedBox(height: 16.h),
 
-        // Horizontal scrollable feature cards
+        // Horizontal scrollable feature cards - full width
         SizedBox(
           height: 300.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.only(left: 16.w),
             itemCount: features.length,
             itemBuilder: (context, index) {
               final feature = features[index];
 
               return Padding(
-                padding: EdgeInsets.only(right: 20.w),
+                padding: EdgeInsets.only(right: 16.w),
                 child: _buildFeatureCard(
                   title: feature['title'] as String,
                   subtitle: feature['subtitle'] as String,
@@ -952,25 +968,28 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Quick Actions section
   Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w700,
-            fontFamily: 'Montserrat',
-            color: MyColors.textPrimary,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Montserrat',
+              color: MyColors.textPrimary,
+            ),
           ),
-        ),
 
-        SizedBox(height: 20.h),
+          SizedBox(height: 20.h),
 
-        // Current Course Card
-        _buildCurrentCourseCard(),
-      ],
+          // Current Course Card
+          _buildCurrentCourseCard(),
+        ],
+      ),
     );
   }
 
@@ -1120,39 +1139,43 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final courses = [
       {
         'title': 'English for\nTravelers',
-        'icon': Icons.account_balance,
-        'iconColor': Color(0xFF4A90E2),
+        'iconPath': 'assets/icons/englishfortravel.svg',
         'iconBgColor': Color(0xFFE3F2FD), // Light blue
         'arrowColor': Color(0xFF4A90E2),
       },
       {
         'title': 'English for\nHealth',
-        'icon': Icons.favorite,
-        'iconColor': Color(0xFF9C27B0),
+        'iconPath': 'assets/icons/englishforhealth.svg',
         'iconBgColor': Color(0xFFF3E5F5), // Light purple
         'arrowColor': Color(0xFF9C27B0),
       },
     ];
 
-    return SizedBox(
-      height: 180.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: courses.length,
-        itemBuilder: (context, index) {
-          final course = courses[index];
-
-          return Padding(
-            padding: EdgeInsets.only(right: 16.w),
-            child: _buildCourseCard(
-              title: course['title'] as String,
-              icon: course['icon'] as IconData,
-              iconColor: course['iconColor'] as Color,
-              iconBgColor: course['iconBgColor'] as Color,
-              arrowColor: course['arrowColor'] as Color,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: SizedBox(
+        height: 180.h,
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildCourseCard(
+                title: courses[0]['title'] as String,
+                iconPath: courses[0]['iconPath'] as String,
+                iconBgColor: courses[0]['iconBgColor'] as Color,
+                arrowColor: courses[0]['arrowColor'] as Color,
+              ),
             ),
-          );
-        },
+            SizedBox(width: 12.w),
+            Expanded(
+              child: _buildCourseCard(
+                title: courses[1]['title'] as String,
+                iconPath: courses[1]['iconPath'] as String,
+                iconBgColor: courses[1]['iconBgColor'] as Color,
+                arrowColor: courses[1]['arrowColor'] as Color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1160,8 +1183,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   /// Single course card
   Widget _buildCourseCard({
     required String title,
-    required IconData icon,
-    required Color iconColor,
+    required String iconPath,
     required Color iconBgColor,
     required Color arrowColor,
   }) {
@@ -1171,8 +1193,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         print('Tapped on course: $title');
       },
       child: Container(
-        width: 200.w,
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
           color: MyColors.white,
           borderRadius: BorderRadius.circular(20.r),
@@ -1189,13 +1210,15 @@ class _HomeViewState extends ConsumerState<HomeView> {
           children: [
             // Icon
             Container(
-              width: 56.w,
-              height: 56.h,
+              width: 48.w,
+              height: 48.h,
               decoration: BoxDecoration(
                 color: iconBgColor,
-                borderRadius: BorderRadius.circular(16.r),
+                borderRadius: BorderRadius.circular(14.r),
               ),
-              child: Icon(icon, color: iconColor, size: 28.sp),
+              child: Center(
+                child: SvgPicture.asset(iconPath, width: 28.w, height: 28.h),
+              ),
             ),
 
             SizedBox(height: 16.h),
@@ -1238,138 +1261,142 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Premium Membership Card
   Widget _buildPremiumCard() {
-    return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to premium subscription page
-        print('Tapped on Premium Membership');
-      },
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A2332), // Dark navy
-              Color(0xFF2D3A4F),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 20,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row with badge and premium logo
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // PRO MEMBERSHIP badge
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFFFA726), // Orange
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    'PRO MEMBERSHIP',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-
-                // Premium logo
-                Image.asset(
-                  'assets/images/premiumlogo.png',
-                  width: 48.w,
-                  height: 48.h,
-                  fit: BoxFit.contain,
-                ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: GestureDetector(
+        onTap: () {
+          // TODO: Navigate to premium subscription page
+          print('Tapped on Premium Membership');
+        },
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1A2332), // Dark navy
+                Color(0xFF2D3A4F),
               ],
             ),
-
-            SizedBox(height: 20.h),
-
-            // Title
-            Text(
-              'Unlimited Access',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Montserrat',
-                color: Colors.white,
-                height: 1.2,
+            borderRadius: BorderRadius.circular(24.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 20,
+                offset: Offset(0, 10),
               ),
-            ),
-
-            SizedBox(height: 12.h),
-
-            // Description
-            Text(
-              'Unlock live translator and all\ncity guides worldwide.',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-                fontFamily: 'Montserrat',
-                color: Colors.white.withOpacity(0.85),
-                height: 1.4,
-              ),
-            ),
-
-            SizedBox(height: 24.h),
-
-            // UPGRADE NOW button
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PremiumView()),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.2),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header row with badge and premium logo
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // PRO MEMBERSHIP badge
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
                     ),
-                  ],
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFFA726), // Orange
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      'PRO MEMBERSHIP',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+
+                  // Premium logo
+                  SvgPicture.asset(
+                    'assets/images/premiumlogo.svg',
+                    width: 48.w,
+                    height: 48.h,
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 20.h),
+
+              // Title
+              Text(
+                'Unlimited Access',
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Montserrat',
+                  color: Colors.white,
+                  height: 1.2,
                 ),
-                child: Center(
-                  child: Text(
-                    'UPGRADE NOW',
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF1A2332),
-                      letterSpacing: 0.5,
+              ),
+
+              SizedBox(height: 12.h),
+
+              // Description
+              Text(
+                'Unlock live translator and all\ncity guides worldwide.',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Montserrat',
+                  color: Colors.white.withOpacity(0.85),
+                  height: 1.4,
+                ),
+              ),
+
+              SizedBox(height: 24.h),
+
+              // UPGRADE NOW button
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PremiumView(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 56.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'UPGRADE NOW',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: Color(0xFF1A2332),
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1377,86 +1404,90 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Visual Dictionary Card
   Widget _buildVisualDictionaryCard() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const VisualDictionaryView(isPremium: false),
-          ),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: MyColors.white,
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: Offset(0, 4),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  const VisualDictionaryView(isPremium: false),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Book icon
-            Container(
-              width: 64.w,
-              height: 64.h,
-              decoration: BoxDecoration(
-                color: Color(0xFFE0F7F4), // Light turquoise
-                borderRadius: BorderRadius.circular(16.r),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: MyColors.white,
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 12,
+                offset: Offset(0, 4),
               ),
-              child: Center(
-                child: Image.asset(
-                  'assets/images/book.png',
-                  width: 36.w,
-                  height: 36.h,
-                  fit: BoxFit.contain,
+            ],
+          ),
+          child: Row(
+            children: [
+              // Book icon
+              Container(
+                width: 64.w,
+                height: 64.h,
+                decoration: BoxDecoration(
+                  color: Color(0xFFE0F7F4), // Light turquoise
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/book.png',
+                    width: 36.w,
+                    height: 36.h,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-            ),
 
-            SizedBox(width: 16.w),
+              SizedBox(width: 16.w),
 
-            // Text content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Visual Dictionary',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: MyColors.textPrimary,
+              // Text content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Visual Dictionary',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    '20,000+ Translated Items',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                      color: MyColors.textSecondary,
+                    SizedBox(height: 4.h),
+                    Text(
+                      '20,000+ Translated Items',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Arrow icon
-            Icon(
-              Icons.arrow_forward_ios,
-              color: MyColors.textSecondary,
-              size: 20.sp,
-            ),
-          ],
+              // Arrow icon
+              Icon(
+                Icons.arrow_forward_ios,
+                color: MyColors.textSecondary,
+                size: 20.sp,
+              ),
+            ],
+          ),
         ),
       ),
     );
