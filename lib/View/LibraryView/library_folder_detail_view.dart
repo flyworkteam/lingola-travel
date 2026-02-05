@@ -28,6 +28,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
   bool _isEditMode = false;
   List<Map<String, dynamic>> _allItems = [];
   late String _currentFolderName;
+  final Set<String> _bookmarkedIds = {};
 
   late AnimationController _progressController;
 
@@ -328,10 +329,13 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
   }
 
   void _toggleBookmark(String itemId) {
-    // TODO: Implement bookmark functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Bookmarked!'), duration: Duration(seconds: 1)),
-    );
+    setState(() {
+      if (_bookmarkedIds.contains(itemId)) {
+        _bookmarkedIds.remove(itemId);
+      } else {
+        _bookmarkedIds.add(itemId);
+      }
+    });
   }
 
   void _showItemDetail(Map<String, dynamic> item) {
@@ -491,8 +495,8 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                                       onTap: _showEditNameDialog,
                                       behavior: HitTestBehavior.opaque,
                                       child: Container(
-                                        width: 36.w,
-                                        height: 36.w,
+                                        width: 28.w, // Reduced from 36.w
+                                        height: 28.w, // Reduced from 36.w
                                         decoration: BoxDecoration(
                                           color: Colors.white,
                                           shape: BoxShape.circle,
@@ -508,8 +512,8 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                                         child: Center(
                                           child: SvgPicture.asset(
                                             'assets/icons/editpen.svg',
-                                            width: 16.w,
-                                            height: 16.h,
+                                            width: 12.w, // Reduced from 16.w
+                                            height: 12.h, // Reduced from 16.h
                                             colorFilter: ColorFilter.mode(
                                               Color(0xFF4ECDC4),
                                               BlendMode.srcIn,
@@ -596,43 +600,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                 ),
               ),
 
-              // Floating Action Button (Edit Mode Only)
-              if (_isEditMode)
-                Positioned(
-                  right: 24.w,
-                  bottom: 100.h,
-                  child: GestureDetector(
-                    onTap: () {
-                      // TODO: Add new item functionality
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Add new item'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 56.w,
-                      height: 56.w,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFF4ECDC4).withOpacity(0.4),
-                            blurRadius: 12,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(Icons.add, color: Colors.white, size: 28.sp),
-                    ),
-                  ),
-                ),
+              // Floating Action Button removed as requested
             ],
           ),
         ),
@@ -671,93 +639,94 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 32.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Walking person with suitcase icon
-            Icon(
-              Icons.luggage,
-              size: 120.sp,
-              color: Color(0xFF4ECDC4).withOpacity(0.3),
-            ),
-            SizedBox(height: 32.h),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 32.w),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          SizedBox(height: 140.h), // Increased from 60.h to push everything further down
+          // Updated Empty State Icon
+          SvgPicture.asset(
+            'assets/icons/nosaveditemyet.svg',
+            width: 140.w,
+            height: 140.w,
+            fit: BoxFit.contain,
+          ),
+          SizedBox(height: 48.h), // Increased from 24.h to pull texts down
 
-            // Title
-            Text(
-              'No saved items yet',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Montserrat',
-                color: Color(0xFF1A1A1A),
+          // Title
+          Text(
+            'No saved items yet',
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Montserrat',
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // Description
+          Text(
+            'Start adding words and phrases\nfrom your lessons to see them here!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Montserrat',
+              color: Color(0xFF9CA3AF),
+              height: 1.5,
+            ),
+          ),
+          
+          const Spacer(), // Pushes everything below it to the bottom
+
+          // Browse Lesson Button
+          GestureDetector(
+            onTap: () {
+              // Navigate to lessons or close
+              Navigator.pop(context, {
+                'newName': _currentFolderName,
+                'oldName': widget.folderName,
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              height: 56.h,
+              decoration: BoxDecoration(
+                color: Color(0xFF4ECDC4),
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF4ECDC4).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: Offset(0, 6),
+                  ),
+                ],
               ),
-            ),
-            SizedBox(height: 12.h),
-
-            // Description
-            Text(
-              'Start adding words and phrases\nfrom your lessons to see them here!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w400,
-                fontFamily: 'Montserrat',
-                color: Color(0xFF9CA3AF),
-                height: 1.5,
-              ),
-            ),
-            SizedBox(height: 48.h),
-
-            // Browse Lesson Button
-            GestureDetector(
-              onTap: () {
-                // Navigate to lessons or close
-                Navigator.pop(context, {
-                  'newName': _currentFolderName,
-                  'oldName': widget.folderName,
-                });
-              },
-              child: Container(
-                width: double.infinity,
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: Color(0xFF4ECDC4),
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0xFF4ECDC4).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'BROWSE LESSON',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: Colors.white,
-                      letterSpacing: 1.2,
-                    ),
+              child: Center(
+                child: Text(
+                  'BROWSE LESSON',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Montserrat',
+                    color: Colors.white,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 100.h), // Space for bottom navigation
-          ],
-        ),
+          ),
+          SizedBox(height: 120.h), // Space for bottom navigation
+        ],
       ),
     );
   }
 
   Widget _buildItemCard(Map<String, dynamic> item, bool isPlaying) {
     return GestureDetector(
-      onTap: _isEditMode ? null : () => _showItemDetail(item),
+      onTap: null, // Disabled bottom sheet trigger as requested by user
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -831,13 +800,17 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                           width: 40.w,
                           height: 40.w,
                           decoration: BoxDecoration(
-                            color: Color(0xFFE0F7F4),
+                            color: _bookmarkedIds.contains(item['id'])
+                                ? Color(0xFFE3F2FD)
+                                : Color(0xFFE0F7F4),
                             borderRadius: BorderRadius.circular(10.r),
                           ),
                           child: Icon(
                             Icons.bookmark,
                             size: 22.sp,
-                            color: Color(0xFF4ECDC4),
+                            color: _bookmarkedIds.contains(item['id'])
+                                ? Color(0xFF3B82F6)
+                                : Color(0xFF4ECDC4),
                           ),
                         ),
                       ),
