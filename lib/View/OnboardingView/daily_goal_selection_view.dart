@@ -132,9 +132,10 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.only(left: 4.w, right: 16.w),
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Container(
                               width: 40.w,
@@ -151,7 +152,6 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 12.w),
                             Text(
                               'Back',
                               style: GoogleFonts.montserrat(
@@ -160,6 +160,7 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                                 color: MyColors.white,
                               ),
                             ),
+                            SizedBox(width: 20.w),
                           ],
                         ),
                       ),
@@ -180,12 +181,12 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.only(left: 16.w, right: 4.w),
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SizedBox(width: 40.w),
+                            SizedBox(width: 20.w),
                             Text(
                               'Continue',
                               style: GoogleFonts.montserrat(
