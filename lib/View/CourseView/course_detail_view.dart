@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../LessonView/lesson_detail_view.dart';
@@ -170,16 +171,19 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                       // Stats row
                       Row(
                         children: [
-                          _buildStatChip(Icons.book_outlined, '12 Lessons'),
+                          _buildStatChip(
+                            iconPath: 'assets/icons/12lesson.svg',
+                            text: '12 Lessons',
+                          ),
                           SizedBox(width: 16.w),
-                          _buildStatChip(Icons.access_time_rounded, '45 Mins'),
+                          _buildStatChip(icon: Icons.access_time_rounded, text: '45 Mins'),
                         ],
                       ),
 
                       SizedBox(height: 12.h),
 
                       // Level chip
-                      _buildStatChip(Icons.signal_cellular_alt, 'Intermediate'),
+                      _buildStatChip(icon: Icons.signal_cellular_alt, text: 'Intermediate'),
 
                       SizedBox(height: 20.h),
 
@@ -263,7 +267,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
             right: 0,
             bottom: 20.h,
             child: CustomBottomNavBar(
-              currentIndex: 2,
+              currentIndex: 1,
               isPremium: widget.isPremium,
             ),
           ),
@@ -272,7 +276,11 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     );
   }
 
-  Widget _buildStatChip(IconData icon, String text) {
+  Widget _buildStatChip({
+    IconData? icon,
+    String? iconPath,
+    required String text,
+  }) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
@@ -282,7 +290,16 @@ class _CourseDetailViewState extends State<CourseDetailView> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16.sp, color: Color(0xFF4ECDC4)),
+          if (iconPath != null)
+            SvgPicture.asset(
+              iconPath,
+              width: 16.w,
+              height: 16.w,
+              colorFilter: const ColorFilter.mode(Color(0xFF2EC4B6), BlendMode.srcIn),
+              fit: BoxFit.contain,
+            )
+          else if (icon != null)
+            Icon(icon, size: 16.sp, color: Color(0xFF4ECDC4)),
           SizedBox(width: 6.w),
           Text(
             text,

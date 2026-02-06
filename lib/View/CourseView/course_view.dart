@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'course_detail_view.dart';
@@ -160,7 +161,7 @@ class _CourseViewState extends State<CourseView> {
               right: 0,
               bottom: 20.h,
               child: CustomBottomNavBar(
-                currentIndex: 2,
+                currentIndex: 1,
                 isPremium: widget.isPremium,
               ),
             ),
@@ -430,10 +431,12 @@ class _CourseViewState extends State<CourseView> {
                               SizedBox(height: 8.h),
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.play_circle_outline,
-                                    size: 16.sp,
-                                    color: MyColors.white,
+                                  SvgPicture.asset(
+                                    'assets/icons/12lesson.svg',
+                                    width: 16.w,
+                                    height: 16.w,
+                                    colorFilter: const ColorFilter.mode(Color(0xFF2EC4B6), BlendMode.srcIn),
+                                    fit: BoxFit.contain,
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
