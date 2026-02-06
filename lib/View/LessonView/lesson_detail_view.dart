@@ -558,29 +558,31 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                   color: MyColors.grey200,
                   borderRadius: BorderRadius.circular(16.r),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    // Arrow with glassmorphism
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                        child: Container(
-                          padding: EdgeInsets.all(6.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Icon(
-                            Icons.arrow_back,
-                            size: 18.sp,
-                            color: MyColors.textSecondary,
+                    // Arrow with glassmorphism on the far left
+                    Positioned(
+                      left: 8.w,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                          child: Container(
+                            padding: EdgeInsets.all(6.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Icon(
+                              Icons.arrow_back,
+                              size: 18.sp,
+                              color: MyColors.textSecondary,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 8.w),
                     Text(
                       'Previous',
                       style: TextStyle(
@@ -619,8 +621,8 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                     ),
                   ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
                     Text(
                       'Continue',
@@ -631,22 +633,24 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                         color: MyColors.white,
                       ),
                     ),
-                    SizedBox(width: 8.w),
-                    // Arrow with glassmorphism
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                        child: Container(
-                          padding: EdgeInsets.all(6.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward,
-                            size: 18.sp,
-                            color: MyColors.white,
+                    // Arrow with glassmorphism on the far right
+                    Positioned(
+                      right: 8.w,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                          child: Container(
+                            padding: EdgeInsets.all(6.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward,
+                              size: 18.sp,
+                              color: MyColors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -751,11 +755,11 @@ class _LessonDetailViewState extends State<LessonDetailView> {
       ancestor: overlay,
     );
 
-    // Position it to be centered under the button
+    // Position it slightly shifted to the right of the button's edge
     final RelativeRect position = RelativeRect.fromLTRB(
-      buttonPosition.dx - 100.w, // Center relative to button
-      buttonPosition.dy + button.size.height + 12.h,
-      buttonPosition.dx + button.size.width + 100.w,
+      buttonPosition.dx + button.size.width - 100.w, // Shift left edge right
+      buttonPosition.dy + button.size.height + 8.h,
+      MediaQuery.of(context).size.width - (buttonPosition.dx + button.size.width + 20.w), // Shift right edge past button
       0,
     );
 
@@ -764,23 +768,23 @@ class _LessonDetailViewState extends State<LessonDetailView> {
       position: position,
       color: Colors.white,
       useRootNavigator: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
-      elevation: 8,
-      shadowColor: Colors.black.withOpacity(0.1),
-      constraints: BoxConstraints(minWidth: 260.w, maxWidth: 260.w),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.08),
+      constraints: BoxConstraints(minWidth: 120.w, maxWidth: 120.w),
       surfaceTintColor: Colors.white,
       items: [
         PopupMenuItem<String>(
           value: 'word',
-          height: 60.h,
+          height: 40.h,
           child: Center(
             child: Text(
               'Word',
               style: TextStyle(
-                fontSize: 32.sp,
-                fontWeight: FontWeight.w400,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w500,
                 fontFamily: 'Montserrat',
-                color: Color(0xFF8B9AAF), // Stylistic gray-blue
+                color: Color(0xFF8B9AAF),
               ),
             ),
           ),
@@ -788,13 +792,13 @@ class _LessonDetailViewState extends State<LessonDetailView> {
         PopupMenuDivider(height: 1.h),
         PopupMenuItem<String>(
           value: 'phrase',
-          height: 60.h,
+          height: 40.h,
           child: Center(
             child: Text(
               'Phrases',
               style: TextStyle(
-                fontSize: 32.sp,
-                fontWeight: FontWeight.w400,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w500,
                 fontFamily: 'Montserrat',
                 color: Color(0xFF8B9AAF),
               ),
