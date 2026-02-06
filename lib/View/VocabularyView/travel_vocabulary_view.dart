@@ -93,6 +93,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
       backgroundColor: MyColors.white, // Consistent white background
       appBar: _buildAppBar(),
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             // Main content

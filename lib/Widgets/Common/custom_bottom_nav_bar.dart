@@ -67,10 +67,11 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 20.h,
+      bottom: 20.h + bottomPadding,
       child: Center(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 24.w),

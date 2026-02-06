@@ -26,6 +26,7 @@ class _ProfileViewState extends State<ProfileView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             // Main content

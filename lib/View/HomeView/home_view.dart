@@ -29,6 +29,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             // Main scrollable content

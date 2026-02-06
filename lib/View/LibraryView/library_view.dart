@@ -92,6 +92,7 @@ class _LibraryViewState extends State<LibraryView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             // Main content with smooth scrolling

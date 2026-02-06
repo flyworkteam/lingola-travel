@@ -28,6 +28,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             // Main scrollable content
@@ -82,12 +83,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             ),
 
             // Floating bottom navigation
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 20.h,
-              child: CustomBottomNavBar(currentIndex: 0, isPremium: true),
-            ),
+            CustomBottomNavBar(currentIndex: 0, isPremium: true),
           ],
         ),
       ),
