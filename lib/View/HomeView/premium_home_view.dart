@@ -1034,7 +1034,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         // Navigate to Course page
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CourseView()),
+          MaterialPageRoute(
+            builder: (context) => const CourseView(isPremium: true),
+          ),
         );
       },
       child: Container(

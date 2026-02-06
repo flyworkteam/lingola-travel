@@ -392,7 +392,10 @@ class _CourseDetailViewState extends State<CourseDetailView> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => LessonDetailView(lessonData: lesson),
+              builder: (context) => LessonDetailView(
+                lessonData: lesson,
+                isPremium: widget.isPremium,
+              ),
             ),
           );
         }
@@ -454,7 +457,10 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LessonDetailView(lessonData: _lessons[1]),
+            builder: (context) => LessonDetailView(
+              lessonData: _lessons[1],
+              isPremium: widget.isPremium,
+            ),
           ),
         );
       },

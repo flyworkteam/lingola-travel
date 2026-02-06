@@ -8,8 +8,13 @@ import 'lesson_result_view.dart';
 
 class LessonDetailView extends StatefulWidget {
   final Map<String, dynamic> lessonData;
+  final bool isPremium;
 
-  const LessonDetailView({super.key, required this.lessonData});
+  const LessonDetailView({
+    super.key,
+    required this.lessonData,
+    this.isPremium = false,
+  });
 
   @override
   State<LessonDetailView> createState() => _LessonDetailViewState();
@@ -759,7 +764,10 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     final RelativeRect position = RelativeRect.fromLTRB(
       buttonPosition.dx + button.size.width - 100.w, // Shift left edge right
       buttonPosition.dy + button.size.height + 8.h,
-      MediaQuery.of(context).size.width - (buttonPosition.dx + button.size.width + 20.w), // Shift right edge past button
+      MediaQuery.of(context).size.width -
+          (buttonPosition.dx +
+              button.size.width +
+              20.w), // Shift right edge past button
       0,
     );
 
