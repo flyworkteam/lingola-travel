@@ -29,6 +29,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
+        top: false,
         bottom: false,
         child: Stack(
           children: [
@@ -97,7 +98,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
   /// Header with language selector, notification, and profile
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      padding: EdgeInsets.only(
+        left: 20.w,
+        right: 20.w,
+        top: MediaQuery.of(context).padding.top + 16.h,
+        bottom: 16.h,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
