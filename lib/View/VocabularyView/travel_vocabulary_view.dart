@@ -442,13 +442,15 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
               width: 40.w,
               height: 40.h,
               decoration: BoxDecoration(
-                color: Color(0xFF4ECDC4).withOpacity(0.2),
-                shape: BoxShape.circle,
+                color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Icon(
-                Icons.volume_up,
-                color: Color(0xFF4ECDC4),
-                size: 20.sp,
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icons/travelvocabularyseslendirme.svg',
+                  width: 20.w,
+                  height: 18.h,
+                ),
               ),
             ),
           ),
@@ -464,10 +466,14 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Center(
-                child: Icon(
-                  Icons.bookmark,
-                  size: 20.sp,
-                  color: isBookmarked ? Color(0xFF2989E9) : Color(0xFF9E9E9E),
+                child: SvgPicture.asset(
+                  'assets/icons/travelvocabularykaydet.svg',
+                  width: 20.w,
+                  height: 20.h,
+                  colorFilter: ColorFilter.mode(
+                    isBookmarked ? const Color(0xFF2989E9) : const Color(0xFF9E9E9E).withOpacity(0.5),
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),
@@ -539,13 +545,15 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                       width: 40.w,
                       height: 40.h,
                       decoration: BoxDecoration(
-                        color: Color(0xFF4ECDC4).withOpacity(0.2),
-                        shape: BoxShape.circle,
+                        color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                      child: Icon(
-                        Icons.volume_up,
-                        color: Color(0xFF4ECDC4),
-                        size: 20.sp,
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/travelvocabularyseslendirme.svg',
+                          width: 20.w,
+                          height: 18.h,
+                        ),
                       ),
                     ),
                   ),
@@ -563,12 +571,14 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Center(
-                        child: Icon(
-                          Icons.bookmark,
-                          size: 20.sp,
-                          color: isBookmarked
-                              ? Color(0xFF2989E9)
-                              : Color(0xFF9E9E9E),
+                        child: SvgPicture.asset(
+                          'assets/icons/travelvocabularykaydet.svg',
+                          width: 20.w,
+                          height: 20.h,
+                          colorFilter: ColorFilter.mode(
+                            isBookmarked ? const Color(0xFF2989E9) : const Color(0xFF9E9E9E).withOpacity(0.5),
+                            BlendMode.srcIn,
+                          ),
                         ),
                       ),
                     ),
