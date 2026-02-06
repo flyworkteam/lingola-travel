@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../Models/language.dart';
 
 class ProfileSettingsView extends StatefulWidget {
@@ -115,10 +116,11 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                               ],
                             ),
                             child: Center(
-                              child: Icon(
-                                Icons.person,
-                                size: 65.sp,
-                                color: Colors.white,
+                              child: SvgPicture.asset(
+                                'assets/icons/userlogo.svg',
+                                width: 65.w,
+                                height: 65.w,
+                                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                               ),
                             ),
                           ),
@@ -128,31 +130,28 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                               width: 44.w,
                               height: 44.w,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFF4ECDC4),
-                                    Color(0xFF2EC4B6),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                                color: Colors.white,
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: Colors.white,
-                                  width: 3.5,
+                                  width: 2.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Color(0xFF4ECDC4).withOpacity(0.4),
-                                    blurRadius: 12,
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 10,
                                     offset: Offset(0, 4),
                                   ),
                                 ],
                               ),
-                              child: Icon(
-                                Icons.camera_alt,
-                                size: 20.sp,
-                                color: Colors.white,
+                              child: Center(
+                                child: SvgPicture.asset(
+                                  'assets/icons/changephoto.svg',
+                                  width: 22.w,
+                                  height: 22.w,
+                                  colorFilter: const ColorFilter.mode(Color(0xFF4ECDC4), BlendMode.srcIn),
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             ),
                           ),
@@ -180,7 +179,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                     SizedBox(height: 10.h),
                     _buildInputField(
                       controller: _nameController,
-                      icon: Icons.person_outline_rounded,
+                      iconPath: 'assets/icons/fullname.svg',
                       hint: 'Enter your name',
                       enabled: true,
                     ),
@@ -192,7 +191,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                     SizedBox(height: 10.h),
                     _buildInputField(
                       controller: _emailController,
-                      icon: Icons.email_outlined,
+                      iconPath: 'assets/icons/email.svg',
                       hint: 'Enter your email',
                       enabled: false,
                       showLock: true,
@@ -205,7 +204,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                     SizedBox(height: 10.h),
                     _buildInputField(
                       controller: _ageController,
-                      icon: Icons.cake_outlined,
+                      iconPath: 'assets/icons/age.svg',
                       hint: 'Enter your age',
                       enabled: false,
                       showLock: true,
@@ -319,18 +318,18 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
   Widget _buildInputField({
     required TextEditingController controller,
-    required IconData icon,
+    required String iconPath,
     required String hint,
     required bool enabled,
     bool showLock = false,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: enabled ? Colors.white : Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(14.r),
+        color: enabled ? Color(0xFFF9FAFB) : Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: enabled ? Color(0xFFE5E7EB) : Color(0xFFF3F4F6),
-          width: 1.5,
+          color: enabled ? Color(0xFFE5E7EB) : Color(0xFFE5E7EB),
+          width: 1.2,
         ),
         boxShadow: enabled
             ? [
@@ -357,23 +356,33 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
             fontSize: 15.sp,
             fontWeight: FontWeight.w500,
             fontFamily: 'Montserrat',
-            color: Color(0xFFD1D5DB),
+            color: enabled ? Color(0xFF9CA3AF) : Color(0xFF4ECDC4).withOpacity(0.4),
           ),
           prefixIcon: Padding(
             padding: EdgeInsets.only(left: 16.w, right: 12.w),
-            child: Icon(
-              icon,
-              size: 22.sp,
-              color: enabled ? Color(0xFF6B7280) : Color(0xFFD1D5DB),
+            child: SvgPicture.asset(
+              iconPath,
+              width: 22.w,
+              height: 22.w,
+              colorFilter: ColorFilter.mode(
+                enabled ? Color(0xFF6B7280) : Color(0xFF4ECDC4).withOpacity(0.6),
+                BlendMode.srcIn,
+              ),
+              fit: BoxFit.scaleDown,
             ),
           ),
           suffixIcon: showLock
               ? Padding(
                   padding: EdgeInsets.only(right: 16.w),
-                  child: Icon(
-                    Icons.lock_outline_rounded,
-                    size: 20.sp,
-                    color: Color(0xFFD1D5DB),
+                  child: SvgPicture.asset(
+                    'assets/icons/lock.svg',
+                    width: 20.w,
+                    height: 20.w,
+                    colorFilter: ColorFilter.mode(
+                      enabled ? Color(0xFF9CA3AF) : Color(0xFF4ECDC4).withOpacity(0.5),
+                      BlendMode.srcIn,
+                    ),
+                    fit: BoxFit.scaleDown,
                   ),
                 )
               : null,
@@ -393,7 +402,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         Expanded(
           child: _buildGenderOption(
             label: 'Male',
-            icon: Icons.male_rounded,
+            iconPath: 'assets/icons/male.svg',
             isSelected: _selectedGender == 'Male',
             onTap: () => setState(() => _selectedGender = 'Male'),
           ),
@@ -402,14 +411,14 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         Expanded(
           child: _buildGenderOption(
             label: 'Female',
-            icon: Icons.female_rounded,
+            iconPath: 'assets/icons/female.svg',
             isSelected: _selectedGender == 'Female',
             onTap: () => setState(() => _selectedGender = 'Female'),
           ),
         ),
         SizedBox(width: 12.w),
         _buildGenderIconOption(
-          icon: Icons.block_rounded,
+          iconPath: 'assets/icons/forbidden.svg',
           isSelected: _selectedGender == 'Other',
           onTap: () => setState(() => _selectedGender = 'Other'),
         ),
@@ -419,7 +428,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
   Widget _buildGenderOption({
     required String label,
-    required IconData icon,
+    required String iconPath,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -446,10 +455,15 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 22.sp,
-              color: isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
+            SvgPicture.asset(
+              iconPath,
+              width: 22.w,
+              height: 22.w,
+              colorFilter: ColorFilter.mode(
+                isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
+                BlendMode.srcIn,
+              ),
+              fit: BoxFit.contain,
             ),
             SizedBox(width: 8.w),
             Text(
@@ -468,7 +482,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   }
 
   Widget _buildGenderIconOption({
-    required IconData icon,
+    required String iconPath,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -493,10 +507,17 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
             width: isSelected ? 2 : 1.5,
           ),
         ),
-        child: Icon(
-          icon,
-          size: 24.sp,
-          color: isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
+        child: Center(
+          child: SvgPicture.asset(
+            iconPath,
+            width: 24.w,
+            height: 24.w,
+            colorFilter: ColorFilter.mode(
+              isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
+              BlendMode.srcIn,
+            ),
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
@@ -701,16 +722,17 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                     width: 80.w,
                     height: 80.w,
                     decoration: BoxDecoration(
-                      color: Color(0xFFFFE5E5),
-                      borderRadius: BorderRadius.circular(20.r),
+                      color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Icon(
-                          Icons.person,
-                          size: 42.sp,
-                          color: Color(0xFFE57373),
+                        SvgPicture.asset(
+                          'assets/icons/userlogo.svg',
+                          width: 42.w,
+                          height: 42.w,
+                          colorFilter: const ColorFilter.mode(Color(0xFFE57373), BlendMode.srcIn),
                         ),
                         Positioned(
                           bottom: 8.h,

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // Added for SVG icons
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'profile_settings_view.dart';
@@ -66,7 +67,7 @@ class _ProfileViewState extends State<ProfileView> {
 
                     _buildSettingsCard([
                       _buildMenuItem(
-                        icon: Icons.person_outline,
+                        iconPath: 'assets/icons/profilesetting.svg',
                         iconColor: Color(0xFF4A90E2),
                         iconBgColor: Color(0xFFE3F2FD),
                         title: 'Profile Settings',
@@ -81,7 +82,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                       _buildDivider(),
                       _buildMenuItemWithToggle(
-                        icon: Icons.notifications_outlined,
+                        iconPath: 'assets/icons/notification.svg',
                         iconColor: Color(0xFF9C27B0),
                         iconBgColor: Color(0xFFF3E5F5),
                         title: 'Notifications',
@@ -94,7 +95,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                       _buildDivider(),
                       _buildMenuItemWithBadge(
-                        icon: Icons.workspace_premium_outlined,
+                        iconPath: 'assets/icons/profilepremium.svg',
                         iconColor: Color(0xFFFFB800),
                         iconBgColor: Color(0xFFFFF9E6),
                         title: 'Premium',
@@ -119,7 +120,7 @@ class _ProfileViewState extends State<ProfileView> {
 
                     _buildSettingsCard([
                       _buildMenuItem(
-                        icon: Icons.language,
+                        iconPath: 'assets/icons/applanguage.svg',
                         iconColor: Color(0xFF4ECDC4),
                         iconBgColor: Color(0xFFE0F7F4),
                         title: 'App Language',
@@ -134,7 +135,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                       _buildDivider(),
                       _buildMenuItem(
-                        icon: Icons.person_add_outlined,
+                        iconPath: 'assets/icons/sharefriends.svg',
                         iconColor: Color(0xFF5C6BC0),
                         iconBgColor: Color(0xFFE8EAF6),
                         title: 'Share Friend',
@@ -149,7 +150,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                       _buildDivider(),
                       _buildMenuItem(
-                        icon: Icons.thumb_up_outlined,
+                        iconPath: 'assets/icons/rateus.svg',
                         iconColor: Color(0xFFFF6B6B),
                         iconBgColor: Color(0xFFFFEBEE),
                         title: 'Rate Us',
@@ -159,7 +160,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                       _buildDivider(),
                       _buildMenuItem(
-                        icon: Icons.help_outline,
+                        iconPath: 'assets/icons/faq.svg',
                         iconColor: Color(0xFF757575),
                         iconBgColor: Color(0xFFF5F5F5),
                         title: 'F.A.Q.',
@@ -196,7 +197,7 @@ class _ProfileViewState extends State<ProfileView> {
 
                     SizedBox(
                       height: 110.h,
-                    ), // Space for bottom nav (65h bar + 20h bottom + 25h extra)
+                    ), // Space for bottom nav
                   ],
                 ),
               ),
@@ -226,7 +227,12 @@ class _ProfileViewState extends State<ProfileView> {
             child: CircleAvatar(
               radius: 48.w,
               backgroundColor: Color(0xFF4ECDC4).withOpacity(0.1),
-              child: Icon(Icons.person, size: 50.sp, color: Color(0xFF4ECDC4)),
+              child: SvgPicture.asset(
+                'assets/icons/userlogo.svg',
+                width: 50.w,
+                height: 50.w,
+                colorFilter: const ColorFilter.mode(Color(0xFF4ECDC4), BlendMode.srcIn),
+              ),
             ),
           ),
 
@@ -350,7 +356,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   /// Menu Item with Arrow
   Widget _buildMenuItem({
-    required IconData icon,
+    required String iconPath,
     required Color iconColor,
     required Color iconBgColor,
     required String title,
@@ -371,7 +377,15 @@ class _ProfileViewState extends State<ProfileView> {
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Icon(icon, size: 20.sp, color: iconColor),
+              child: Center(
+                child: SvgPicture.asset(
+                  iconPath,
+                  width: 20.w,
+                  height: 20.w,
+                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
 
             SizedBox(width: 12.w),
@@ -403,7 +417,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   /// Menu Item with Toggle Switch
   Widget _buildMenuItemWithToggle({
-    required IconData icon,
+    required String iconPath,
     required Color iconColor,
     required Color iconBgColor,
     required String title,
@@ -422,7 +436,15 @@ class _ProfileViewState extends State<ProfileView> {
               color: iconBgColor,
               borderRadius: BorderRadius.circular(12.r),
             ),
-            child: Icon(icon, size: 20.sp, color: iconColor),
+            child: Center(
+              child: SvgPicture.asset(
+                iconPath,
+                width: 20.w,
+                height: 20.w,
+                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
 
           SizedBox(width: 12.w),
@@ -453,7 +475,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   /// Menu Item with Badge
   Widget _buildMenuItemWithBadge({
-    required IconData icon,
+    required String iconPath,
     required Color iconColor,
     required Color iconBgColor,
     required String title,
@@ -475,7 +497,15 @@ class _ProfileViewState extends State<ProfileView> {
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Icon(icon, size: 20.sp, color: iconColor),
+              child: Center(
+                child: SvgPicture.asset(
+                  iconPath,
+                  width: 20.w,
+                  height: 20.w,
+                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
 
             SizedBox(width: 12.w),
@@ -543,7 +573,13 @@ class _ProfileViewState extends State<ProfileView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout, size: 20.sp, color: Color(0xFFF44336)),
+            SvgPicture.asset(
+              'assets/icons/cikisyap.svg',
+              width: 20.w,
+              height: 20.w,
+              colorFilter: const ColorFilter.mode(Color(0xFFF44336), BlendMode.srcIn),
+              fit: BoxFit.contain,
+            ),
             SizedBox(width: 8.w),
             Text(
               'Çıkış Yap',
@@ -583,16 +619,20 @@ class _ProfileViewState extends State<ProfileView> {
                 children: [
                   // Logout Icon
                   Container(
-                    width: 80.w,
-                    height: 80.w,
+                    width: 70.w,
+                    height: 70.w,
                     decoration: BoxDecoration(
-                      color: Color(0xFFFFE5E5),
-                      borderRadius: BorderRadius.circular(20.r),
+                      color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.logout_rounded,
-                      size: 40.sp,
-                      color: Color(0xFFE57373),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'assets/icons/cikisyap.svg',
+                        width: 32.w,
+                        height: 32.w,
+                        colorFilter: const ColorFilter.mode(Color(0xFFE57373), BlendMode.srcIn),
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   SizedBox(height: 24.h),
