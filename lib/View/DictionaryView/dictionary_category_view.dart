@@ -232,6 +232,8 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
     return AppBar(
       backgroundColor: MyColors.white,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: MyColors.textPrimary, size: 24.sp),
         onPressed: () => Navigator.pop(context),
