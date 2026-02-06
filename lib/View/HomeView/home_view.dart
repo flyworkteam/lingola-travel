@@ -731,28 +731,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
             end: Alignment.bottomRight,
             colors: gradientColors,
           ),
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: gradientColors[0].withOpacity(0.3),
-              blurRadius: 16,
-              offset: Offset(0, 8),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(20.r),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // Background pattern
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16.r),
-                child: Image.asset(
-                  'assets/images/messageboxarkaplan.png',
-                  fit: BoxFit.cover,
-                  opacity: AlwaysStoppedAnimation(0.3),
-                ),
-              ),
-            ),
 
             // Decorative circles
             Positioned(
@@ -804,7 +787,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     height: 60.h,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(16.r),
+                      borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Center(
                       child: Image.asset(
