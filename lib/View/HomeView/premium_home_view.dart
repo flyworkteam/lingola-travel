@@ -54,8 +54,6 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                   // Questions
                   _buildQuestions(),
 
-                  SizedBox(height: 16.h),
-
                   // Features
                   _buildFeatures(),
 
@@ -772,7 +770,6 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-
             // Decorative circles
             Positioned(
               bottom: -30.h,

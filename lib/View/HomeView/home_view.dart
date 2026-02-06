@@ -55,8 +55,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   // Questions
                   _buildQuestions(),
 
-                  SizedBox(height: 16.h),
-
                   // Features
                   _buildFeatures(),
 
@@ -736,7 +734,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-
             // Decorative circles
             Positioned(
               bottom: -30.h,

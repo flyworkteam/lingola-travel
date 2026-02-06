@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 
@@ -376,28 +377,36 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
             onTap: () {
               print('Play audio: ${word['english']}');
             },
-            child: Container(
+            child: SvgPicture.asset(
+              'assets/icons/visualdictionaryses.svg',
               width: 40.w,
               height: 40.h,
-              decoration: BoxDecoration(
-                color: Color(0xFF4ECDC4).withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.volume_up,
-                color: Color(0xFF4ECDC4),
-                size: 20.sp,
-              ),
             ),
           ),
           SizedBox(width: 8.w),
           // Bookmark button
           GestureDetector(
             onTap: () => _toggleBookmark(id),
-            child: Icon(
-              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.textSecondary,
-              size: 24.sp,
+            child: Container(
+              width: 40.w,
+              height: 40.h,
+              decoration: BoxDecoration(
+                color: isBookmarked
+                    ? Color(0xFF4ECDC4).withOpacity(0.2)
+                    : Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icons/visualdictionarysaved.svg',
+                  width: 11.w,
+                  height: 13.h,
+                  colorFilter: ColorFilter.mode(
+                    isBookmarked ? Color(0xFF4ECDC4) : Color(0xFFCBD5E1),
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
