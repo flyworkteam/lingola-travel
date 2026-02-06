@@ -462,7 +462,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
               width: 40.w,
               height: 40.h,
               decoration: BoxDecoration(
-                color: isBookmarked ? Color(0x3D2989E9) : Color(0xFFE8E8E8),
+                color: isBookmarked ? Color(0x3D2989E9) : const Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Center(
@@ -534,7 +534,8 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                 ),
               ),
               SizedBox(width: 12.w),
-              Column(
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Audio button
                   GestureDetector(
@@ -557,7 +558,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 8.h),
+                  SizedBox(width: 8.w),
                   // Bookmark button
                   GestureDetector(
                     onTap: () => _toggleBookmark(id),
@@ -567,7 +568,7 @@ class _TravelVocabularyViewState extends State<TravelVocabularyView> {
                       decoration: BoxDecoration(
                         color: isBookmarked
                             ? Color(0x3D2989E9)
-                            : Color(0xFFE8E8E8),
+                            : const Color(0xFFF5F5F5),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Center(

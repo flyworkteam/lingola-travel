@@ -469,16 +469,17 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                         ),
                         SizedBox(width: 12.w),
                         Expanded(
-                          child: Center(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
                                 Padding(
                                   padding: EdgeInsets.only(
-                                      left: 36.w, top: 4.h, bottom: 4.h),
+                                      left: 29.w, top: 4.h, bottom: 4.h),
                                   child: Text(
                                     _currentFolderName.replaceAll('\n', ' '),
-                                    textAlign: TextAlign.center,
+                                    textAlign: TextAlign.left,
                                     style: TextStyle(
                                       fontSize: 20.sp,
                                       fontWeight: FontWeight.w700,
@@ -512,8 +513,8 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                                         child: Center(
                                           child: SvgPicture.asset(
                                             'assets/icons/editpen.svg',
-                                            width: 12.w, // Reduced from 16.w
-                                            height: 12.h, // Reduced from 16.h
+                                            width: 15.w,
+                                            height: 15.h,
                                             colorFilter: ColorFilter.mode(
                                               Color(0xFF4ECDC4),
                                               BlendMode.srcIn,

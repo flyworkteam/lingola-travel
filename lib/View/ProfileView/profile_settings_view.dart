@@ -120,7 +120,10 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                                 'assets/icons/userlogo.svg',
                                 width: 65.w,
                                 height: 65.w,
-                                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
+                                ),
                               ),
                             ),
                           ),
@@ -149,7 +152,10 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                                   'assets/icons/changephoto.svg',
                                   width: 22.w,
                                   height: 22.w,
-                                  colorFilter: const ColorFilter.mode(Color(0xFF4ECDC4), BlendMode.srcIn),
+                                  colorFilter: const ColorFilter.mode(
+                                    Color(0xFF4ECDC4),
+                                    BlendMode.srcIn,
+                                  ),
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -356,7 +362,9 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
             fontSize: 15.sp,
             fontWeight: FontWeight.w500,
             fontFamily: 'Montserrat',
-            color: enabled ? Color(0xFF9CA3AF) : Color(0xFF4ECDC4).withOpacity(0.4),
+            color: enabled
+                ? Color(0xFF9CA3AF)
+                : Color(0xFF9CA3AF).withOpacity(0.6),
           ),
           prefixIcon: Padding(
             padding: EdgeInsets.only(left: 16.w, right: 12.w),
@@ -365,7 +373,9 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
               width: 22.w,
               height: 22.w,
               colorFilter: ColorFilter.mode(
-                enabled ? Color(0xFF6B7280) : Color(0xFF4ECDC4).withOpacity(0.6),
+                enabled
+                    ? Color(0xFF6B7280)
+                    : Color(0xFF9CA3AF).withOpacity(0.8),
                 BlendMode.srcIn,
               ),
               fit: BoxFit.scaleDown,
@@ -379,7 +389,9 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                     width: 20.w,
                     height: 20.w,
                     colorFilter: ColorFilter.mode(
-                      enabled ? Color(0xFF9CA3AF) : Color(0xFF4ECDC4).withOpacity(0.5),
+                      enabled
+                          ? Color(0xFF9CA3AF)
+                          : Color(0xFF9CA3AF).withOpacity(0.7),
                       BlendMode.srcIn,
                     ),
                     fit: BoxFit.scaleDown,
@@ -438,14 +450,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         duration: Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(vertical: 14.h),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [Color(0xFFE0F7F4), Color(0xFFD0F2EE)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: isSelected ? null : Color(0xFFFAFAFA),
+          color: isSelected ? Colors.white : Color(0xFFFAFAFA),
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: isSelected ? Color(0xFF4ECDC4) : Color(0xFFE5E7EB),
@@ -460,7 +465,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
               width: 22.w,
               height: 22.w,
               colorFilter: ColorFilter.mode(
-                isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
+                isSelected ? Color(0xFF6B7280) : Color(0xFF9CA3AF),
                 BlendMode.srcIn,
               ),
               fit: BoxFit.contain,
@@ -472,7 +477,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
-                color: isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
+                color: isSelected ? Color(0xFF6B7280) : Color(0xFF9CA3AF),
               ),
             ),
           ],
@@ -493,14 +498,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         width: 56.w,
         height: 56.w,
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [Color(0xFFE0F7F4), Color(0xFFD0F2EE)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: isSelected ? null : Color(0xFFFAFAFA),
+          color: isSelected ? Colors.white : Color(0xFFFAFAFA),
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: isSelected ? Color(0xFF4ECDC4) : Color(0xFFE5E7EB),
@@ -513,7 +511,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
             width: 24.w,
             height: 24.w,
             colorFilter: ColorFilter.mode(
-              isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
+              isSelected ? Color(0xFF6B7280) : Color(0xFF9CA3AF),
               BlendMode.srcIn,
             ),
             fit: BoxFit.contain,
@@ -732,7 +730,10 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                           'assets/icons/userlogo.svg',
                           width: 42.w,
                           height: 42.w,
-                          colorFilter: const ColorFilter.mode(Color(0xFFE57373), BlendMode.srcIn),
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFFE57373),
+                            BlendMode.srcIn,
+                          ),
                         ),
                         Positioned(
                           bottom: 8.h,
