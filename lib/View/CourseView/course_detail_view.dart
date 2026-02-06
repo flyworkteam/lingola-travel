@@ -176,14 +176,20 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                             text: '12 Lessons',
                           ),
                           SizedBox(width: 16.w),
-                          _buildStatChip(icon: Icons.access_time_rounded, text: '45 Mins'),
+                          _buildStatChip(
+                            iconPath: 'assets/icons/45min.svg',
+                            text: '45 Mins',
+                          ),
                         ],
                       ),
 
                       SizedBox(height: 12.h),
 
                       // Level chip
-                      _buildStatChip(icon: Icons.signal_cellular_alt, text: 'Intermediate'),
+                      _buildStatChip(
+                        iconPath: 'assets/icons/intermediate.svg',
+                        text: 'Intermediate',
+                      ),
 
                       SizedBox(height: 20.h),
 
@@ -279,6 +285,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
   Widget _buildStatChip({
     IconData? icon,
     String? iconPath,
+    Color? iconColor,
     required String text,
   }) {
     return Container(
@@ -295,7 +302,10 @@ class _CourseDetailViewState extends State<CourseDetailView> {
               iconPath,
               width: 16.w,
               height: 16.w,
-              colorFilter: const ColorFilter.mode(Color(0xFF2EC4B6), BlendMode.srcIn),
+              colorFilter: ColorFilter.mode(
+                iconColor ?? Color(0xFF4ECDC4),
+                BlendMode.srcIn,
+              ),
               fit: BoxFit.contain,
             )
           else if (icon != null)
@@ -327,16 +337,53 @@ class _CourseDetailViewState extends State<CourseDetailView> {
 
     if (isCompleted) {
       bgColor = Color(0xFFF0F9FF);
-      iconBgColor = Color(0xFF4ECDC4);
-      iconWidget = Icon(Icons.check, color: Colors.white, size: 24.sp);
+      iconWidget = Container(
+        width: 48.w,
+        height: 48.w,
+        decoration: BoxDecoration(
+          color: Color(0xFFE0F7F4),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: SvgPicture.asset(
+            'assets/icons/tamamlandi.svg',
+            width: 24.w,
+            height: 24.w,
+            fit: BoxFit.contain,
+          ),
+        ),
+      );
     } else if (isInProgress) {
       bgColor = Color(0xFFE8F9F7);
-      iconBgColor = Color(0xFF4ECDC4);
-      iconWidget = Icon(Icons.play_arrow, color: Colors.white, size: 28.sp);
+      iconWidget = Container(
+        width: 48.w,
+        height: 48.w,
+        decoration: BoxDecoration(
+          color: Color(0xFF4ECDC4),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(Icons.play_arrow, color: Colors.white, size: 28.sp),
+        ),
+      );
     } else {
       bgColor = Color(0xFFF9F9F9);
-      iconBgColor = Color(0xFFE0E0E0);
-      iconWidget = Icon(Icons.lock, color: Color(0xFFBDBDBD), size: 20.sp);
+      iconWidget = Container(
+        width: 48.w,
+        height: 48.w,
+        decoration: BoxDecoration(
+          color: Color(0xFFF3F4F6),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: SvgPicture.asset(
+            'assets/icons/tamamlanmadi.svg',
+            width: 20.w,
+            height: 20.w,
+            fit: BoxFit.contain,
+          ),
+        ),
+      );
     }
 
     return GestureDetector(
@@ -359,16 +406,8 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         ),
         child: Row(
           children: [
-            // Icon circle
-            Container(
-              width: 48.w,
-              height: 48.w,
-              decoration: BoxDecoration(
-                color: iconBgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Center(child: iconWidget),
-            ),
+            // Icon container
+            iconWidget,
 
             SizedBox(width: 16.w),
 

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'lesson_result_view.dart';
 
@@ -31,14 +32,14 @@ class _LessonDetailViewState extends State<LessonDetailView> {
   // Mock vocabulary data
   final List<Map<String, dynamic>> _vocabulary = [
     {
-      'icon': Icons.location_on,
+      'iconPath': 'assets/icons/checkin.svg',
       'iconColor': Color(0xFF4ECDC4),
       'term': 'Check-in',
       'definition':
           'The process of reporting your arrival at an airport or hotel.',
     },
     {
-      'icon': Icons.confirmation_number,
+      'iconPath': 'assets/icons/boardingpass.svg',
       'iconColor': Color(0xFF4ECDC4),
       'term': 'Boarding Pass',
       'definition':
@@ -300,9 +301,9 @@ class _LessonDetailViewState extends State<LessonDetailView> {
       children: [
         // Speaker button
         _buildAudioButton(
-          icon: Icons.volume_up,
+          iconPath: 'assets/icons/volume.svg',
           size: 56.w,
-          iconSize: 28.sp,
+          iconSize: 22.sp,
           color: MyColors.grey200,
           iconColor: MyColors.textSecondary,
           onTap: () {
@@ -317,9 +318,9 @@ class _LessonDetailViewState extends State<LessonDetailView> {
 
         // Microphone button (main)
         _buildAudioButton(
-          icon: isRecording ? Icons.mic : Icons.mic_none,
+          iconPath: 'assets/icons/microphone.svg',
           size: 72.w,
-          iconSize: 36.sp,
+          iconSize: 30.sp,
           color: Color(0xFF4ECDC4),
           iconColor: MyColors.white,
           onTap: () {
@@ -342,9 +343,9 @@ class _LessonDetailViewState extends State<LessonDetailView> {
         Container(
           key: _bookmarkButtonKey,
           child: _buildAudioButton(
-            icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+            iconPath: 'assets/icons/save.svg',
             size: 56.w,
-            iconSize: 28.sp,
+            iconSize: 22.sp,
             color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.grey200,
             iconColor: isBookmarked ? MyColors.white : MyColors.textSecondary,
             onTap: () {
@@ -358,7 +359,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
 
   /// Single audio button
   Widget _buildAudioButton({
-    required IconData icon,
+    required String iconPath,
     required double size,
     required double iconSize,
     required Color color,
@@ -367,7 +368,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
   }) {
     final bool isMicButton = size == 72.w;
     final bool showPulse = isMicButton && isRecording;
-    final bool isSpeakerButton = icon == Icons.volume_up;
+    final bool isSpeakerButton = iconPath.contains('volume.svg');
     final bool showProgress = isSpeakerButton && isPlaying;
 
     return GestureDetector(
@@ -413,7 +414,15 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                     ]
                   : null,
             ),
-            child: Icon(icon, size: iconSize, color: iconColor),
+            child: Center(
+              child: SvgPicture.asset(
+                iconPath,
+                width: iconSize,
+                height: iconSize,
+                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
         ],
       ),
@@ -462,7 +471,26 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               color: vocab['iconColor'].withOpacity(0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
-            child: Icon(vocab['icon'], size: 24.sp, color: vocab['iconColor']),
+            child: (vocab['iconPath'] != null)
+                ? Center(
+                    child: SvgPicture.asset(
+                      vocab['iconPath'],
+                      width: 20.w,
+                      height: 20.w,
+                      colorFilter: ColorFilter.mode(
+                        vocab['iconColor'] ?? Color(0xFF4ECDC4),
+                        BlendMode.srcIn,
+                      ),
+                      fit: BoxFit.contain,
+                    ),
+                  )
+                : Center(
+                    child: Icon(
+                      vocab['icon'] ?? Icons.help_outline,
+                      size: 20.sp,
+                      color: vocab['iconColor'] ?? Color(0xFF4ECDC4),
+                    ),
+                  ),
           ),
 
           SizedBox(width: 12.w),
@@ -723,47 +751,53 @@ class _LessonDetailViewState extends State<LessonDetailView> {
       ancestor: overlay,
     );
 
+    // Position it to be centered under the button
     final RelativeRect position = RelativeRect.fromLTRB(
-      buttonPosition.dx - 35.w, // Position to the right-bottom of button
-      buttonPosition.dy + button.size.height + 4.h, // Just below button
-      MediaQuery.of(context).size.width - 20.w,
-      buttonPosition.dy,
+      buttonPosition.dx - 100.w, // Center relative to button
+      buttonPosition.dy + button.size.height + 12.h,
+      buttonPosition.dx + button.size.width + 100.w,
+      0,
     );
 
     final result = await showMenu<String>(
       context: context,
       position: position,
       color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.05),
-      constraints: BoxConstraints(minWidth: 95.w, maxWidth: 95.w),
+      useRootNavigator: true,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+      elevation: 8,
+      shadowColor: Colors.black.withOpacity(0.1),
+      constraints: BoxConstraints(minWidth: 260.w, maxWidth: 260.w),
+      surfaceTintColor: Colors.white,
       items: [
         PopupMenuItem<String>(
           value: 'word',
-          height: 36.h,
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
-          child: Text(
-            'Word',
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Montserrat',
-              color: Color(0xFF1A1A1A),
+          height: 60.h,
+          child: Center(
+            child: Text(
+              'Word',
+              style: TextStyle(
+                fontSize: 32.sp,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'Montserrat',
+                color: Color(0xFF8B9AAF), // Stylistic gray-blue
+              ),
             ),
           ),
         ),
+        PopupMenuDivider(height: 1.h),
         PopupMenuItem<String>(
           value: 'phrase',
-          height: 36.h,
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
-          child: Text(
-            'Phrases',
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Montserrat',
-              color: Color(0xFF1A1A1A),
+          height: 60.h,
+          child: Center(
+            child: Text(
+              'Phrases',
+              style: TextStyle(
+                fontSize: 32.sp,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'Montserrat',
+                color: Color(0xFF8B9AAF),
+              ),
             ),
           ),
         ),
@@ -781,24 +815,8 @@ class _LessonDetailViewState extends State<LessonDetailView> {
       isBookmarked = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          type == 'word'
-              ? 'Word saved to library!'
-              : 'Phrase saved to library!',
-          style: TextStyle(fontFamily: 'Montserrat'),
-        ),
-        backgroundColor: Color(0xFF4ECDC4),
-        duration: Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-      ),
-    );
-
-    // TODO: Actually save to library with type
+    // SnackBar feedback removed as requested by user
+    // Button color change in build method provides the visual feedback
     print('Saved as $type');
   }
 

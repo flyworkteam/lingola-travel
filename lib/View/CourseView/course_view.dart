@@ -435,7 +435,7 @@ class _CourseViewState extends State<CourseView> {
                                     'assets/icons/12lesson.svg',
                                     width: 16.w,
                                     height: 16.w,
-                                    colorFilter: const ColorFilter.mode(Color(0xFF2EC4B6), BlendMode.srcIn),
+                                    colorFilter: const ColorFilter.mode(MyColors.white, BlendMode.srcIn),
                                     fit: BoxFit.contain,
                                   ),
                                   SizedBox(width: 4.w),
