@@ -1,4 +1,4 @@
-package com.example.lingola_travel
+package com.flywork.lingolatravel
 
 import io.flutter.embedding.android.FlutterActivity
 
