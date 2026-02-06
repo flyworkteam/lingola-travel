@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../Services/revenuecat_service.dart';
 
 class PremiumView extends StatefulWidget {
   const PremiumView({super.key});
@@ -19,9 +20,9 @@ class _PremiumViewState extends State<PremiumView> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header with Back and Restore buttons
+            // Header with Back, Logo and Restore buttons
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -30,18 +31,18 @@ class _PremiumViewState extends State<PremiumView> {
                     onTap: () => Navigator.pop(context),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 20.w,
-                        vertical: 10.h,
+                        horizontal: 16.w,
+                        vertical: 8.h,
                       ),
                       decoration: BoxDecoration(
                         color: Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(8.r),
+                        borderRadius: BorderRadius.circular(100.r),
                       ),
                       child: Text(
                         'BACK',
                         style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'Montserrat',
                           color: Color(0xFF1A1A1A),
                           letterSpacing: 0.5,
@@ -49,25 +50,33 @@ class _PremiumViewState extends State<PremiumView> {
                       ),
                     ),
                   ),
+
+                  // Logo in the center
+                  SvgPicture.asset(
+                    'assets/icons/logo.svg',
+                    width: 72.w,
+                    height: 72.w,
+                  ),
+
                   // Restore Button
                   GestureDetector(
-                    onTap: () {
-                      // TODO: Restore purchases
+                    onTap: () async {
+                      await RevenueCatService().restorePurchases();
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 16.w,
-                        vertical: 10.h,
+                        vertical: 8.h,
                       ),
                       decoration: BoxDecoration(
                         color: Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(8.r),
+                        borderRadius: BorderRadius.circular(100.r),
                       ),
                       child: Text(
                         'RESTORE',
                         style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'Montserrat',
                           color: Color(0xFF1A1A1A),
                           letterSpacing: 0.5,
@@ -86,15 +95,6 @@ class _PremiumViewState extends State<PremiumView> {
                   children: [
                     SizedBox(height: 12.h),
 
-                    // Logo
-                    SvgPicture.asset(
-                      'assets/icons/logo.svg',
-                      width: 80.w,
-                      height: 80.w,
-                    ),
-
-                    SizedBox(height: 24.h),
-
                     // Title
                     Text(
                       'Lingola Travel Premium',
@@ -106,7 +106,15 @@ class _PremiumViewState extends State<PremiumView> {
                       ),
                     ),
 
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 16.h),
+
+                    // Thin line under title
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Divider(color: Color(0xFFE5E7EB), thickness: 1.2),
+                    ),
+
+                    SizedBox(height: 24.h),
 
                     // Features List
                     Padding(
@@ -170,85 +178,68 @@ class _PremiumViewState extends State<PremiumView> {
                             },
                             child: AnimatedContainer(
                               duration: Duration(milliseconds: 200),
-                              padding: EdgeInsets.all(20.w),
+                              width: double.infinity,
+                              padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(16.r),
+                                borderRadius: BorderRadius.circular(12.r),
                                 border: Border.all(
                                   color: _selectedPlan == 'annual'
                                       ? Color(0xFF4ECDC4)
                                       : Color(0xFFE5E7EB),
-                                  width: _selectedPlan == 'annual' ? 2.5 : 1.5,
+                                  width: _selectedPlan == 'annual' ? 2 : 1.5,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
                               ),
-                              child: Row(
+                              child: Stack(
                                 children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Annual',
-                                          style: TextStyle(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w600,
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF1A1A1A),
-                                          ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Annual',
+                                        style: TextStyle(
+                                          fontSize: 15.sp,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'Montserrat',
+                                          color: Color(0xFF1A1A1A),
                                         ),
-                                        SizedBox(height: 4.h),
-                                        RichText(
-                                          text: TextSpan(
-                                            children: [
-                                              TextSpan(
-                                                text: '\$79,99/yr',
-                                                style: TextStyle(
-                                                  fontSize: 18.sp,
-                                                  fontWeight: FontWeight.w700,
-                                                  fontFamily: 'Montserrat',
-                                                  color: Color(0xFF1A1A1A),
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text: ' (\$6,67/mo)',
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontFamily: 'Montserrat',
-                                                  color: Color(0xFF6B7280),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                      ),
+                                      SizedBox(height: 6.h),
+                                      Text(
+                                        '\$79,99/yr (\$6,67/mo)',
+                                        style: TextStyle(
+                                          fontSize: 17.sp,
+                                          fontWeight: FontWeight.w800,
+                                          fontFamily: 'Montserrat',
+                                          color: Color(0xFF1A1A1A),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12.w,
-                                      vertical: 6.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFF4ECDC4),
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                    child: Text(
-                                      'SAVE 19%',
-                                      style: TextStyle(
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'Montserrat',
-                                        color: Colors.white,
-                                        letterSpacing: 0.5,
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12.w,
+                                        vertical: 6.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF4ECDC4),
+                                        borderRadius: BorderRadius.circular(
+                                          100.r,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'SAVE 19%',
+                                        style: TextStyle(
+                                          fontSize: 11.sp,
+                                          fontWeight: FontWeight.w800,
+                                          fontFamily: 'Montserrat',
+                                          color: Colors.white,
+                                          letterSpacing: 0.5,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -268,23 +259,17 @@ class _PremiumViewState extends State<PremiumView> {
                             },
                             child: AnimatedContainer(
                               duration: Duration(milliseconds: 200),
-                              padding: EdgeInsets.all(20.w),
+                              width: double.infinity,
+                              padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(16.r),
+                                borderRadius: BorderRadius.circular(12.r),
                                 border: Border.all(
                                   color: _selectedPlan == 'monthly'
                                       ? Color(0xFF4ECDC4)
                                       : Color(0xFFE5E7EB),
-                                  width: _selectedPlan == 'monthly' ? 2.5 : 1.5,
+                                  width: _selectedPlan == 'monthly' ? 2 : 1.5,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
                               ),
                               child: Row(
                                 children: [
@@ -296,18 +281,18 @@ class _PremiumViewState extends State<PremiumView> {
                                         Text(
                                           'Monthly',
                                           style: TextStyle(
-                                            fontSize: 16.sp,
+                                            fontSize: 15.sp,
                                             fontWeight: FontWeight.w600,
                                             fontFamily: 'Montserrat',
                                             color: Color(0xFF1A1A1A),
                                           ),
                                         ),
-                                        SizedBox(height: 4.h),
+                                        SizedBox(height: 6.h),
                                         Text(
                                           '\$9,99/mo',
                                           style: TextStyle(
-                                            fontSize: 18.sp,
-                                            fontWeight: FontWeight.w700,
+                                            fontSize: 17.sp,
+                                            fontWeight: FontWeight.w800,
                                             fontFamily: 'Montserrat',
                                             color: Color(0xFF1A1A1A),
                                           ),
@@ -323,44 +308,33 @@ class _PremiumViewState extends State<PremiumView> {
                       ),
                     ),
 
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 48.h),
 
                     // Continue Button
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 24.w),
                       child: Container(
                         width: double.infinity,
-                        height: 56.h,
+                        height: 58.h,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFF4ECDC4).withOpacity(0.4),
-                              blurRadius: 16,
-                              offset: Offset(0, 8),
-                            ),
-                          ],
+                          color: Color(0xFF4ECDC4),
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: () {
-                              // TODO: Process payment
+                            onTap: () async {
+                              await RevenueCatService().showPaywall();
                             },
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(12.r),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   'Continue',
                                   style: TextStyle(
-                                    fontSize: 17.sp,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.w800,
                                     fontFamily: 'Montserrat',
                                     color: Colors.white,
                                   ),
@@ -369,10 +343,10 @@ class _PremiumViewState extends State<PremiumView> {
                                 Text(
                                   'Cancel anytime',
                                   style: TextStyle(
-                                    fontSize: 12.sp,
+                                    fontSize: 13.sp,
                                     fontWeight: FontWeight.w500,
                                     fontFamily: 'Montserrat',
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withOpacity(0.9),
                                   ),
                                 ),
                               ],
@@ -395,14 +369,14 @@ class _PremiumViewState extends State<PremiumView> {
                           child: Text(
                             'Privacy policy',
                             style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
                               fontFamily: 'Montserrat',
                               color: Color(0xFF6B7280),
                             ),
                           ),
                         ),
-                        SizedBox(width: 24.w),
+                        SizedBox(width: 32.w),
                         GestureDetector(
                           onTap: () {
                             // TODO: Open terms of service
@@ -410,8 +384,8 @@ class _PremiumViewState extends State<PremiumView> {
                           child: Text(
                             'Terms of service',
                             style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
                               fontFamily: 'Montserrat',
                               color: Color(0xFF6B7280),
                             ),

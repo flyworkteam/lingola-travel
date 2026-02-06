@@ -227,16 +227,20 @@ class ShareFriendView extends StatelessWidget {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.copy_rounded,
-                                      size: 20.sp,
-                                      color: Colors.white,
+                                    SvgPicture.asset(
+                                      'assets/icons/sharewithfirendkopya.svg',
+                                      width: 24.w,
+                                      height: 24.w,
+                                      colorFilter: ColorFilter.mode(
+                                        Colors.white,
+                                        BlendMode.srcIn,
+                                      ),
                                     ),
-                                    SizedBox(width: 10.w),
+                                    SizedBox(width: 12.w),
                                     Text(
                                       'Copy the link',
                                       style: TextStyle(
-                                        fontSize: 16.sp,
+                                        fontSize: 18.sp,
                                         fontWeight: FontWeight.w700,
                                         fontFamily: 'Montserrat',
                                         color: Colors.white,

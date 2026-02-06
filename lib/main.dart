@@ -6,10 +6,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'Core/Config/app_config.dart';
 import 'Core/Routes/app_routes.dart';
 import 'Core/Theme/my_colors.dart';
+import 'Services/revenuecat_service.dart';
 import 'View/SplashView/splash_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize RevenueCat
+  await RevenueCatService().init();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
