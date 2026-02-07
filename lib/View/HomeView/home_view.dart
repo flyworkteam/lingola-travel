@@ -10,6 +10,7 @@ import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
 import '../CourseView/course_view.dart';
 import '../ProfileView/premium_view.dart';
+import '../ProfileView/profile_view.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -1471,18 +1472,28 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Profile avatar
   Widget _buildProfileAvatar() {
-    return Container(
-      width: 44.w,
-      height: 44.h,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: MyColors.lingolaPrimaryColor.withOpacity(0.1),
-        border: Border.all(color: MyColors.lingolaPrimaryColor, width: 2),
-      ),
-      child: Icon(
-        Icons.person,
-        size: 24.sp,
-        color: MyColors.lingolaPrimaryColor,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ProfileView(isPremium: false),
+          ),
+        );
+      },
+      child: Container(
+        width: 44.w,
+        height: 44.h,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: MyColors.lingolaPrimaryColor.withOpacity(0.1),
+          border: Border.all(color: MyColors.lingolaPrimaryColor, width: 2),
+        ),
+        child: Icon(
+          Icons.person,
+          size: 24.sp,
+          color: MyColors.lingolaPrimaryColor,
+        ),
       ),
     );
   }

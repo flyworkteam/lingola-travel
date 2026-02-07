@@ -71,7 +71,7 @@ class CustomBottomNavBar extends StatelessWidget {
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 20.h + bottomPadding,
+      bottom: 8.h + bottomPadding,
       child: Center(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 24.w),

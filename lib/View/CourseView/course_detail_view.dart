@@ -271,7 +271,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: 20.h,
+            bottom: 8.h,
             child: CustomBottomNavBar(
               currentIndex: 1,
               isPremium: widget.isPremium,

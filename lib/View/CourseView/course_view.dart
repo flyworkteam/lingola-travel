@@ -159,7 +159,7 @@ class _CourseViewState extends State<CourseView> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 20.h,
+              bottom: 8.h,
               child: CustomBottomNavBar(
                 currentIndex: 1,
                 isPremium: widget.isPremium,
@@ -435,7 +435,10 @@ class _CourseViewState extends State<CourseView> {
                                     'assets/icons/12lesson.svg',
                                     width: 16.w,
                                     height: 16.w,
-                                    colorFilter: const ColorFilter.mode(MyColors.white, BlendMode.srcIn),
+                                    colorFilter: const ColorFilter.mode(
+                                      MyColors.white,
+                                      BlendMode.srcIn,
+                                    ),
                                     fit: BoxFit.contain,
                                   ),
                                   SizedBox(width: 4.w),

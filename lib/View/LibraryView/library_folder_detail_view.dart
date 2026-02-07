@@ -476,7 +476,10 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                               children: [
                                 Padding(
                                   padding: EdgeInsets.only(
-                                      left: 29.w, top: 4.h, bottom: 4.h),
+                                    left: 29.w,
+                                    top: 4.h,
+                                    bottom: 4.h,
+                                  ),
                                   child: Text(
                                     _currentFolderName.replaceAll('\n', ' '),
                                     textAlign: TextAlign.left,
@@ -503,8 +506,9 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                                           shape: BoxShape.circle,
                                           boxShadow: [
                                             BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.1),
+                                              color: Colors.black.withOpacity(
+                                                0.1,
+                                              ),
                                               blurRadius: 8,
                                               offset: Offset(0, 2),
                                             ),
@@ -594,7 +598,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: 20.h,
+                bottom: 8.h,
                 child: CustomBottomNavBar(
                   currentIndex: 2,
                   isPremium: widget.isPremium,
@@ -645,7 +649,9 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: 140.h), // Increased from 60.h to push everything further down
+          SizedBox(
+            height: 140.h,
+          ), // Increased from 60.h to push everything further down
           // Updated Empty State Icon
           SvgPicture.asset(
             'assets/icons/nosaveditemyet.svg',
@@ -654,7 +660,6 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
             fit: BoxFit.contain,
           ),
           SizedBox(height: 48.h), // Increased from 24.h to pull texts down
-
           // Title
           Text(
             'No saved items yet',
@@ -679,9 +684,8 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
               height: 1.5,
             ),
           ),
-          
-          const Spacer(), // Pushes everything below it to the bottom
 
+          const Spacer(), // Pushes everything below it to the bottom
           // Browse Lesson Button
           GestureDetector(
             onTap: () {
