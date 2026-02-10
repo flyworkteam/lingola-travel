@@ -180,6 +180,77 @@ const getCourseById = async (req, res, next) => {
 };
 
 /**
+ * GET /api/v1/courses/:id/lessons
+ * Get all lessons for a specific course
+ */
+const getCourseLessons = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    // Check if course exists
+    const courseSql = 'SELECT id, title FROM courses WHERE id = ?';
+    const courseResult = await query(courseSql, [id]);
+
+    if (courseResult.length === 0) {
+      return res.status(404).json(errorResponse('NOT_FOUND', 'Kurs bulunamadı'));
+    }
+
+    // Get lessons for this course
+    let lessonsSql, lessonsParams;
+    
+    if (userId) {
+      lessonsSql = `
+        SELECT 
+          l.id,
+          l.title,
+          l.description,
+          l.lesson_order,
+          l.image_url,
+          l.audio_url,
+          IFNULL(ulp.status, 'not_started') as status,
+          IFNULL(ulp.progress_percentage, 0) as progress_percentage,
+          IFNULL(ulp.completed_at, NULL) as completed_at
+        FROM lessons l
+        LEFT JOIN user_lesson_progress ulp ON l.id = ulp.lesson_id AND ulp.user_id = ?
+        WHERE l.course_id = ?
+        ORDER BY l.lesson_order ASC
+      `;
+      lessonsParams = [userId, id];
+    } else {
+      lessonsSql = `
+        SELECT 
+          l.id,
+          l.title,
+          l.description,
+          l.lesson_order,
+          l.image_url,
+          l.audio_url,
+          'not_started' as status,
+          0 as progress_percentage,
+          NULL as completed_at
+        FROM lessons l
+        WHERE l.course_id = ?
+        ORDER BY l.lesson_order ASC
+      `;
+      lessonsParams = [id];
+    }
+
+    const lessons = await query(lessonsSql, lessonsParams);
+
+    res.json(successResponse({
+      course_id: id,
+      course_title: courseResult[0].title,
+      lessons,
+      total: lessons.length
+    }));
+  } catch (error) {
+    console.error('Get course lessons error:', error);
+    next(error);
+  }
+};
+
+/**
  * GET /api/v1/courses/categories
  * Get all unique categories
  */
@@ -247,6 +318,7 @@ const startCourse = async (req, res, next) => {
 module.exports = {
   getAllCourses,
   getCourseById,
+  getCourseLessons,
   getCategories,
   startCourse
 };

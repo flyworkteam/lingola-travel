@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const libraryController = require('../controllers/libraryController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { body } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validator');
+
+// GET /api/v1/library - Get library overview
+router.get('/', optionalAuth, libraryController.getLibraryItems);
 
 // GET /api/v1/library/bookmarks - Get bookmarks
 router.get('/bookmarks', authenticateToken, libraryController.getBookmarks);

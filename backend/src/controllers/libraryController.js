@@ -2,6 +2,103 @@ const { query } = require('../config/database');
 const { successResponse, errorResponse } = require('../utils/response');
 
 /**
+ * GET /api/v1/library
+ * Get library overview (bookmarks and folders)
+ */
+const getLibraryItems = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+
+    // If not authenticated, return empty library
+    if (!userId) {
+      return res.json(successResponse({
+        bookmarks: [],
+        folders: [],
+        stats: {
+          total_bookmarks: 0,
+          dictionary_count: 0,
+          phrases_count: 0,
+          vocabulary_count: 0
+        },
+        message: 'Kitaplığınızı görmek için giriş yapın'
+      }));
+    }
+
+    // Get recent bookmarks
+    const bookmarksSql = `
+      SELECT 
+        b.id as bookmark_id,
+        b.item_type,
+        b.item_id,
+        b.created_at as bookmarked_at,
+        CASE 
+          WHEN b.item_type = 'dictionary_word' THEN dw.word
+          WHEN b.item_type = 'travel_phrase' THEN tp.english_text
+          WHEN b.item_type = 'lesson_vocabulary' THEN lv.term
+        END as word,
+        CASE 
+          WHEN b.item_type = 'dictionary_word' THEN dw.translation
+          WHEN b.item_type = 'travel_phrase' THEN tp.translation
+          WHEN b.item_type = 'lesson_vocabulary' THEN lv.definition
+        END as translation
+      FROM bookmarks b
+      LEFT JOIN dictionary_words dw ON b.item_id = dw.id AND b.item_type = 'dictionary_word'
+      LEFT JOIN travel_phrases tp ON b.item_id = tp.id AND b.item_type = 'travel_phrase'
+      LEFT JOIN lesson_vocabulary lv ON b.item_id = lv.id AND b.item_type = 'lesson_vocabulary'
+      WHERE b.user_id = ?
+      ORDER BY b.created_at DESC
+      LIMIT 20
+    `;
+
+    const bookmarks = await query(bookmarksSql, [userId]);
+
+    // Get folders
+    const foldersSql = `
+      SELECT 
+        f.id,
+        f.name,
+        f.color,
+        f.created_at,
+        COUNT(b.id) as item_count
+      FROM library_folders f
+      LEFT JOIN bookmarks b ON b.folder_id = f.id
+      WHERE f.user_id = ?
+      GROUP BY f.id
+      ORDER BY f.created_at DESC
+    `;
+
+    const folders = await query(foldersSql, [userId]);
+
+    // Get stats
+    const statsSql = `
+      SELECT 
+        COUNT(*) as total_bookmarks,
+        COUNT(DISTINCT CASE WHEN item_type = 'dictionary_word' THEN 1 END) as dictionary_count,
+        COUNT(DISTINCT CASE WHEN item_type = 'travel_phrase' THEN 1 END) as phrases_count,
+        COUNT(DISTINCT CASE WHEN item_type = 'lesson_vocabulary' THEN 1 END) as vocabulary_count
+      FROM bookmarks
+      WHERE user_id = ?
+    `;
+
+    const stats = await query(statsSql, [userId]);
+
+    res.json(successResponse({
+      bookmarks,
+      folders,
+      stats: stats[0] || {
+        total_bookmarks: 0,
+        dictionary_count: 0,
+        phrases_count: 0,
+        vocabulary_count: 0
+      }
+    }));
+  } catch (error) {
+    console.error('Get library items error:', error);
+    next(error);
+  }
+};
+
+/**
  * GET /api/v1/library/bookmarks
  * Get all bookmarked words and phrases
  */
@@ -206,6 +303,7 @@ const deleteFolder = async (req, res, next) => {
 };
 
 module.exports = {
+  getLibraryItems,
   getBookmarks,
   addBookmark,
   removeBookmark,
