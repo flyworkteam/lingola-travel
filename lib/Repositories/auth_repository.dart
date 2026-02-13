@@ -7,7 +7,7 @@ class AuthRepository extends BaseRepository {
   /// Login with email and password
   Future<AuthResult> loginWithEmail(String email, String password) async {
     try {
-      final response = await apiClient.post<Map<String, dynamic>>(
+      final response = await apiClient.post(
         '/auth/login',
         data: {'email': email, 'password': password},
       );
@@ -22,7 +22,7 @@ class AuthRepository extends BaseRepository {
       } else {
         return AuthResult(
           success: false,
-          errorMessage: handleError(response.error!),
+          errorMessage: response.error?.message ?? 'Giriş başarısız',
         );
       }
     } catch (e) {
@@ -33,7 +33,7 @@ class AuthRepository extends BaseRepository {
   /// Login with Google
   Future<AuthResult> loginWithGoogle(String idToken) async {
     try {
-      final response = await apiClient.post<Map<String, dynamic>>(
+      final response = await apiClient.post(
         '/auth/google',
         data: {'idToken': idToken},
       );
@@ -48,7 +48,7 @@ class AuthRepository extends BaseRepository {
       } else {
         return AuthResult(
           success: false,
-          errorMessage: handleError(response.error!),
+          errorMessage: response.error?.message ?? 'Google girişi başarısız',
         );
       }
     } catch (e) {
@@ -62,7 +62,7 @@ class AuthRepository extends BaseRepository {
   /// Login with Apple
   Future<AuthResult> loginWithApple(String identityToken) async {
     try {
-      final response = await apiClient.post<Map<String, dynamic>>(
+      final response = await apiClient.post(
         '/auth/apple',
         data: {'identityToken': identityToken},
       );
@@ -77,7 +77,7 @@ class AuthRepository extends BaseRepository {
       } else {
         return AuthResult(
           success: false,
-          errorMessage: handleError(response.error!),
+          errorMessage: response.error?.message ?? 'Apple girişi başarısız',
         );
       }
     } catch (e) {
@@ -91,7 +91,7 @@ class AuthRepository extends BaseRepository {
   /// Login with Facebook
   Future<AuthResult> loginWithFacebook(String accessToken) async {
     try {
-      final response = await apiClient.post<Map<String, dynamic>>(
+      final response = await apiClient.post(
         '/auth/facebook',
         data: {'accessToken': accessToken},
       );
@@ -106,7 +106,7 @@ class AuthRepository extends BaseRepository {
       } else {
         return AuthResult(
           success: false,
-          errorMessage: handleError(response.error!),
+          errorMessage: response.error?.message ?? 'Facebook girişi başarısız',
         );
       }
     } catch (e) {
@@ -120,7 +120,7 @@ class AuthRepository extends BaseRepository {
   /// Anonymous login
   Future<AuthResult> loginAnonymously(String deviceId) async {
     try {
-      final response = await apiClient.post<Map<String, dynamic>>(
+      final response = await apiClient.post(
         '/auth/anonymous',
         data: {'deviceId': deviceId},
       );
@@ -135,7 +135,7 @@ class AuthRepository extends BaseRepository {
       } else {
         return AuthResult(
           success: false,
-          errorMessage: handleError(response.error!),
+          errorMessage: response.error?.message ?? 'Anonim giriş başarısız',
         );
       }
     } catch (e) {
@@ -149,7 +149,7 @@ class AuthRepository extends BaseRepository {
   /// Refresh access token
   Future<AuthResult> refreshToken(String refreshToken) async {
     try {
-      final response = await apiClient.post<Map<String, dynamic>>(
+      final response = await apiClient.post(
         '/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
@@ -163,7 +163,7 @@ class AuthRepository extends BaseRepository {
       } else {
         return AuthResult(
           success: false,
-          errorMessage: handleError(response.error!),
+          errorMessage: response.error?.message ?? 'Token yenileme başarısız',
         );
       }
     } catch (e) {

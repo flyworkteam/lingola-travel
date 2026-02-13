@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../Core/Config/app_config.dart';
+import '../Models/api_response.dart';
 
 /// API Client using Dio
 /// Handles all HTTP requests with interceptors for auth, logging, and error handling
@@ -12,9 +13,11 @@ class ApiClient {
   final _secureStorage = const FlutterSecureStorage();
 
   ApiClient._internal() {
+    final baseUrl = '${AppConfig.baseUrl}/${AppConfig.apiVersion}';
+
     _dio = Dio(
       BaseOptions(
-        baseUrl: '${AppConfig.baseUrl}/${AppConfig.apiVersion}',
+        baseUrl: baseUrl,
         connectTimeout: Duration(seconds: int.parse(AppConfig.apiTimeout)),
         receiveTimeout: Duration(seconds: int.parse(AppConfig.apiTimeout)),
         headers: {
@@ -39,13 +42,9 @@ class ApiClient {
             options.headers['Authorization'] = 'Bearer $token';
           }
 
-          // Log request
-          print('REQUEST[${options.method}] => PATH: ${options.path}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          // Log response
-          print('RESPONSE[${response.statusCode}] => DATA: ${response.data}');
           return handler.next(response);
         },
         onError: (error, handler) async {
@@ -66,7 +65,7 @@ class ApiClient {
   }
 
   // GET Request
-  Future<ApiResponse<T>> get<T>(
+  Future<ApiResponse<dynamic>> get(
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
@@ -77,14 +76,20 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
       );
-      return ApiResponse<T>.fromJson(response.data);
+      return ApiResponse<dynamic>(
+        success: response.data['success'] ?? true,
+        data: response.data['data'],
+        error: response.data['error'] != null
+            ? ApiError.fromJson(response.data['error'] as Map<String, dynamic>)
+            : null,
+      );
     } on DioException catch (e) {
-      return _handleError<T>(e);
+      return _handleError(e);
     }
   }
 
   // POST Request
-  Future<ApiResponse<T>> post<T>(
+  Future<ApiResponse<dynamic>> post(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -97,14 +102,20 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
       );
-      return ApiResponse<T>.fromJson(response.data);
+      return ApiResponse<dynamic>(
+        success: response.data['success'] ?? true,
+        data: response.data['data'],
+        error: response.data['error'] != null
+            ? ApiError.fromJson(response.data['error'] as Map<String, dynamic>)
+            : null,
+      );
     } on DioException catch (e) {
-      return _handleError<T>(e);
+      return _handleError(e);
     }
   }
 
   // PUT Request
-  Future<ApiResponse<T>> put<T>(
+  Future<ApiResponse<dynamic>> put(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -117,14 +128,20 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
       );
-      return ApiResponse<T>.fromJson(response.data);
+      return ApiResponse<dynamic>(
+        success: response.data['success'] ?? true,
+        data: response.data['data'],
+        error: response.data['error'] != null
+            ? ApiError.fromJson(response.data['error'] as Map<String, dynamic>)
+            : null,
+      );
     } on DioException catch (e) {
-      return _handleError<T>(e);
+      return _handleError(e);
     }
   }
 
   // DELETE Request
-  Future<ApiResponse<T>> delete<T>(
+  Future<ApiResponse<dynamic>> delete(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -137,14 +154,20 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
       );
-      return ApiResponse<T>.fromJson(response.data);
+      return ApiResponse<dynamic>(
+        success: response.data['success'] ?? true,
+        data: response.data['data'],
+        error: response.data['error'] != null
+            ? ApiError.fromJson(response.data['error'] as Map<String, dynamic>)
+            : null,
+      );
     } on DioException catch (e) {
-      return _handleError<T>(e);
+      return _handleError(e);
     }
   }
 
   // Error Handler
-  ApiResponse<T> _handleError<T>(DioException error) {
+  ApiResponse<dynamic> _handleError(DioException error) {
     String errorMessage = 'An error occurred';
     String errorCode = 'UNKNOWN_ERROR';
 
@@ -167,52 +190,10 @@ class ApiClient {
       }
     }
 
-    return ApiResponse<T>(
+    return ApiResponse<dynamic>(
       success: false,
       data: null,
       error: ApiError(code: errorCode, message: errorMessage),
     );
-  }
-}
-
-/// Standard API Response Model
-class ApiResponse<T> {
-  final bool success;
-  final T? data;
-  final ApiError? error;
-
-  ApiResponse({required this.success, this.data, this.error});
-
-  factory ApiResponse.fromJson(Map<String, dynamic> json) {
-    return ApiResponse<T>(
-      success: json['success'] ?? false,
-      data: json['data'] as T?,
-      error: json['error'] != null
-          ? ApiError.fromJson(json['error'] as Map<String, dynamic>)
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'success': success, 'data': data, 'error': error?.toJson()};
-  }
-}
-
-/// API Error Model
-class ApiError {
-  final String code;
-  final String message;
-
-  ApiError({required this.code, required this.message});
-
-  factory ApiError.fromJson(Map<String, dynamic> json) {
-    return ApiError(
-      code: json['code'] ?? 'UNKNOWN',
-      message: json['message'] ?? 'An error occurred',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'code': code, 'message': message};
   }
 }

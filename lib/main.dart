@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'Core/Config/app_config.dart';
+import 'Core/Config/environment_config.dart';
 import 'Core/Routes/app_routes.dart';
 import 'Core/Theme/my_colors.dart';
 import 'Services/revenuecat_service.dart';
@@ -11,6 +12,9 @@ import 'View/SplashView/splash_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Environment Config (.env file)
+  await EnvironmentConfig.init();
 
   // Initialize RevenueCat
   await RevenueCatService().init();

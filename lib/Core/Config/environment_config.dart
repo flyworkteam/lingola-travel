@@ -1,9 +1,17 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Environment Configuration
 /// Handles different environments (development, staging, production)
+/// Now reads from .env file
 enum Environment { development, staging, production }
 
 class EnvironmentConfig {
   static Environment _currentEnvironment = Environment.development;
+
+  /// Initialize environment config (call in main.dart)
+  static Future<void> init() async {
+    await dotenv.load(fileName: '.env');
+  }
 
   /// Get current environment
   static Environment get currentEnvironment => _currentEnvironment;
@@ -13,19 +21,29 @@ class EnvironmentConfig {
     _currentEnvironment = env;
   }
 
-  /// Get base URL based on environment
+  /// Get base URL from .env or fallback to default
   static String get baseUrl {
+    final envUrl = dotenv.env['API_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) {
+      return envUrl;
+    }
+
+    // Fallback based on environment
     switch (_currentEnvironment) {
       case Environment.development:
         return 'http://localhost:3000/api';
       case Environment.staging:
-        // TODO: Update with your staging backend URL
         return 'https://staging-api.lingolatravel.com/api';
       case Environment.production:
-        // TODO: Update with your production backend URL
         return 'https://api.lingolatravel.com/api';
     }
   }
+
+  /// Get API version
+  static String get apiVersion => dotenv.env['API_VERSION'] ?? 'v1';
+
+  /// Get API timeout
+  static String get apiTimeout => dotenv.env['API_TIMEOUT'] ?? '30';
 
   /// Check if we're in production
   static bool get isProduction => _currentEnvironment == Environment.production;
@@ -50,6 +68,12 @@ class EnvironmentConfig {
   }
 
   /// Enable/Disable features based on environment
-  static bool get enableDebugLogging => !isProduction;
+  static bool get enableDebugLogging =>
+      dotenv.env['ENABLE_DEBUG_LOGGING']?.toLowerCase() == 'true' ||
+      isDevelopment;
   static bool get enableDetailedErrors => isDevelopment;
+
+  /// Get OneSignal App ID
+  static String get oneSignalAppId =>
+      dotenv.env['ONESIGNAL_APP_ID'] ?? 'YOUR_ONESIGNAL_APP_ID';
 }

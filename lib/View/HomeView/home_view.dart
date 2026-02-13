@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import '../../Riverpod/Controllers/home_view_controller.dart';
+import '../../Riverpod/Controllers/dictionary_controller.dart';
 import '../NotificationsView/notifications_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
@@ -24,6 +26,16 @@ class _HomeViewState extends ConsumerState<HomeView> {
   int _selectedCategoryIndex = 0; // Track selected phrasebook category
   Map<int, double> _swipeProgressMap =
       {}; // Track swipe progress for each feature card
+
+  @override
+  void initState() {
+    super.initState();
+    // Load courses and dictionary categories from backend (FREE user)
+    Future.microtask(() {
+      ref.read(homeViewControllerProvider.notifier).init();
+      ref.read(dictionaryControllerProvider.notifier).init();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -358,24 +370,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Quick Phrasebook section
+  /// Quick Phrasebook section - TAMAMEN DİNAMİK! Backend'den isim + icon 🚀🔥
   Widget _buildQuickPhrasebook() {
-    final categories = [
-      {'icon': 'assets/images/general.png', 'label': 'General'},
-      {'icon': 'assets/images/trip.png', 'label': 'Trip'},
-      {'icon': 'assets/images/food.png', 'label': 'Food &\nDrink'},
-      {'icon': 'assets/images/accomo.png', 'label': 'Accommo...'},
-      {'icon': 'assets/images/culture.png', 'label': 'Culture'},
-      {'icon': 'assets/images/shope.png', 'label': 'Shop'},
-      {
-        'icon': 'assets/images/direction.png',
-        'label': 'Direction &\nNavigation',
-      },
-      {'icon': 'assets/images/sport.png', 'label': 'Sport'},
-      {'icon': 'assets/images/health.png', 'label': 'Health'},
-      {'icon': 'assets/images/bussines.png', 'label': 'Business'},
-      {'icon': 'assets/images/emergency.png', 'label': 'Emergency'},
-    ];
+    final dictionaryState = ref.watch(dictionaryControllerProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,7 +394,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ),
               GestureDetector(
                 onTap: () {
-                  // Navigate to Travel Vocabulary
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -422,32 +418,51 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
         SizedBox(height: 12.h),
 
-        // Horizontal scrollable categories - full width
+        // Dynamic categories from backend with STATIC ICONS!
         SizedBox(
           height: 100.h,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.only(left: 16.w),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              final isSelected = _selectedCategoryIndex == index;
+          child: dictionaryState.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : dictionaryState.categories.isEmpty
+              ? Center(
+                  child: Text(
+                    'Categories not found',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: MyColors.textSecondary,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.only(left: 16.w),
+                  itemCount: dictionaryState.categories.length,
+                  itemBuilder: (context, index) {
+                    final category = dictionaryState.categories[index];
+                    final isSelected = _selectedCategoryIndex == index;
 
-              return Padding(
-                padding: EdgeInsets.only(right: 16.w),
-                child: _buildPhrasebookCategory(
-                  iconPath: category['icon']!,
-                  label: category['label']!,
-                  isSelected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      _selectedCategoryIndex = index;
-                    });
+                    return Padding(
+                      padding: EdgeInsets.only(right: 16.w),
+                      child: _buildPhrasebookCategory(
+                        iconPath: category.iconPath, // DİREKT BACKEND'TEN! 🔥
+                        label: category.name,
+                        isSelected: isSelected,
+                        onTap: () {
+                          // Navigate to Travel Vocabulary View with selected category
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TravelVocabularyView(
+                                isPremium: false,
+                                initialCategory: category.name,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
                   },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );
@@ -970,11 +985,22 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Current course card
+  /// Current course card - DİNAMİK (Backend'den aktif kurs - FREE USER!)
   Widget _buildCurrentCourseCard() {
-    const double progress = 0.65; // 65%
-    const int currentLesson = 12;
-    const int totalLessons = 18;
+    final homeState = ref.watch(homeViewControllerProvider);
+
+    // Backend'den gelen ilk kursu "Current Course" olarak göster
+    final currentCourse = homeState.courses.isNotEmpty
+        ? homeState.courses.first
+        : null;
+
+    if (currentCourse == null) {
+      return const SizedBox.shrink();
+    }
+
+    final progress = currentCourse.progressPercentage / 100.0;
+    final completedLessons = currentCourse.lessonsCompleted;
+    final totalLessons = currentCourse.totalLessons;
 
     return GestureDetector(
       onTap: () {
@@ -1027,9 +1053,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
                   SizedBox(height: 12.h),
 
-                  // Course title
+                  // Course title (Backend'den!)
                   Text(
-                    'Terminal Talks:\nAirport Basics',
+                    currentCourse.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
@@ -1041,7 +1069,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
                   SizedBox(height: 20.h),
 
-                  // Progress info
+                  // Progress info (Backend'den!)
                   Row(
                     children: [
                       Text(
@@ -1055,7 +1083,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       ),
                       SizedBox(width: 16.w),
                       Text(
-                        '$currentLesson/$totalLessons Lessons',
+                        '$completedLessons/$totalLessons Lessons',
                         style: TextStyle(
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w400,
@@ -1111,22 +1139,64 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Course Cards section
+  /// Course Cards section - DİNAMİK (FREE USER - Backend'den geliyor!)
   Widget _buildCourseCards() {
-    final courses = [
-      {
-        'title': 'English for\nTravelers',
-        'iconPath': 'assets/icons/englishfortravel.svg',
-        'iconBgColor': Color(0xFFE3F2FD), // Light blue
-        'arrowColor': Color(0xFF4A90E2),
-      },
-      {
-        'title': 'English for\nHealth',
-        'iconPath': 'assets/icons/englishforhealth.svg',
-        'iconBgColor': Color(0xFFF3E5F5), // Light purple
-        'arrowColor': Color(0xFF9C27B0),
-      },
-    ];
+    final homeState = ref.watch(homeViewControllerProvider);
+
+    // Loading state
+    if (homeState.isLoading) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: SizedBox(
+          height: 180.h,
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    // Error state
+    if (homeState.errorMessage != null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: SizedBox(
+          height: 180.h,
+          child: Center(
+            child: Text(
+              'Kurslar yüklenemedi\n${homeState.errorMessage}',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, color: Colors.red),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Empty state
+    if (homeState.courses.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: SizedBox(
+          height: 180.h,
+          child: Center(
+            child: Text(
+              'Henüz kurs bulunmuyor',
+              style: TextStyle(fontSize: 14.sp, color: MyColors.textSecondary),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Backend'den gelen FREE kurslar (is_free = true)
+    final freeCourses = homeState.courses
+        .where((c) => c.isFree)
+        .take(2)
+        .toList();
+
+    // Eğer ücretsiz kurs yoksa ilk 2'yi göster
+    final courses = freeCourses.isEmpty
+        ? homeState.courses.take(2).toList()
+        : freeCourses;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -1134,23 +1204,28 @@ class _HomeViewState extends ConsumerState<HomeView> {
         height: 180.h,
         child: Row(
           children: [
-            Expanded(
-              child: _buildCourseCard(
-                title: courses[0]['title'] as String,
-                iconPath: courses[0]['iconPath'] as String,
-                iconBgColor: courses[0]['iconBgColor'] as Color,
-                arrowColor: courses[0]['arrowColor'] as Color,
+            if (courses.isNotEmpty)
+              Expanded(
+                child: _buildCourseCard(
+                  title: courses[0].title,
+                  subtitle: '${courses[0].totalLessons} lessons',
+                  iconPath: 'assets/icons/englishfortravel.svg',
+                  iconBgColor: const Color(0xFFE3F2FD),
+                  arrowColor: const Color(0xFF4A90E2),
+                ),
               ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: _buildCourseCard(
-                title: courses[1]['title'] as String,
-                iconPath: courses[1]['iconPath'] as String,
-                iconBgColor: courses[1]['iconBgColor'] as Color,
-                arrowColor: courses[1]['arrowColor'] as Color,
+            if (courses.length > 1) ...[
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _buildCourseCard(
+                  title: courses[1].title,
+                  subtitle: '${courses[1].totalLessons} lessons',
+                  iconPath: 'assets/icons/englishforhealth.svg',
+                  iconBgColor: const Color(0xFFF3E5F5),
+                  arrowColor: const Color(0xFF9C27B0),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -1160,14 +1235,19 @@ class _HomeViewState extends ConsumerState<HomeView> {
   /// Single course card
   Widget _buildCourseCard({
     required String title,
+    required String subtitle,
     required String iconPath,
     required Color iconBgColor,
     required Color arrowColor,
   }) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to course detail page
-        print('Tapped on course: $title');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CourseView(isPremium: false),
+          ),
+        );
       },
       child: Container(
         padding: EdgeInsets.all(14.w),
@@ -1200,9 +1280,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
             SizedBox(height: 16.h),
 
-            // Title
+            // Title (Backend'den!)
             Text(
               title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
@@ -1212,7 +1294,20 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ),
             ),
 
-            Spacer(),
+            SizedBox(height: 4.h),
+
+            // Subtitle (Backend'den!)
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Montserrat',
+                color: MyColors.textSecondary,
+              ),
+            ),
+
+            const Spacer(),
 
             // Start Course button
             Row(

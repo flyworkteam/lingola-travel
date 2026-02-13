@@ -1,4 +1,5 @@
 import '../Services/api_client.dart';
+import '../Models/api_response.dart';
 
 /// Base Repository class
 /// Provides common methods for all repositories
@@ -7,9 +8,27 @@ abstract class BaseRepository {
 
   ApiClient get apiClient => _apiClient;
 
-  /// Handle repository-level errors
-  String handleError(ApiError error) {
-    // Map error codes to user-friendly messages
+  /// Handle repository-level errors and convert to ApiResponse
+  ApiResponse<T> handleError<T>(Object error) {
+    String errorMessage = 'Bir hata oluştu. Lütfen tekrar deneyin.';
+    String errorCode = 'UNKNOWN_ERROR';
+
+    if (error is ApiError) {
+      errorCode = error.code;
+      errorMessage = _getLocalizedErrorMessage(error);
+    } else if (error is Exception) {
+      errorMessage = error.toString();
+    }
+
+    return ApiResponse<T>(
+      success: false,
+      data: null,
+      error: ApiError(code: errorCode, message: errorMessage),
+    );
+  }
+
+  /// Map error codes to user-friendly messages
+  String _getLocalizedErrorMessage(ApiError error) {
     switch (error.code) {
       case 'TIMEOUT':
         return 'Bağlantı zaman aşımına uğradı. Lütfen tekrar deneyin.';

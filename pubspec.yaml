@@ -50,6 +50,9 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.3.3
   
+  # Environment Variables
+  flutter_dotenv: ^5.1.0
+  
   # Animations
   animations: ^2.0.11
   smooth_page_indicator: ^1.2.0+3
@@ -99,7 +102,8 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
-    - assets/audio/
+    # Environment config
+    - .env
     # Explicitly add SVG files
     - assets/images/home/avatarimage.svg
     - assets/images/home/elementcerceve.svg
