@@ -1,3 +1,5 @@
+import 'environment_config.dart';
+
 /// App configuration constants
 class AppConfig {
   AppConfig._(); // Private constructor
@@ -7,8 +9,8 @@ class AppConfig {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  // TODO: Replace with actual backend URL before deployment
-  static const String baseUrl = 'http://localhost:3000/api';
+  // Backend URL is now managed by EnvironmentConfig
+  static String get baseUrl => EnvironmentConfig.baseUrl;
   static const String apiVersion = 'v1';
   static const String apiTimeout = '30'; // seconds
 
