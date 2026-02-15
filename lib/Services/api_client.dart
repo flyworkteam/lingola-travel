@@ -38,9 +38,10 @@ class ApiClient {
           final token = await _secureStorage.read(
             key: AppConfig.keyAccessToken,
           );
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
+
+          // TEST MODE: Use demo token if no real token exists
+          final authToken = token ?? 'demo-token-user-demo-001';
+          options.headers['Authorization'] = 'Bearer $authToken';
 
           return handler.next(options);
         },

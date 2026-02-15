@@ -1,34 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import '../../Riverpod/Controllers/library_controller.dart';
+import '../../Models/library_model.dart';
+import '../../Services/tts_service.dart';
 
-class LibraryFolderDetailView extends StatefulWidget {
+class LibraryFolderDetailView extends ConsumerStatefulWidget {
+  final String folderId;
   final String folderName;
   final String icon;
   final bool isPremium;
 
   const LibraryFolderDetailView({
     super.key,
+    required this.folderId,
     required this.folderName,
     required this.icon,
     this.isPremium = false,
   });
 
   @override
-  State<LibraryFolderDetailView> createState() =>
+  ConsumerState<LibraryFolderDetailView> createState() =>
       _LibraryFolderDetailViewState();
 }
 
-class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
+class _LibraryFolderDetailViewState
+    extends ConsumerState<LibraryFolderDetailView>
     with SingleTickerProviderStateMixin {
   int _selectedTab = 0; // 0: All, 1: Words, 2: Phrases
   String? _playingItemId;
   bool _isEditMode = false;
-  List<Map<String, dynamic>> _allItems = [];
   late String _currentFolderName;
-  final Set<String> _bookmarkedIds = {};
 
   late AnimationController _progressController;
 
@@ -36,177 +41,77 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
   void initState() {
     super.initState();
     _currentFolderName = widget.folderName;
-    _allItems = _getInitialItems();
     _progressController = AnimationController(
       vsync: this,
       duration: Duration(seconds: 3),
     );
+
+    // Initialize TTS service
+    TtsService().init();
+
+    // Load folder items from backend
+    Future.microtask(() {
+      print(
+        '🔵 LibraryFolderDetailView initState - folderId: ${widget.folderId}',
+      );
+      ref
+          .read(libraryFolderItemsControllerProvider(widget.folderId).notifier)
+          .init();
+    });
   }
 
   @override
   void dispose() {
     _progressController.dispose();
+    TtsService().stop(); // Stop any ongoing TTS
     super.dispose();
   }
 
-  // Sample data - different for each category
-  List<Map<String, dynamic>> _getInitialItems() {
-    if (widget.folderName.contains('Airport')) {
-      return [
-        {
-          'id': '1',
-          'english': 'Boarding Pass',
-          'turkish': 'Biniş Kartı',
-          'type': 'word',
-        },
-        {
-          'id': '2',
-          'english': 'Where is the gate?',
-          'turkish': 'Kapı nerede?',
-          'type': 'phrase',
-        },
-        {
-          'id': '3',
-          'english': 'Passport Control',
-          'turkish': 'Pasaport Kontrolü',
-          'type': 'word',
-        },
-        {
-          'id': '4',
-          'english': 'Baggage Claim',
-          'turkish': 'Bagaj Alım',
-          'type': 'word',
-        },
-        {
-          'id': '5',
-          'english': 'Carry-on',
-          'turkish': 'El bagajı',
-          'type': 'word',
-        },
-      ];
-    } else if (widget.folderName.contains('Hotel')) {
-      return [
-        {
-          'id': '1',
-          'english': 'Check-in',
-          'turkish': 'Giriş yapma',
-          'type': 'word',
-        },
-        {
-          'id': '2',
-          'english': 'Do you have a reservation?',
-          'turkish': 'Rezervasyonunuz var mı?',
-          'type': 'phrase',
-        },
-        {
-          'id': '3',
-          'english': 'Room service',
-          'turkish': 'Oda servisi',
-          'type': 'word',
-        },
-        {
-          'id': '4',
-          'english': 'Wake-up call',
-          'turkish': 'Uyandırma servisi',
-          'type': 'word',
-        },
-      ];
-    } else if (widget.folderName.contains('Transport')) {
-      return [
-        {'id': '1', 'english': 'Taxi', 'turkish': 'Taksi', 'type': 'word'},
-        {
-          'id': '2',
-          'english': 'How much is the fare?',
-          'turkish': 'Ücret ne kadar?',
-          'type': 'phrase',
-        },
-        {
-          'id': '3',
-          'english': 'Bus stop',
-          'turkish': 'Otobüs durağı',
-          'type': 'word',
-        },
-        {
-          'id': '4',
-          'english': 'Train station',
-          'turkish': 'Tren istasyonu',
-          'type': 'word',
-        },
-      ];
-    } else if (widget.folderName.contains('Food')) {
-      return [
-        {'id': '1', 'english': 'Menu', 'turkish': 'Menü', 'type': 'word'},
-        {
-          'id': '2',
-          'english': 'Can I see the menu?',
-          'turkish': 'Menüyü görebilir miyim?',
-          'type': 'phrase',
-        },
-        {'id': '3', 'english': 'Bill', 'turkish': 'Hesap', 'type': 'word'},
-        {
-          'id': '4',
-          'english': 'Reservation',
-          'turkish': 'Rezervasyon',
-          'type': 'word',
-        },
-      ];
-    } else if (widget.folderName.contains('Shopping')) {
-      return [
-        {
-          'id': '1',
-          'english': 'How much?',
-          'turkish': 'Ne kadar?',
-          'type': 'phrase',
-        },
-        {'id': '2', 'english': 'Receipt', 'turkish': 'Fiş', 'type': 'word'},
-        {
-          'id': '3',
-          'english': 'Discount',
-          'turkish': 'İndirim',
-          'type': 'word',
-        },
-        {
-          'id': '4',
-          'english': 'Credit card',
-          'turkish': 'Kredi kartı',
-          'type': 'word',
-        },
-      ];
-    } else {
-      return [
-        {'id': '1', 'english': 'Hello', 'turkish': 'Merhaba', 'type': 'word'},
-        {
-          'id': '2',
-          'english': 'Thank you',
-          'turkish': 'Teşekkür ederim',
-          'type': 'phrase',
-        },
-        {
-          'id': '3',
-          'english': 'Goodbye',
-          'turkish': 'Hoşça kal',
-          'type': 'word',
-        },
-      ];
-    }
-  }
-
-  List<Map<String, dynamic>> _getFilteredItems() {
-    if (_selectedTab == 0) return _allItems; // All
+  // Filter items by tab (All, Words, Phrases)
+  List<LibraryItemModel> _getFilteredItems(List<LibraryItemModel> allItems) {
+    if (_selectedTab == 0) return allItems; // All
     if (_selectedTab == 1) {
-      return _allItems
-          .where((item) => item['type'] == 'word')
-          .toList(); // Words
+      // Words: dictionary_word and lesson_vocabulary
+      return allItems
+          .where(
+            (item) =>
+                item.itemType == 'dictionary_word' ||
+                item.itemType == 'lesson_vocabulary',
+          )
+          .toList();
     }
-    return _allItems
-        .where((item) => item['type'] == 'phrase')
-        .toList(); // Phrases
+    // Phrases: travel_phrase
+    return allItems.where((item) => item.itemType == 'travel_phrase').toList();
   }
 
-  void _deleteItem(String itemId) {
-    setState(() {
-      _allItems.removeWhere((item) => item['id'] == itemId);
-    });
+  // Delete item from library
+  void _deleteItem(int libraryItemId) async {
+    try {
+      final controller = ref.read(
+        libraryFolderItemsControllerProvider(widget.folderId).notifier,
+      );
+      await controller.removeItem(libraryItemId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✓ Silindi'),
+            backgroundColor: Color(0xFF4ECDC4),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Silinemedi'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   void _showEditNameDialog() async {
@@ -304,20 +209,29 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
     }
   }
 
-  void _playAudio(String itemId) {
+  void _playAudio(String itemId, String englishWord) async {
+    final tts = TtsService();
+
     setState(() {
       if (_playingItemId == itemId) {
+        // Stop playing
         _playingItemId = null;
         _progressController.stop();
         _progressController.reset();
+        tts.stop();
       } else {
+        // Start playing
         _playingItemId = itemId;
         _progressController.reset();
         _progressController.forward();
+
+        // Speak the English word
+        tts.speak(englishWord);
       }
     });
 
     if (_playingItemId == itemId) {
+      // Auto-stop after 3 seconds (approximate TTS duration)
       Future.delayed(Duration(seconds: 3), () {
         if (mounted && _playingItemId == itemId) {
           setState(() {
@@ -328,113 +242,14 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
     }
   }
 
-  void _toggleBookmark(String itemId) {
-    setState(() {
-      if (_bookmarkedIds.contains(itemId)) {
-        _bookmarkedIds.remove(itemId);
-      } else {
-        _bookmarkedIds.add(itemId);
-      }
-    });
-  }
-
-  void _showItemDetail(Map<String, dynamic> item) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(24.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24.r),
-              topRight: Radius.circular(24.r),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag handle
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: Color(0xFFE5E7EB),
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              SizedBox(height: 24.h),
-
-              // English text
-              Text(
-                item['english'],
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF1A1A1A),
-                ),
-              ),
-              SizedBox(height: 12.h),
-
-              // Turkish text
-              Text(
-                item['turkish'],
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-              SizedBox(height: 32.h),
-
-              // Action buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildActionButton(
-                    icon: Icons.volume_up,
-                    onTap: () => _playAudio(item['id']),
-                  ),
-                  SizedBox(width: 20.w),
-                  _buildActionButton(
-                    icon: Icons.bookmark,
-                    onTap: () => _toggleBookmark(item['id']),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 40.h),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 56.w,
-        height: 56.w,
-        decoration: BoxDecoration(
-          color: Color(0xFFE0F7F4),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, size: 28.sp, color: Color(0xFF4ECDC4)),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filteredItems = _getFilteredItems();
+    // Get folder items from backend
+    final folderItemsState = ref.watch(
+      libraryFolderItemsControllerProvider(widget.folderId),
+    );
+    final allItems = folderItemsState.items;
+    final filteredItems = _getFilteredItems(allItems);
 
     return PopScope(
       canPop: true,
@@ -570,7 +385,84 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
 
                   // Items list
                   Expanded(
-                    child: filteredItems.isEmpty
+                    child: folderItemsState.isLoading
+                        ? Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF4ECDC4),
+                            ),
+                          )
+                        : folderItemsState.errorMessage != null
+                        ? Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.w),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 64.sp,
+                                    color: Colors.red,
+                                  ),
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    folderItemsState.errorMessage!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      color: Colors.grey[700],
+                                      fontFamily: 'Montserrat',
+                                    ),
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    'Folder ID: ${widget.folderId}',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: Colors.grey[500],
+                                      fontFamily: 'Montserrat',
+                                    ),
+                                  ),
+                                  SizedBox(height: 24.h),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      print(
+                                        '🔄 Retrying to load items for ${widget.folderId}',
+                                      );
+                                      ref
+                                          .read(
+                                            libraryFolderItemsControllerProvider(
+                                              widget.folderId,
+                                            ).notifier,
+                                          )
+                                          .loadItems();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFF4ECDC4),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 32.w,
+                                        vertical: 12.h,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          12.r,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Tekrar Dene',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'Montserrat',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : filteredItems.isEmpty
                         ? _buildEmptyState()
                         : ListView.builder(
                             padding: EdgeInsets.only(
@@ -582,7 +474,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                             itemCount: filteredItems.length,
                             itemBuilder: (context, index) {
                               final item = filteredItems[index];
-                              final isPlaying = _playingItemId == item['id'];
+                              final isPlaying = _playingItemId == item.itemId;
 
                               return Padding(
                                 padding: EdgeInsets.only(bottom: 16.h),
@@ -729,9 +621,9 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
     );
   }
 
-  Widget _buildItemCard(Map<String, dynamic> item, bool isPlaying) {
+  Widget _buildItemCard(LibraryItemModel item, bool isPlaying) {
     return GestureDetector(
-      onTap: null, // Disabled bottom sheet trigger as requested by user
+      onTap: null, // Disabled bottom sheet trigger
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -758,7 +650,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['english'],
+                            item.word,
                             style: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w700,
@@ -768,7 +660,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            item['turkish'],
+                            item.translation,
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
@@ -776,48 +668,75 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
                               color: Color(0xFF6B7280),
                             ),
                           ),
+                          if (item.category != null) ...[
+                            SizedBox(height: 8.h),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              child: Text(
+                                item.category!,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
                     SizedBox(width: 12.w),
+
+                    // Audio and Bookmark buttons - YAN YANA
                     if (!_isEditMode)
-                      GestureDetector(
-                        onTap: () => _playAudio(item['id']),
-                        child: Container(
-                          width: 40.w,
-                          height: 40.w,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFE0F7F4),
-                            borderRadius: BorderRadius.circular(10.r),
+                      Row(
+                        children: [
+                          // Audio Play Button
+                          GestureDetector(
+                            onTap: () => _playAudio(item.itemId, item.word),
+                            child: Container(
+                              width: 48.w,
+                              height: 48.h,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFE0F7F4),
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              padding: EdgeInsets.all(12.w),
+                              child: SvgPicture.asset(
+                                'assets/icons/travelvocabularyseslendirme.svg',
+                                width: 24.w,
+                                height: 24.h,
+                                color: Color(0xFF4ECDC4),
+                              ),
+                            ),
                           ),
-                          child: Icon(
-                            isPlaying ? Icons.pause : Icons.volume_up,
-                            size: 22.sp,
-                            color: Color(0xFF4ECDC4),
+
+                          SizedBox(width: 8.w),
+
+                          // Bookmark Button (already saved) - BEYAZIMSI ARKAPLAN
+                          Container(
+                            width: 48.w,
+                            height: 48.h,
+                            decoration: BoxDecoration(
+                              color: Color(0xFFF3F4F6), // Beyazımsı gri
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            padding: EdgeInsets.all(12.w),
+                            child: SvgPicture.asset(
+                              'assets/icons/travelvocabularykaydet.svg',
+                              width: 24.w,
+                              height: 24.h,
+                              color: Color(0xFF4ECDC4),
+                            ),
                           ),
-                        ),
-                      ),
-                    SizedBox(width: 8.w),
-                    if (!_isEditMode)
-                      GestureDetector(
-                        onTap: () => _toggleBookmark(item['id']),
-                        child: Container(
-                          width: 40.w,
-                          height: 40.w,
-                          decoration: BoxDecoration(
-                            color: _bookmarkedIds.contains(item['id'])
-                                ? Color(0xFFE3F2FD)
-                                : Color(0xFFE0F7F4),
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          child: Icon(
-                            Icons.bookmark,
-                            size: 22.sp,
-                            color: _bookmarkedIds.contains(item['id'])
-                                ? Color(0xFF3B82F6)
-                                : Color(0xFF4ECDC4),
-                          ),
-                        ),
+                        ],
                       ),
                   ],
                 ),
@@ -848,7 +767,7 @@ class _LibraryFolderDetailViewState extends State<LibraryFolderDetailView>
               top: -8.w,
               left: 4.w,
               child: GestureDetector(
-                onTap: () => _deleteItem(item['id']),
+                onTap: () => _deleteItem(item.libraryItemId),
                 child: Container(
                   width: 24.w,
                   height: 24.w,

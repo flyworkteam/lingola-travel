@@ -1,18 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../Models/travel_phrase_model.dart';
-import '../../Models/dictionary_model.dart' hide TravelPhraseModel;
-import '../../Models/api_response.dart';
+import '../../Models/dictionary_model.dart'; // Only for DictionaryWordModel type
 import '../../Repositories/travel_phrase_repository.dart';
-import '../../Repositories/dictionary_repository.dart';
-import 'dictionary_controller.dart';
 
 // Provider for repository
 final travelPhraseRepositoryProvider = Provider<TravelPhraseRepository>((ref) {
   return TravelPhraseRepository();
-});
-
-final dictionaryRepositoryProvider = Provider<DictionaryRepository>((ref) {
-  return DictionaryRepository();
 });
 
 // ViewModel for state
@@ -52,14 +45,9 @@ class TravelVocabularyViewModel {
 class TravelVocabularyController
     extends StateNotifier<TravelVocabularyViewModel> {
   final TravelPhraseRepository _phraseRepository;
-  final DictionaryRepository _dictionaryRepository;
-  final Ref _ref;
 
-  TravelVocabularyController(
-    this._phraseRepository,
-    this._dictionaryRepository,
-    this._ref,
-  ) : super(const TravelVocabularyViewModel());
+  TravelVocabularyController(this._phraseRepository)
+    : super(const TravelVocabularyViewModel());
 
   /// Initialize and load both
   Future<void> init() async {
@@ -72,19 +60,15 @@ class TravelVocabularyController
       isLoading: true,
       errorMessage: null,
       selectedCategory: categoryName,
-      words: [],
+      words: [], // Empty - not used anymore
       phrases: [],
     );
 
     try {
-      // 1. Kategorilerin yüklenmiş olduğundan emin olalım
-      var dictionaryState = _ref.read(dictionaryControllerProvider);
-      if (dictionaryState.categories.isEmpty) {
-        await _ref.read(dictionaryControllerProvider.notifier).init();
-        dictionaryState = _ref.read(dictionaryControllerProvider);
-      }
+      // Travel Vocabulary shows ONLY PHRASES (travel_phrases table)
+      // Words are shown in Visual Dictionary (dictionary_words table)
 
-      // 2. Cümleleri Yükle (categoryName 'All Topics' ise null gönderiyoruz ki hepsi gelsin)
+      // Load phrases (categoryName 'All Topics' ise null gönderiyoruz ki hepsi gelsin)
       final effectiveCategory =
           (categoryName == 'All Topics' || categoryName == null)
           ? null
@@ -93,48 +77,9 @@ class TravelVocabularyController
         effectiveCategory,
       );
 
-      // 3. Kelimeleri Yükle
-      List<DictionaryWordModel> words = [];
-
-      if (effectiveCategory != null) {
-        // Belirli bir kategori seçildiyse:
-        final category = dictionaryState.categories.firstWhere(
-          (c) => c.name == effectiveCategory,
-          orElse: () =>
-              throw Exception('Category "$effectiveCategory" not found'),
-        );
-
-        final wordResp = await _dictionaryRepository.getWordsByCategory(
-          categoryId: category.id,
-        );
-        if (wordResp.success) words = wordResp.data ?? [];
-      } else {
-        // "All Topics" seçildiyse (Başlangıç ekranı):
-        // Çeşitlilik için ilk 5 kategoriden 10'ar kelime çekelim
-        final topCategories = dictionaryState.categories.take(5).toList();
-        final List<Future<ApiResponse<List<DictionaryWordModel>>>> futures =
-            topCategories
-                .map(
-                  (c) => _dictionaryRepository.getWordsByCategory(
-                    categoryId: c.id,
-                    limit: 10,
-                  ),
-                )
-                .toList();
-
-        final resultsArr = await Future.wait(futures);
-        for (var res in resultsArr) {
-          if (res.success && res.data != null) {
-            words.addAll(res.data!);
-          }
-        }
-        // Kelimeleri karıştırabiliriz (Opsiyonel)
-        words.shuffle();
-      }
-
       state = state.copyWith(
         phrases: phraseResp.data ?? [],
-        words: words,
+        words: [], // Not used in Travel Vocabulary
         isLoading: false,
       );
     } catch (e) {
@@ -158,6 +103,5 @@ final travelVocabularyControllerProvider =
       TravelVocabularyViewModel
     >((ref) {
       final phraseRepo = ref.watch(travelPhraseRepositoryProvider);
-      final dictRepo = ref.watch(dictionaryRepositoryProvider);
-      return TravelVocabularyController(phraseRepo, dictRepo, ref);
+      return TravelVocabularyController(phraseRepo);
     });

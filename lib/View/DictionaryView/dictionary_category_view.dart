@@ -1,179 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import '../../Riverpod/Controllers/visual_dictionary_words_controller.dart';
 
-class DictionaryCategoryView extends StatefulWidget {
+class DictionaryCategoryView extends ConsumerStatefulWidget {
   final String categoryName;
+  final String categoryId;
   final bool isPremium;
 
   const DictionaryCategoryView({
     super.key,
     required this.categoryName,
+    required this.categoryId,
     this.isPremium = false,
   });
 
   @override
-  State<DictionaryCategoryView> createState() => _DictionaryCategoryViewState();
+  ConsumerState<DictionaryCategoryView> createState() =>
+      _DictionaryCategoryViewState();
 }
 
-class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
+class _DictionaryCategoryViewState
+    extends ConsumerState<DictionaryCategoryView> {
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {};
 
-  // Mock data for different categories
-  final Map<String, List<Map<String, String>>> _categoryWords = {
-    'Airport': [
-      {'english': 'Passport', 'turkish': 'Pasaport'},
-      {'english': 'Boarding Pass', 'turkish': 'Biniş Kartı'},
-      {'english': 'Departure', 'turkish': 'Kalkış'},
-      {'english': 'Arrival', 'turkish': 'Varış'},
-      {'english': 'Gate', 'turkish': 'Kapı'},
-      {'english': 'Baggage Claim', 'turkish': 'Bagaj Alanı'},
-      {'english': 'Check-in', 'turkish': 'Bilet ve bagaj işlemi'},
-      {'english': 'Flight', 'turkish': 'Uçuş'},
-      {'english': 'Security', 'turkish': 'Güvenlik'},
-      {'english': 'Customs', 'turkish': 'Gümrük'},
-      {'english': 'Terminal', 'turkish': 'Terminal'},
-      {'english': 'Runway', 'turkish': 'Pist'},
-    ],
-    'Accommodation': [
-      {'english': 'Hotel', 'turkish': 'Otel'},
-      {'english': 'Room', 'turkish': 'Oda'},
-      {'english': 'Reception', 'turkish': 'Resepsiyon'},
-      {'english': 'Reservation', 'turkish': 'Rezervasyon'},
-      {'english': 'Check-in', 'turkish': 'Giriş'},
-      {'english': 'Check-out', 'turkish': 'Çıkış'},
-      {'english': 'Key Card', 'turkish': 'Anahtar Kart'},
-      {'english': 'Breakfast', 'turkish': 'Kahvaltı'},
-      {'english': 'Housekeeping', 'turkish': 'Oda Servisi'},
-      {'english': 'Lobby', 'turkish': 'Lobi'},
-    ],
-    'Transportation': [
-      {'english': 'Taxi', 'turkish': 'Taksi'},
-      {'english': 'Bus', 'turkish': 'Otobüs'},
-      {'english': 'Train', 'turkish': 'Tren'},
-      {'english': 'Subway', 'turkish': 'Metro'},
-      {'english': 'Ticket', 'turkish': 'Bilet'},
-      {'english': 'Station', 'turkish': 'İstasyon'},
-      {'english': 'Driver', 'turkish': 'Sürücü'},
-      {'english': 'Fare', 'turkish': 'Ücret'},
-      {'english': 'Stop', 'turkish': 'Durak'},
-      {'english': 'Schedule', 'turkish': 'Tarife'},
-    ],
-    'Food & Drink': [
-      {'english': 'Restaurant', 'turkish': 'Restoran'},
-      {'english': 'Menu', 'turkish': 'Menü'},
-      {'english': 'Waiter', 'turkish': 'Garson'},
-      {'english': 'Bill', 'turkish': 'Hesap'},
-      {'english': 'Breakfast', 'turkish': 'Kahvaltı'},
-      {'english': 'Lunch', 'turkish': 'Öğle Yemeği'},
-      {'english': 'Dinner', 'turkish': 'Akşam Yemeği'},
-      {'english': 'Water', 'turkish': 'Su'},
-      {'english': 'Coffee', 'turkish': 'Kahve'},
-      {'english': 'Tea', 'turkish': 'Çay'},
-      {'english': 'Dessert', 'turkish': 'Tatlı'},
-      {'english': 'Tip', 'turkish': 'Bahşiş'},
-    ],
-    'Shopping': [
-      {'english': 'Store', 'turkish': 'Mağaza'},
-      {'english': 'Price', 'turkish': 'Fiyat'},
-      {'english': 'Sale', 'turkish': 'İndirim'},
-      {'english': 'Receipt', 'turkish': 'Fiş'},
-      {'english': 'Cash', 'turkish': 'Nakit'},
-      {'english': 'Credit Card', 'turkish': 'Kredi Kartı'},
-      {'english': 'Size', 'turkish': 'Beden'},
-      {'english': 'Color', 'turkish': 'Renk'},
-      {'english': 'Discount', 'turkish': 'İndirim'},
-      {'english': 'Refund', 'turkish': 'İade'},
-      {'english': 'Shopping Bag', 'turkish': 'Alışveriş Çantası'},
-      {'english': 'Fitting Room', 'turkish': 'Deneme Kabini'},
-    ],
-    'Culture': [
-      {'english': 'Museum', 'turkish': 'Müze'},
-      {'english': 'Gallery', 'turkish': 'Galeri'},
-      {'english': 'Theater', 'turkish': 'Tiyatro'},
-      {'english': 'Concert', 'turkish': 'Konser'},
-      {'english': 'Exhibition', 'turkish': 'Sergi'},
-      {'english': 'Ticket', 'turkish': 'Bilet'},
-      {'english': 'Guide', 'turkish': 'Rehber'},
-      {'english': 'Tour', 'turkish': 'Tur'},
-      {'english': 'Monument', 'turkish': 'Anıt'},
-      {'english': 'Historic Site', 'turkish': 'Tarihi Alan'},
-    ],
-    'Meeting': [
-      {'english': 'Conference', 'turkish': 'Konferans'},
-      {'english': 'Meeting Room', 'turkish': 'Toplantı Odası'},
-      {'english': 'Presentation', 'turkish': 'Sunum'},
-      {'english': 'Schedule', 'turkish': 'Program'},
-      {'english': 'Appointment', 'turkish': 'Randevu'},
-      {'english': 'Business Card', 'turkish': 'Kartvizit'},
-      {'english': 'Colleague', 'turkish': 'Meslektaş'},
-      {'english': 'Client', 'turkish': 'Müşteri'},
-      {'english': 'Partner', 'turkish': 'Ortak'},
-      {'english': 'Agreement', 'turkish': 'Anlaşma'},
-    ],
-    'Sport': [
-      {'english': 'Gym', 'turkish': 'Spor Salonu'},
-      {'english': 'Swimming Pool', 'turkish': 'Yüzme Havuzu'},
-      {'english': 'Fitness', 'turkish': 'Fitness'},
-      {'english': 'Trainer', 'turkish': 'Antrenör'},
-      {'english': 'Equipment', 'turkish': 'Ekipman'},
-      {'english': 'Membership', 'turkish': 'Üyelik'},
-      {'english': 'Locker', 'turkish': 'Dolap'},
-      {'english': 'Towel', 'turkish': 'Havlu'},
-      {'english': 'Exercise', 'turkish': 'Egzersiz'},
-      {'english': 'Yoga', 'turkish': 'Yoga'},
-    ],
-    'Health': [
-      {'english': 'Hospital', 'turkish': 'Hastane'},
-      {'english': 'Doctor', 'turkish': 'Doktor'},
-      {'english': 'Pharmacy', 'turkish': 'Eczane'},
-      {'english': 'Medicine', 'turkish': 'İlaç'},
-      {'english': 'Prescription', 'turkish': 'Reçete'},
-      {'english': 'Emergency', 'turkish': 'Acil'},
-      {'english': 'Appointment', 'turkish': 'Randevu'},
-      {'english': 'Symptoms', 'turkish': 'Belirtiler'},
-      {'english': 'Pain', 'turkish': 'Ağrı'},
-      {'english': 'Fever', 'turkish': 'Ateş'},
-      {'english': 'Headache', 'turkish': 'Baş Ağrısı'},
-      {'english': 'Insurance', 'turkish': 'Sigorta'},
-    ],
-    'Business': [
-      {'english': 'Office', 'turkish': 'Ofis'},
-      {'english': 'Manager', 'turkish': 'Müdür'},
-      {'english': 'Employee', 'turkish': 'Çalışan'},
-      {'english': 'Contract', 'turkish': 'Sözleşme'},
-      {'english': 'Salary', 'turkish': 'Maaş'},
-      {'english': 'Invoice', 'turkish': 'Fatura'},
-      {'english': 'Report', 'turkish': 'Rapor'},
-      {'english': 'Deadline', 'turkish': 'Son Tarih'},
-      {'english': 'Project', 'turkish': 'Proje'},
-      {'english': 'Budget', 'turkish': 'Bütçe'},
-      {'english': 'Profit', 'turkish': 'Kâr'},
-      {'english': 'Loss', 'turkish': 'Zarar'},
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    // Load words from backend
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(
+            visualDictionaryWordsControllerProvider(widget.categoryId).notifier,
+          )
+          .init();
+    });
+  }
 
   List<Map<String, String>> get _words {
-    return _categoryWords[widget.categoryName] ?? [];
+    final wordsState = ref.watch(
+      visualDictionaryWordsControllerProvider(widget.categoryId),
+    );
+
+    // Convert DictionaryWordModel to Map for compatibility with existing UI
+    return wordsState.words.map((word) {
+      return {'english': word.word, 'turkish': word.translation};
+    }).toList();
   }
 
   int get _itemCount {
-    final counts = {
-      'Airport': 1240,
-      'Accommodation': 1000,
-      'Transportation': 980,
-      'Food & Drink': 1250,
-      'Shopping': 1520,
-      'Culture': 550,
-      'Meeting': 1520,
-      'Sport': 1550,
-      'Health': 1520,
-      'Business': 1550,
-    };
-    return counts[widget.categoryName] ?? 0;
+    final wordsState = ref.watch(
+      visualDictionaryWordsControllerProvider(widget.categoryId),
+    );
+    return wordsState.words.length;
   }
 
   @override
@@ -194,32 +77,70 @@ class _DictionaryCategoryViewState extends State<DictionaryCategoryView> {
 
   @override
   Widget build(BuildContext context) {
+    final wordsState = ref.watch(
+      visualDictionaryWordsControllerProvider(widget.categoryId),
+    );
+
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
       body: Stack(
         children: [
           // Main content
-          Column(
-            children: [
-              SizedBox(height: 16.h),
+          wordsState.isLoading
+              ? Center(
+                  child: CircularProgressIndicator(color: Color(0xFF4ECDC4)),
+                )
+              : wordsState.errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                      SizedBox(height: 16.h),
+                      Text(
+                        wordsState.errorMessage!,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          color: MyColors.textSecondary,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref
+                              .read(
+                                visualDictionaryWordsControllerProvider(
+                                  widget.categoryId,
+                                ).notifier,
+                              )
+                              .refresh();
+                        },
+                        child: Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    SizedBox(height: 16.h),
 
-              // Search bar
-              _buildSearchBar(),
+                    // Search bar
+                    _buildSearchBar(),
 
-              SizedBox(height: 16.h),
+                    SizedBox(height: 16.h),
 
-              // Item count
-              _buildItemCount(),
+                    // Item count
+                    _buildItemCount(),
 
-              SizedBox(height: 16.h),
+                    SizedBox(height: 16.h),
 
-              // Word list
-              Expanded(child: _buildWordList()),
+                    // Word list
+                    Expanded(child: _buildWordList()),
 
-              SizedBox(height: 100.h), // Space for bottom nav
-            ],
-          ),
+                    SizedBox(height: 100.h), // Space for bottom nav
+                  ],
+                ),
 
           // Floating bottom navigation
           CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),

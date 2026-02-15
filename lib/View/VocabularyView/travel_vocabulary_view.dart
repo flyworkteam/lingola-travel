@@ -7,7 +7,8 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Riverpod/Controllers/travel_vocabulary_controller.dart';
 import '../../Riverpod/Controllers/dictionary_controller.dart';
-import '../../Models/dictionary_model.dart';
+import '../../Riverpod/Controllers/library_controller.dart';
+import '../../Repositories/library_repository.dart';
 
 class TravelVocabularyView extends ConsumerStatefulWidget {
   final bool isPremium;
@@ -25,10 +26,11 @@ class TravelVocabularyView extends ConsumerStatefulWidget {
 
 class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   // State variables
-  int _selectedTab = 0; // 0: Words, 1: Phrases - MODIFIED: Start with Words
+  // REMOVED: Tab switcher - Travel Vocabulary shows ONLY PHRASES (Cümleler)
+  // Words (Kelimeler) are shown in Visual Dictionary
   String _selectedCategory = 'All Topics';
   final TextEditingController _searchController = TextEditingController();
-  Set<String> _bookmarkedItems = {};
+  Set<String> _bookmarkedItems = {}; // Will be loaded from backend
 
   @override
   void initState() {
@@ -53,7 +55,47 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             .read(travelVocabularyControllerProvider.notifier)
             .init(); // Phrases için
       }
+
+      // Load user's bookmarked items from backend
+      _loadBookmarkedItems();
     });
+  }
+
+  // Load all bookmarked item IDs from backend
+  Future<void> _loadBookmarkedItems() async {
+    try {
+      final repository = LibraryRepository();
+      final allBookmarkedIds = <String>{};
+
+      // Get all folders
+      final foldersResponse = await repository.getFolders();
+      if (foldersResponse.success && foldersResponse.data != null) {
+        // For each folder, get items
+        for (final folder in foldersResponse.data!) {
+          final itemsResponse = await repository.getFolderItems(
+            folderId: folder.id,
+            limit: 1000,
+          );
+
+          if (itemsResponse.success && itemsResponse.data != null) {
+            // Add item IDs to set
+            for (final item in itemsResponse.data!) {
+              allBookmarkedIds.add(item.itemId);
+            }
+          }
+        }
+      }
+
+      setState(() {
+        _bookmarkedItems = allBookmarkedIds;
+      });
+
+      print(
+        '📚 Loaded ${_bookmarkedItems.length} bookmarked items from backend',
+      );
+    } catch (e) {
+      print('❌ Error loading bookmarks: $e');
+    }
   }
 
   // Categories - DİNAMİK! Backend'den geliyor + All Topics ekliyoruz
@@ -92,14 +134,111 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     super.dispose();
   }
 
-  void _toggleBookmark(String id) {
+  // Map category to folder ID
+  String _getCategoryFolderId(String categoryName) {
+    final categoryLower = categoryName.toLowerCase();
+
+    // Simple mapping based on category keywords
+    if (categoryLower.contains('airport') ||
+        categoryLower.contains('havaalani')) {
+      return 'folder-001'; // My Airport Essentials
+    } else if (categoryLower.contains('hotel') ||
+        categoryLower.contains('accommodation') ||
+        categoryLower.contains('konaklama')) {
+      return 'folder-002'; // My Hotel Essentials
+    } else if (categoryLower.contains('transport') ||
+        categoryLower.contains('ulaşım')) {
+      return 'folder-003'; // Transport Essentials
+    } else if (categoryLower.contains('food') ||
+        categoryLower.contains('drink') ||
+        categoryLower.contains('yemek')) {
+      return 'folder-004'; // My Food Essentials
+    } else if (categoryLower.contains('shopping') ||
+        categoryLower.contains('alışveriş')) {
+      return 'folder-005'; // My Shopping Essentials
+    } else if (categoryLower.contains('culture') ||
+        categoryLower.contains('kültür')) {
+      return 'folder-006'; // Culture Essentials
+    } else if (categoryLower.contains('meeting') ||
+        categoryLower.contains('görüşme')) {
+      return 'folder-007'; // Meeting Essentials
+    } else if (categoryLower.contains('sport') ||
+        categoryLower.contains('spor')) {
+      return 'folder-008'; // Sport Essentials
+    } else if (categoryLower.contains('health') ||
+        categoryLower.contains('sağlık')) {
+      return 'folder-009'; // Health Essentials
+    } else if (categoryLower.contains('business') ||
+        categoryLower.contains('iş')) {
+      return 'folder-010'; // Business Essentials
+    }
+
+    // Default to Airport folder
+    return 'folder-001';
+  }
+
+  void _toggleBookmark(
+    String itemId, {
+    String? itemType,
+    String? category,
+  }) async {
+    final isCurrentlyBookmarked = _bookmarkedItems.contains(itemId);
+
     setState(() {
-      if (_bookmarkedItems.contains(id)) {
-        _bookmarkedItems.remove(id);
+      if (isCurrentlyBookmarked) {
+        _bookmarkedItems.remove(itemId);
       } else {
-        _bookmarkedItems.add(id);
+        _bookmarkedItems.add(itemId);
       }
     });
+
+    // Save to backend library
+    if (!isCurrentlyBookmarked) {
+      try {
+        final folderId = _getCategoryFolderId(category ?? _selectedCategory);
+        final type =
+            itemType ?? 'dictionary_word'; // Default to dictionary_word
+
+        print('🔖 Saving to library:');
+        print('   itemId: $itemId');
+        print('   itemType: $type');
+        print('   category: ${category ?? _selectedCategory}');
+        print('   folderId: $folderId');
+
+        final repository = LibraryRepository();
+        final response = await repository.addItemToFolder(
+          folderId: folderId,
+          itemType: type,
+          itemId: itemId,
+        );
+
+        print(
+          '✅ Response: success=${response.success}, error=${response.error}',
+        );
+
+        if (response.success) {
+          // Refresh library to update counts
+          ref.read(libraryControllerProvider.notifier).loadFolders();
+        }
+      } catch (e) {
+        print('❌ Error saving to library: $e');
+        // Revert local state on error
+        setState(() {
+          _bookmarkedItems.remove(itemId);
+        });
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Hata: $e'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -117,11 +256,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                 SizedBox(height: 16.h), // Added spacing from AppBar
                 // Search bar
                 _buildSearchBar(),
-
-                SizedBox(height: 16.h),
-
-                // Tab switcher
-                _buildTabSwitcher(),
 
                 SizedBox(height: 20.h),
 
@@ -186,7 +320,8 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             color: MyColors.textPrimary,
           ),
           decoration: InputDecoration(
-            hintText: 'Search words or phrases...',
+            hintText:
+                'Search phrases...', // Changed from 'Search words or phrases...'
             hintStyle: TextStyle(
               fontSize: 14.sp,
               fontFamily: 'Montserrat',
@@ -208,56 +343,8 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     );
   }
 
-  /// Tab switcher (Words/Phrases)
-  Widget _buildTabSwitcher() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Container(
-        height: 48.h,
-        decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5), // Gray background for container
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(child: _buildTabButton('Words', 0)),
-            Expanded(child: _buildTabButton('Phrases', 1)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabButton(String label, int index) {
-    final isSelected = _selectedTab == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedTab = index;
-        });
-        // Tab değişince datayı yenile
-        _onCategorySelected(_selectedCategory);
-      },
-      child: Container(
-        margin: EdgeInsets.all(4.w),
-        decoration: BoxDecoration(
-          color: isSelected ? MyColors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Montserrat',
-              color: isSelected ? Color(0xFF4ECDC4) : MyColors.textPrimary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  /// REMOVED: Tab switcher - Travel Vocabulary shows ONLY PHRASES
+  /// Words are in Visual Dictionary
 
   /// Category filters
   Widget _buildCategoryFilters() {
@@ -301,145 +388,10 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     );
   }
 
-  /// Content (Words or Phrases) - DİNAMİK!
+  /// Content - ONLY PHRASES (CÜMLELER)
+  /// Words (Kelimeler) are shown in Visual Dictionary
   Widget _buildContent() {
-    if (_selectedTab == 0) {
-      // Words tab - TODO: Words için de backend endpoint'i eklenecek
-      return _buildWordsContent();
-    } else {
-      // Phrases tab - Backend'den geliyor! 🚀
-      return _buildPhrasesContent();
-    }
-  }
-
-  /// Words content (placeholder for now)
-  Widget _buildWordsContent() {
-    final vocabularyState = ref.watch(travelVocabularyControllerProvider);
-
-    if (vocabularyState.isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
-
-    final words = vocabularyState.words;
-
-    if (words.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.inventory_2_outlined, size: 64.r, color: Colors.grey),
-              SizedBox(height: 16.h),
-              Text(
-                "No words found in this category",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      itemCount: words.length,
-      itemBuilder: (context, index) {
-        final word = words[index];
-        return _buildWordListItem(word);
-      },
-    );
-  }
-
-  /// Word list item widget
-  Widget _buildWordListItem(DictionaryWordModel word) {
-    final isBookmarked = _bookmarkedItems.contains(word.id);
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Play sound button
-          GestureDetector(
-            onTap: () {
-              // TODO: Sound logic
-            },
-            child: Container(
-              width: 40.w,
-              height: 40.h,
-              decoration: BoxDecoration(
-                color: Color(0x3D4ECDC4),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: SvgPicture.asset(
-                  'assets/icons/travelvocabularyseslendirme.svg',
-                  width: 20.w,
-                  height: 18.h,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 16.w),
-
-          // Word and translation
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  word.word,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  word.translation,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Bookmark button
-          GestureDetector(
-            onTap: () => _toggleBookmark(word.id),
-            child: Icon(
-              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: isBookmarked
-                  ? Color(0xFF2989E9)
-                  : Colors.grey.withOpacity(0.5),
-            ),
-          ),
-        ],
-      ),
-    );
+    return _buildPhrasesContent();
   }
 
   /// Phrases content - TAMAMEN DİNAMİK! Backend'den geliyor 🔥
@@ -605,7 +557,11 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
               // Bookmark button
               GestureDetector(
-                onTap: () => _toggleBookmark(id),
+                onTap: () => _toggleBookmark(
+                  id,
+                  itemType: 'travel_phrase',
+                  category: phrase.category,
+                ),
                 child: Container(
                   width: 40.w,
                   height: 40.h,

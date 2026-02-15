@@ -1,84 +1,109 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'dictionary_category_view.dart';
 
-class VisualDictionaryView extends StatefulWidget {
+class VisualDictionaryView extends ConsumerStatefulWidget {
   final bool isPremium;
   const VisualDictionaryView({super.key, this.isPremium = false});
 
   @override
-  State<VisualDictionaryView> createState() => _VisualDictionaryViewState();
+  ConsumerState<VisualDictionaryView> createState() =>
+      _VisualDictionaryViewState();
 }
 
-class _VisualDictionaryViewState extends State<VisualDictionaryView> {
+class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _recentSearches = ['Accommodation', 'Airport'];
 
-  // Categories data - using getter to avoid initializer issues
-  List<Map<String, dynamic>> get _categories => [
+  // STATIC categories - matching database content
+  final List<Map<String, dynamic>> _staticCategories = [
     {
-      'name': 'Airport',
-      'items': 1240,
+      'id': 'dict-cat-011',
+      'name': 'Airport', // NEW: Airport-specific category
       'icon': 'assets/icons/airport.png',
-      'color': Color(0xFF2E48F0).withOpacity(0.2),
+      'color': '#B8A7FF',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-001',
+      'name': 'General', // Database has General words (Yes, No, Please)
+      'icon': 'assets/icons/airport.png', // Keep your icon design
+      'color': '#4ECDC4',
+      'count': 10,
+    },
+    {
+      'id': 'dict-cat-002',
       'name': 'Accommodation',
-      'items': 1000,
       'icon': 'assets/icons/accommodation.png',
-      'color': Color(0xFFF0722E).withOpacity(0.2),
+      'color': '#FF9F6A',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-003',
       'name': 'Transportation',
-      'items': 980,
       'icon': 'assets/icons/transportation.png',
-      'color': Color(0xFFF0CC2E).withOpacity(0.2),
+      'color': '#F9D26B',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-004',
       'name': 'Food & Drink',
-      'items': 1250,
       'icon': 'assets/icons/food_drink.png',
-      'color': Color(0xFFF02E2E).withOpacity(0.2),
+      'color': '#FF8FA5',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-005',
       'name': 'Shopping',
-      'items': 1520,
       'icon': 'assets/icons/shopping.png',
-      'color': Color(0xFF8BD99D).withOpacity(0.2),
+      'color': '#8BDDCD',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-006',
       'name': 'Culture',
-      'items': 550,
       'icon': 'assets/icons/culture.png',
-      'color': Color(0xFF70CDBB).withOpacity(0.2),
+      'color': '#B8D9FF',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-007',
       'name': 'Meeting',
-      'items': 1520,
       'icon': 'assets/icons/meeting.png',
-      'color': Color(0xFFFDB0B0).withOpacity(0.2),
+      'color': '#FFB8B8',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-008',
       'name': 'Sport',
-      'items': 1550,
       'icon': 'assets/icons/sport.png',
-      'color': Color(0xFFFCD5F0),
+      'color': '#E4B3FF',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-009',
       'name': 'Health',
-      'items': 1520,
       'icon': 'assets/icons/health.png',
-      'color': Color(0xFF86E17C).withOpacity(0.3),
+      'color': '#B8FFC9',
+      'count': 10,
     },
     {
+      'id': 'dict-cat-010',
       'name': 'Business',
-      'items': 1550,
       'icon': 'assets/icons/business.png',
-      'color': Color(0xFF53BAF5).withOpacity(0.25),
+      'color': '#A4C8E1',
+      'count': 10,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // NO backend loading - fully static
+  }
 
   @override
   void dispose() {
@@ -92,7 +117,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
     });
   }
 
-  void _navigateToCategory(String categoryName) {
+  void _navigateToCategory(String categoryName, String categoryId) {
     // Add to recent searches
     setState(() {
       _recentSearches.remove(categoryName);
@@ -107,6 +132,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
       MaterialPageRoute(
         builder: (context) => DictionaryCategoryView(
           categoryName: categoryName,
+          categoryId: categoryId,
           isPremium: widget.isPremium,
         ),
       ),
@@ -120,7 +146,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
       appBar: _buildAppBar(),
       body: Stack(
         children: [
-          // Main content
+          // Main content - STATIC, no loading state
           Column(
             children: [
               SizedBox(height: 16.h),
@@ -137,7 +163,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Category grid
+                      // Category grid - STATIC categories
                       _buildCategoryGrid(),
 
                       SizedBox(height: 16.h),
@@ -222,7 +248,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
     );
   }
 
-  /// Category grid
+  /// Category grid - STATIC
   Widget _buildCategoryGrid() {
     return GridView.builder(
       shrinkWrap: true,
@@ -233,18 +259,28 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
         mainAxisSpacing: 16.h,
         childAspectRatio: 1.1,
       ),
-      itemCount: _categories.length,
+      itemCount: _staticCategories.length,
       itemBuilder: (context, index) {
-        final category = _categories[index];
+        final category = _staticCategories[index];
         return _buildCategoryCard(category);
       },
     );
   }
 
-  /// Category card
+  /// Category card - STATIC data
   Widget _buildCategoryCard(Map<String, dynamic> category) {
+    // Parse color from string
+    Color bgColor;
+    try {
+      final colorStr = category['color'].replaceAll('#', '');
+      final colorInt = int.parse('FF$colorStr', radix: 16);
+      bgColor = Color(colorInt).withOpacity(0.2);
+    } catch (e) {
+      bgColor = Color(0xFF4ECDC4).withOpacity(0.2);
+    }
+
     return GestureDetector(
-      onTap: () => _navigateToCategory(category['name']),
+      onTap: () => _navigateToCategory(category['name'], category['id']),
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
@@ -266,16 +302,23 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
               width: 48.w,
               height: 48.h,
               decoration: BoxDecoration(
-                color: category['color'],
+                color: bgColor,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Center(
                 child: Image.asset(
-                  category['icon'],
+                  category['icon'], // Direct static icon path
                   width: 20.w,
                   height: 20.h,
                   fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high, // HD quality
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.category,
+                      size: 24.sp,
+                      color: Colors.grey,
+                    );
+                  },
                 ),
               ),
             ),
@@ -302,7 +345,7 @@ class _VisualDictionaryViewState extends State<VisualDictionaryView> {
               children: [
                 Expanded(
                   child: Text(
-                    '${category['items']} items',
+                    '${category['count']} items',
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w400,

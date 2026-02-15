@@ -1,198 +1,174 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import 'package:lingola_travel/Riverpod/Controllers/library_controller.dart';
 import 'library_folder_detail_view.dart';
 
-class LibraryView extends StatefulWidget {
+class LibraryView extends ConsumerStatefulWidget {
   final bool isPremium;
   const LibraryView({super.key, this.isPremium = false});
 
   @override
-  State<LibraryView> createState() => _LibraryViewState();
+  ConsumerState<LibraryView> createState() => _LibraryViewState();
 }
 
-class _LibraryViewState extends State<LibraryView> {
-  // Folder data
-  final List<Map<String, dynamic>> _folders = [
-    {
-      'name': 'My Airport\nEssentials',
-      'items': 12,
-      'icon': 'assets/icons/airport.png',
-      'color': Color(0xFFE3F2FD),
-      'iconColor': Color(0xFF2196F3),
-    },
-    {
-      'name': 'My Hotel\nEssentials',
-      'items': 20,
-      'icon': 'assets/icons/accommodation.png',
-      'color': Color(0xFFFFE4CC),
-      'iconColor': Color(0xFFFF6B35),
-    },
-    {
-      'name': 'Transport\nEssentials',
-      'items': 35,
-      'icon': 'assets/icons/transportation.png',
-      'color': Color(0xFFFFF9C4),
-      'iconColor': Color(0xFFFBC02D),
-    },
-    {
-      'name': 'My Food\nEssentials',
-      'items': 8,
-      'icon': 'assets/icons/food_drink.png',
-      'color': Color(0xFFFFCDD2),
-      'iconColor': Color(0xFFE53935),
-    },
-    {
-      'name': 'My Shopping\nEssentials',
-      'items': 21,
-      'icon': 'assets/icons/shopping.png',
-      'color': Color(0xFFC8E6C9),
-      'iconColor': Color(0xFF43A047),
-    },
-    {
-      'name': 'Culture\nEssentials',
-      'items': 10,
-      'icon': 'assets/icons/culture.png',
-      'color': Color(0xFFB3E5FC),
-      'iconColor': Color(0xFF0288D1),
-    },
-    {
-      'name': 'Meeting\nEssentials',
-      'items': 32,
-      'icon': 'assets/icons/meeting.png',
-      'color': Color(0xFFD7CCC8),
-      'iconColor': Color(0xFF6D4C41),
-    },
-    {
-      'name': 'Sport\nEssentials',
-      'items': 18,
-      'icon': 'assets/icons/sport.png',
-      'color': Color(0xFFF8BBD0),
-      'iconColor': Color(0xFFE91E63),
-    },
-    {
-      'name': 'Health\nEssentials',
-      'items': 8,
-      'icon': 'assets/icons/health.png',
-      'color': Color(0xFFC5E1A5),
-      'iconColor': Color(0xFF7CB342),
-    },
-    {
-      'name': 'Business\nEssentials',
-      'items': 5,
-      'icon': 'assets/icons/business.png',
-      'color': Color(0xFFBBDEFB),
-      'iconColor': Color(0xFF1976D2),
-    },
-  ];
+class _LibraryViewState extends ConsumerState<LibraryView> {
+  @override
+  void initState() {
+    super.initState();
+    // Load folders from backend
+    Future.microtask(() {
+      ref.read(libraryControllerProvider.notifier).init();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = ref.watch(libraryControllerProvider);
+    final folders = viewModel.folders;
+
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
         bottom: false,
         child: Stack(
           children: [
-            // Main content with smooth scrolling
-            SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 20.h),
-
-                    // Header
-                    Text(
-                      'YOUR COLLECTION',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF4ECDC4),
-                        letterSpacing: 1.5,
+            // Show loading indicator
+            if (viewModel.isLoading && folders.isEmpty)
+              Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)))
+            // Show error message
+            else if (viewModel.errorMessage != null && folders.isEmpty)
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+                      SizedBox(height: 16.h),
+                      Text(
+                        viewModel.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16.sp, color: Colors.red),
                       ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'My Library',
-                      style: TextStyle(
-                        fontSize: 32.sp,
-                        fontWeight: FontWeight.w800,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
+                      SizedBox(height: 16.h),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref.read(libraryControllerProvider.notifier).init();
+                        },
+                        child: Text('Retry'),
                       ),
-                    ),
+                    ],
+                  ),
+                ),
+              )
+            // Show folders
+            else
+              SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 20.h),
 
-                    SizedBox(height: 32.h),
-
-                    // Folders Section Title
-                    Text(
-                      'Folders',
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-
-                    SizedBox(height: 16.h),
-
-                    // Folders Grid replacement with Staggered layout and Layout Variations
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left Column
-                        Expanded(
-                          child: Column(
-                            children: [
-                              for (int i = 0; i < _folders.length; i += 2)
-                                Padding(
-                                  padding: EdgeInsets.only(bottom: 16.h),
-                                  child: _buildFolderCard(
-                                    name: _folders[i]['name'],
-                                    items: _folders[i]['items'],
-                                    icon: _folders[i]['icon'],
-                                    color: _folders[i]['color'],
-                                    iconColor: _folders[i]['iconColor'],
-                                    isVertical: i % 4 == 0 || i % 4 == 3,
-                                  ),
-                                ),
-                            ],
-                          ),
+                      // Header
+                      Text(
+                        'YOUR COLLECTION',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Montserrat',
+                          color: Color(0xFF4ECDC4),
+                          letterSpacing: 1.5,
                         ),
-                        SizedBox(width: 12.w),
-                        // Right Column
-                        Expanded(
-                          child: Column(
-                            children: [
-                              for (int i = 1; i < _folders.length; i += 2)
-                                Padding(
-                                  padding: EdgeInsets.only(bottom: 16.h),
-                                  child: _buildFolderCard(
-                                    name: _folders[i]['name'],
-                                    items: _folders[i]['items'],
-                                    icon: _folders[i]['icon'],
-                                    color: _folders[i]['color'],
-                                    iconColor: _folders[i]['iconColor'],
-                                    isVertical: i % 4 == 0 || i % 4 == 3,
-                                  ),
-                                ),
-                            ],
-                          ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'My Library',
+                        style: TextStyle(
+                          fontSize: 32.sp,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Montserrat',
+                          color: Color(0xFF1A1A1A),
                         ),
-                      ],
-                    ),
+                      ),
 
-                    SizedBox(height: 100.h), // Space for bottom nav
-                  ],
+                      SizedBox(height: 32.h),
+
+                      // Folders Section Title
+                      Text(
+                        'Folders',
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Montserrat',
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Folders Grid with backend data
+                      if (folders.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.h),
+                            child: Text(
+                              'No folders yet',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                color: Color(0xFFB8BCC8),
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Left Column
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  for (int i = 0; i < folders.length; i += 2)
+                                    Padding(
+                                      padding: EdgeInsets.only(bottom: 16.h),
+                                      child: _buildFolderCard(
+                                        folder: folders[i],
+                                        isVertical: i % 4 == 0 || i % 4 == 3,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            // Right Column
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  for (int i = 1; i < folders.length; i += 2)
+                                    Padding(
+                                      padding: EdgeInsets.only(bottom: 16.h),
+                                      child: _buildFolderCard(
+                                        folder: folders[i],
+                                        isVertical: i % 4 == 0 || i % 4 == 3,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                      SizedBox(height: 100.h), // Space for bottom nav
+                    ],
+                  ),
                 ),
               ),
-            ),
 
             // Bottom Navigation Bar
             CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
@@ -202,16 +178,51 @@ class _LibraryViewState extends State<LibraryView> {
     );
   }
 
-  Widget _buildFolderCard({
-    required String name,
-    required int items,
-    required String icon,
-    required Color color,
-    required Color iconColor,
-    required bool isVertical,
-  }) {
+  Widget _buildFolderCard({required folder, required bool isVertical}) {
+    // Parse color from hex string (e.g., "#E3F2FD" or "E3F2FD")
+    Color parseColor(String? colorString) {
+      if (colorString == null || colorString.isEmpty) {
+        return Color(0xFFE3F2FD); // Default color
+      }
+      final hexColor = colorString.replaceAll('#', '');
+      return Color(int.parse('FF$hexColor', radix: 16));
+    }
+
+    // Map folder name to icon
+    String getFolderIcon(String folderName) {
+      final nameLower = folderName.toLowerCase();
+
+      if (nameLower.contains('airport') || nameLower.contains('havaalani')) {
+        return 'assets/icons/airport.png';
+      } else if (nameLower.contains('hotel') ||
+          nameLower.contains('accommodation')) {
+        return 'assets/icons/accommodation.png';
+      } else if (nameLower.contains('transport')) {
+        return 'assets/icons/transportation.png';
+      } else if (nameLower.contains('food')) {
+        return 'assets/icons/food_drink.png';
+      } else if (nameLower.contains('shopping')) {
+        return 'assets/icons/shopping.png';
+      } else if (nameLower.contains('culture')) {
+        return 'assets/icons/culture.png';
+      } else if (nameLower.contains('meeting')) {
+        return 'assets/icons/meeting.png';
+      } else if (nameLower.contains('sport')) {
+        return 'assets/icons/sport.png';
+      } else if (nameLower.contains('health')) {
+        return 'assets/icons/health.png';
+      } else if (nameLower.contains('business')) {
+        return 'assets/icons/business.png';
+      }
+
+      return 'assets/icons/folder.png'; // Default
+    }
+
+    final folderColor = parseColor(folder.color);
+    final folderIcon = folder.icon ?? getFolderIcon(folder.name);
+
     final folderName = Text(
-      name.replaceAll('\n', ' '),
+      folder.name,
       style: TextStyle(
         fontSize: 16.sp,
         fontWeight: FontWeight.w700,
@@ -225,7 +236,7 @@ class _LibraryViewState extends State<LibraryView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$items items',
+          '${folder.itemCount} items',
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w500,
@@ -235,7 +246,7 @@ class _LibraryViewState extends State<LibraryView> {
         ),
         SizedBox(height: 2.h),
         Text(
-          'Updated 2d ago',
+          _formatDate(folder.createdAt),
           style: TextStyle(
             fontSize: 11.sp,
             fontWeight: FontWeight.w400,
@@ -250,15 +261,24 @@ class _LibraryViewState extends State<LibraryView> {
       width: 44.w,
       height: 44.w,
       decoration: BoxDecoration(
-        color: color,
+        color: folderColor,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Center(
         child: Image.asset(
-          icon,
+          folderIcon,
           width: 22.w,
           height: 22.w,
           fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(
+              Icons.folder,
+              size: 22.w,
+              color: folderColor.computeLuminance() > 0.5
+                  ? Colors.black54
+                  : Colors.white70,
+            );
+          },
         ),
       ),
     );
@@ -269,30 +289,17 @@ class _LibraryViewState extends State<LibraryView> {
           context,
           MaterialPageRoute(
             builder: (context) => LibraryFolderDetailView(
-              folderName: name,
-              icon: icon,
+              folderId: folder.id,
+              folderName: folder.name,
+              icon: folderIcon,
               isPremium: widget.isPremium,
             ),
           ),
         );
 
-        // Eğer folder ismi değiştirilirse güncelle
-        if (result != null && result is Map) {
-          setState(() {
-            final newName = result['newName'] as String;
-            final oldName = result['oldName'] as String;
-
-            // Eski isimle eşleşen folder'ı bul (newline karakterlerine dikkate al)
-            final folderIndex = _folders.indexWhere(
-              (f) =>
-                  f['name'].replaceAll('\n', ' ').trim() ==
-                  oldName.replaceAll('\n', ' ').trim(),
-            );
-
-            if (folderIndex != -1) {
-              _folders[folderIndex]['name'] = newName;
-            }
-          });
+        // Refresh folders list if needed
+        if (result != null && result == true) {
+          ref.read(libraryControllerProvider.notifier).loadFolders();
         }
       },
       child: Container(
@@ -338,5 +345,27 @@ class _LibraryViewState extends State<LibraryView> {
               ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).floor();
+      return '${weeks}w ago';
+    } else if (difference.inDays < 365) {
+      final months = (difference.inDays / 30).floor();
+      return '${months}mo ago';
+    } else {
+      final years = (difference.inDays / 365).floor();
+      return '${years}y ago';
+    }
   }
 }

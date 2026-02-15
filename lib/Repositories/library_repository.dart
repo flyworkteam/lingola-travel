@@ -1,20 +1,21 @@
 import '../Models/api_response.dart';
-import '../Services/api_client.dart';
+import '../Models/library_model.dart';
 import 'base_repository.dart';
 
 /// Library Repository - Handles user's saved/bookmarked content
 class LibraryRepository extends BaseRepository {
-  final ApiClient _apiClient = ApiClient();
-
   /// Get all library folders
-  Future<ApiResponse<List<Map<String, dynamic>>>> getFolders() async {
+  Future<ApiResponse<List<LibraryFolderModel>>> getFolders() async {
     try {
-      final response = await _apiClient.get('/library/folders');
+      final response = await apiClient.get('/library/folders');
 
       if (response.success && response.data != null) {
         final List<dynamic> foldersJson = response.data['folders'] ?? [];
         final folders = foldersJson
-            .map((json) => json as Map<String, dynamic>)
+            .map(
+              (json) =>
+                  LibraryFolderModel.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
 
         return ApiResponse(success: true, data: folders);
@@ -27,21 +28,23 @@ class LibraryRepository extends BaseRepository {
   }
 
   /// Get items in a specific folder
-  Future<ApiResponse<List<Map<String, dynamic>>>> getFolderItems({
-    required int folderId,
-    int page = 1,
-    int limit = 20,
+  Future<ApiResponse<List<LibraryItemModel>>> getFolderItems({
+    required String folderId,
+    int limit = 50,
+    int offset = 0,
   }) async {
     try {
-      final response = await _apiClient.get(
+      final response = await apiClient.get(
         '/library/folders/$folderId/items',
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: {'limit': limit, 'offset': offset},
       );
 
       if (response.success && response.data != null) {
         final List<dynamic> itemsJson = response.data['items'] ?? [];
         final items = itemsJson
-            .map((json) => json as Map<String, dynamic>)
+            .map(
+              (json) => LibraryItemModel.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
 
         return ApiResponse(success: true, data: items);
@@ -53,16 +56,17 @@ class LibraryRepository extends BaseRepository {
     }
   }
 
-  /// Save/bookmark an item to library
-  Future<ApiResponse<bool>> saveItem({
-    required int folderId,
-    required String itemType, // 'word', 'phrase', 'lesson'
-    required int itemId,
+  /// Add an item (word or phrase) to a folder
+  Future<ApiResponse<bool>> addItemToFolder({
+    required String folderId,
+    required String
+    itemType, // 'dictionary_word', 'travel_phrase', 'lesson_vocabulary'
+    required String itemId,
   }) async {
     try {
-      final response = await _apiClient.post(
-        '/library/items',
-        data: {'folder_id': folderId, 'item_type': itemType, 'item_id': itemId},
+      final response = await apiClient.post(
+        '/library/folders/$folderId/items',
+        data: {'item_type': itemType, 'item_id': itemId},
       );
 
       return ApiResponse(
@@ -76,9 +80,9 @@ class LibraryRepository extends BaseRepository {
   }
 
   /// Remove item from library
-  Future<ApiResponse<bool>> removeItem(int itemId) async {
+  Future<ApiResponse<bool>> removeItem(int libraryItemId) async {
     try {
-      final response = await _apiClient.delete('/library/items/$itemId');
+      final response = await apiClient.delete('/library/items/$libraryItemId');
 
       return ApiResponse(
         success: response.success,
@@ -90,49 +94,22 @@ class LibraryRepository extends BaseRepository {
     }
   }
 
-  /// Check if item is saved
-  Future<ApiResponse<bool>> isItemSaved({
-    required String itemType,
-    required int itemId,
-  }) async {
-    try {
-      final response = await _apiClient.get(
-        '/library/check',
-        queryParameters: {'item_type': itemType, 'item_id': itemId},
-      );
-
-      if (response.success && response.data != null) {
-        final isSaved = response.data['is_saved'] as bool? ?? false;
-        return ApiResponse(success: true, data: isSaved);
-      }
-
-      return ApiResponse(success: false, error: response.error);
-    } catch (e) {
-      return handleError(e);
-    }
-  }
-
   /// Create a new folder
-  Future<ApiResponse<Map<String, dynamic>>> createFolder({
+  Future<ApiResponse<LibraryFolderModel>> createFolder({
     required String name,
-    required String nameTr,
-    String? description,
+    String? color,
   }) async {
     try {
-      final response = await _apiClient.post(
+      final response = await apiClient.post(
         '/library/folders',
-        data: {
-          'name': name,
-          'name_tr': nameTr,
-          if (description != null) 'description': description,
-        },
+        data: {'name': name, if (color != null) 'color': color},
       );
 
       if (response.success && response.data != null) {
-        return ApiResponse(
-          success: true,
-          data: response.data as Map<String, dynamic>,
+        final folder = LibraryFolderModel.fromJson(
+          response.data['folder'] as Map<String, dynamic>,
         );
+        return ApiResponse(success: true, data: folder);
       }
 
       return ApiResponse(success: false, error: response.error);
@@ -142,9 +119,9 @@ class LibraryRepository extends BaseRepository {
   }
 
   /// Delete a folder
-  Future<ApiResponse<bool>> deleteFolder(int folderId) async {
+  Future<ApiResponse<bool>> deleteFolder(String folderId) async {
     try {
-      final response = await _apiClient.delete('/library/folders/$folderId');
+      final response = await apiClient.delete('/library/folders/$folderId');
 
       return ApiResponse(
         success: response.success,
