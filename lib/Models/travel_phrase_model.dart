@@ -9,6 +9,8 @@ class TravelPhraseModel extends Equatable {
   final String translation;
   final String? audioUrl;
   final bool isBookmarked;
+  final String? sourceLanguage; // tr
+  final String? targetLanguage; // de, en, fr, etc.
 
   const TravelPhraseModel({
     required this.id,
@@ -18,6 +20,8 @@ class TravelPhraseModel extends Equatable {
     required this.translation,
     this.audioUrl,
     this.isBookmarked = false,
+    this.sourceLanguage,
+    this.targetLanguage,
   });
 
   factory TravelPhraseModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,8 @@ class TravelPhraseModel extends Equatable {
       audioUrl: json['audio_url'] as String?,
       isBookmarked:
           (json['is_bookmarked'] == 1 || json['is_bookmarked'] == true),
+      sourceLanguage: json['source_language'] as String?,
+      targetLanguage: json['target_language'] as String?,
     );
   }
 
@@ -42,6 +48,8 @@ class TravelPhraseModel extends Equatable {
       'translation': translation,
       'audio_url': audioUrl,
       'is_bookmarked': isBookmarked,
+      'source_language': sourceLanguage,
+      'target_language': targetLanguage,
     };
   }
 
@@ -54,5 +62,7 @@ class TravelPhraseModel extends Equatable {
     translation,
     audioUrl,
     isBookmarked,
+    sourceLanguage,
+    targetLanguage,
   ];
 }

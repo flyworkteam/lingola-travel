@@ -26,6 +26,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   int _selectedCategoryIndex = 0; // Track selected phrasebook category
   Map<int, double> _swipeProgressMap =
       {}; // Track swipe progress for each feature card
+  bool _isNavigating = false; // Prevent double navigation
 
   @override
   void initState() {
@@ -393,14 +394,34 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const TravelVocabularyView(isPremium: false),
-                    ),
-                  );
+                onTap: () async {
+                  // Prevent double navigation
+                  if (_isNavigating) {
+                    print('⏳ Already navigating...');
+                    return;
+                  }
+
+                  setState(() {
+                    _isNavigating = true;
+                  });
+
+                  try {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const TravelVocabularyView(isPremium: false),
+                      ),
+                    );
+                  } catch (e) {
+                    print('❌ Navigation error: $e');
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _isNavigating = false;
+                      });
+                    }
+                  }
                 },
                 child: Text(
                   'See All',
@@ -447,17 +468,107 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         iconPath: category.iconPath, // DİREKT BACKEND'TEN! 🔥
                         label: category.name,
                         isSelected: isSelected,
-                        onTap: () {
-                          // Navigate to Travel Vocabulary View with selected category
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TravelVocabularyView(
-                                isPremium: false,
-                                initialCategory: category.name,
+                        onTap: () async {
+                          // Prevent navigation if still loading or already navigating
+                          if (dictionaryState.isLoading || _isNavigating) {
+                            print('⏳ Still loading or navigating...');
+                            return;
+                          }
+
+                          // Set navigation flag
+                          // Ultra paranoid checks before navigation
+                          if (!mounted) {
+                            print('❌ Widget not mounted, canceling navigation');
+                            return;
+                          }
+
+                          final navigator = Navigator.of(context);
+                          if (!navigator.mounted) {
+                            print('❌ Navigator not mounted');
+                            return;
+                          }
+
+                          setState(() {
+                            _isNavigating = true;
+                          });
+
+                          try {
+                            // Small delay to prevent race conditions
+                            await Future.delayed(Duration(milliseconds: 100));
+
+                            if (!mounted) {
+                              print('❌ Widget disposed during delay');
+                              return;
+                            }
+
+                            print(
+                              '🚀 ULTRA SAFE Navigation to: ${category.name}',
+                            );
+
+                            // Navigate to Travel Vocabulary View with selected category - SUPER SAFE
+                            await navigator.push(
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) {
+                                      return TravelVocabularyView(
+                                        isPremium: false,
+                                        initialCategory: category.name,
+                                      );
+                                    },
+                                transitionDuration: Duration(milliseconds: 150),
+                                transitionsBuilder:
+                                    (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                      child,
+                                    ) {
+                                      return SlideTransition(
+                                        position:
+                                            Tween<Offset>(
+                                              begin: const Offset(1.0, 0.0),
+                                              end: Offset.zero,
+                                            ).animate(
+                                              CurvedAnimation(
+                                                parent: animation,
+                                                curve: Curves.easeOut,
+                                              ),
+                                            ),
+                                        child: child,
+                                      );
+                                    },
                               ),
-                            ),
-                          );
+                            );
+
+                            print('✅ Navigation completed successfully');
+                          } catch (e, stackTrace) {
+                            print('❌ CRITICAL Navigation error: $e');
+                            print('📍 Stack trace: $stackTrace');
+
+                            // Try fallback simple navigation if widget still mounted
+                            if (mounted && navigator.mounted) {
+                              try {
+                                await navigator.push(
+                                  MaterialPageRoute(
+                                    builder: (context) => TravelVocabularyView(
+                                      isPremium: false,
+                                      initialCategory: category.name,
+                                    ),
+                                  ),
+                                );
+                                print('✅ Fallback navigation succeeded');
+                              } catch (e2) {
+                                print('❌ Fallback navigation also failed: $e2');
+                              }
+                            }
+                          } finally {
+                            // Reset navigation flag when returning - ULTRA SAFE
+                            if (mounted) {
+                              setState(() {
+                                _isNavigating = false;
+                              });
+                            }
+                          }
                         },
                       ),
                     );

@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../Core/Theme/my_colors.dart';
+import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
 import 'profession_selection_view.dart';
 
 /// Language Selection View - Onboarding Step 1 of 4
 /// User selects which language they want to learn
-class LanguageSelectionView extends StatefulWidget {
+class LanguageSelectionView extends ConsumerStatefulWidget {
   const LanguageSelectionView({super.key});
 
   @override
-  State<LanguageSelectionView> createState() => _LanguageSelectionViewState();
+  ConsumerState<LanguageSelectionView> createState() =>
+      _LanguageSelectionViewState();
 }
 
-class _LanguageSelectionViewState extends State<LanguageSelectionView> {
+class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
   String? selectedLanguage;
 
   final List<Map<String, String>> languages = [
@@ -210,12 +213,18 @@ class _LanguageSelectionViewState extends State<LanguageSelectionView> {
                       child: ElevatedButton(
                         onPressed: selectedLanguage != null
                             ? () {
+                                // Save to onboarding controller
+                                ref
+                                    .read(onboardingControllerProvider.notifier)
+                                    .setTargetLanguage(selectedLanguage!);
+
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ProfessionSelectionView(
-                                      selectedLanguage: selectedLanguage,
-                                    ),
+                                    builder: (context) =>
+                                        ProfessionSelectionView(
+                                          selectedLanguage: selectedLanguage,
+                                        ),
                                   ),
                                 );
                               }

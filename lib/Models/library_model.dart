@@ -57,6 +57,8 @@ class LibraryItemModel extends Equatable {
   final String? audioUrl; // Ses dosyası URL
   final String? imageUrl; // Görsel URL (sadece dictionary_word için)
   final String? category; // Kategori (Airport, Food, etc.)
+  final String? sourceLanguage; // tr
+  final String? targetLanguage; // de, en, fr, etc.
   final DateTime createdAt; // Klasöre eklenme tarihi
 
   const LibraryItemModel({
@@ -68,6 +70,8 @@ class LibraryItemModel extends Equatable {
     this.audioUrl,
     this.imageUrl,
     this.category,
+    this.sourceLanguage,
+    this.targetLanguage,
     required this.createdAt,
   });
 
@@ -81,6 +85,8 @@ class LibraryItemModel extends Equatable {
       audioUrl: json['audio_url'] as String?,
       imageUrl: json['image_url'] as String?,
       category: json['category'] as String?,
+      sourceLanguage: json['source_language'] as String?,
+      targetLanguage: json['target_language'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
@@ -97,6 +103,8 @@ class LibraryItemModel extends Equatable {
       'audio_url': audioUrl,
       'image_url': imageUrl,
       'category': category,
+      'source_language': sourceLanguage,
+      'target_language': targetLanguage,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -125,6 +133,8 @@ class LibraryItemModel extends Equatable {
     audioUrl,
     imageUrl,
     category,
+    sourceLanguage,
+    targetLanguage,
     createdAt,
   ];
 }

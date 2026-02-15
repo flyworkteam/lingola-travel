@@ -35,6 +35,12 @@ class DictionaryController extends StateNotifier<DictionaryViewModel> {
 
   /// Initialize dictionary - load categories
   Future<void> init() async {
+    // Skip if already loaded or currently loading
+    if (state.categories.isNotEmpty || state.isLoading) {
+      print('📚 Dictionary categories already loaded, skipping init');
+      return;
+    }
+
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
@@ -79,6 +85,7 @@ class DictionaryController extends StateNotifier<DictionaryViewModel> {
 }
 
 /// Provider for Dictionary Controller
+/// Global provider - categories are shared across pages
 final dictionaryControllerProvider =
     StateNotifierProvider<DictionaryController, DictionaryViewModel>((ref) {
       return DictionaryController();

@@ -51,8 +51,38 @@ class ApiClient {
         onError: (error, handler) async {
           // Handle 401 Unauthorized - refresh token
           if (error.response?.statusCode == 401) {
-            // TODO: Implement token refresh logic
-            print('TOKEN EXPIRED - Need to refresh');
+            try {
+              // Try to refresh token
+              final refreshToken = await _secureStorage.read(
+                key: AppConfig.keyRefreshToken,
+              );
+
+              if (refreshToken != null) {
+                final refreshed = await _refreshAccessToken(refreshToken);
+
+                if (refreshed) {
+                  // Retry original request with new token
+                  final newToken = await _secureStorage.read(
+                    key: AppConfig.keyAccessToken,
+                  );
+
+                  error.requestOptions.headers['Authorization'] =
+                      'Bearer $newToken';
+
+                  final response = await _dio.fetch(error.requestOptions);
+                  return handler.resolve(response);
+                } else {
+                  // Refresh failed, logout user
+                  await _clearTokens();
+                }
+              } else {
+                // No refresh token, logout user
+                await _clearTokens();
+              }
+            } catch (e) {
+              print('Token refresh error: $e');
+              await _clearTokens();
+            }
           }
 
           // Log error
@@ -63,6 +93,52 @@ class ApiClient {
         },
       ),
     );
+  }
+
+  /// Refresh access token using refresh token
+  Future<bool> _refreshAccessToken(String refreshToken) async {
+    try {
+      final response = await Dio().post(
+        '${AppConfig.baseUrl}/${AppConfig.apiVersion}/auth/refresh',
+        data: {'refreshToken': refreshToken},
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final newAccessToken = response.data['data']['accessToken'];
+        final newRefreshToken = response.data['data']['refreshToken'];
+
+        // Save new tokens
+        await _secureStorage.write(
+          key: AppConfig.keyAccessToken,
+          value: newAccessToken,
+        );
+        await _secureStorage.write(
+          key: AppConfig.keyRefreshToken,
+          value: newRefreshToken,
+        );
+
+        print('Token refreshed successfully');
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      print('Refresh token error: $e');
+      return false;
+    }
+  }
+
+  /// Clear all tokens (logout)
+  Future<void> _clearTokens() async {
+    await _secureStorage.delete(key: AppConfig.keyAccessToken);
+    await _secureStorage.delete(key: AppConfig.keyRefreshToken);
+    print('Tokens cleared - User logged out');
   }
 
   // GET Request
@@ -124,6 +200,32 @@ class ApiClient {
   }) async {
     try {
       final response = await _dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return ApiResponse<dynamic>(
+        success: response.data['success'] ?? true,
+        data: response.data['data'],
+        error: response.data['error'] != null
+            ? ApiError.fromJson(response.data['error'] as Map<String, dynamic>)
+            : null,
+      );
+    } on DioException catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  // PATCH Request
+  Future<ApiResponse<dynamic>> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      final response = await _dio.patch(
         path,
         data: data,
         queryParameters: queryParameters,

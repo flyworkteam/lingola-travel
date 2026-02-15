@@ -61,6 +61,8 @@ class DictionaryWordModel extends Equatable {
   final String? imageUrl;
   final String? audioUrl;
   final bool isBookmarked;
+  final String? sourceLanguage; // tr
+  final String? targetLanguage; // de, en, fr, etc.
 
   const DictionaryWordModel({
     required this.id,
@@ -71,6 +73,8 @@ class DictionaryWordModel extends Equatable {
     this.imageUrl,
     this.audioUrl,
     this.isBookmarked = false,
+    this.sourceLanguage,
+    this.targetLanguage,
   });
 
   factory DictionaryWordModel.fromJson(Map<String, dynamic> json) {
@@ -83,6 +87,8 @@ class DictionaryWordModel extends Equatable {
       imageUrl: json['image_url'] as String?,
       audioUrl: json['audio_url'] as String?,
       isBookmarked: json['is_bookmarked'] == 1 || json['is_bookmarked'] == true,
+      sourceLanguage: json['source_language'] as String?,
+      targetLanguage: json['target_language'] as String?,
     );
   }
 
@@ -96,6 +102,8 @@ class DictionaryWordModel extends Equatable {
       'image_url': imageUrl,
       'audio_url': audioUrl,
       'is_bookmarked': isBookmarked,
+      'source_language': sourceLanguage,
+      'target_language': targetLanguage,
     };
   }
 
@@ -109,5 +117,7 @@ class DictionaryWordModel extends Equatable {
     imageUrl,
     audioUrl,
     isBookmarked,
+    sourceLanguage,
+    targetLanguage,
   ];
 }

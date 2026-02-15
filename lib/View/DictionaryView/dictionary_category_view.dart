@@ -4,7 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
 import '../../Riverpod/Controllers/visual_dictionary_words_controller.dart';
+import '../../Riverpod/Controllers/library_controller.dart';
+import '../../Repositories/library_repository.dart';
 
 class DictionaryCategoryView extends ConsumerStatefulWidget {
   final String categoryName;
@@ -28,9 +32,26 @@ class _DictionaryCategoryViewState
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {};
 
+  // Audio player
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _playingItemId;
+  StreamSubscription? _audioCompletionSubscription;
+
   @override
   void initState() {
     super.initState();
+
+    // Setup audio completion listener once
+    _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
+      event,
+    ) {
+      if (mounted) {
+        setState(() {
+          _playingItemId = null;
+        });
+      }
+    });
+
     // Load words from backend
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
@@ -48,7 +69,11 @@ class _DictionaryCategoryViewState
 
     // Convert DictionaryWordModel to Map for compatibility with existing UI
     return wordsState.words.map((word) {
-      return {'english': word.word, 'turkish': word.translation};
+      return {
+        'english': word.word,
+        'turkish': word.translation,
+        'audioUrl': word.audioUrl ?? '',
+      };
     }).toList();
   }
 
@@ -62,17 +87,63 @@ class _DictionaryCategoryViewState
   @override
   void dispose() {
     _searchController.dispose();
+    _audioCompletionSubscription?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  void _toggleBookmark(String id) {
-    setState(() {
+  void _toggleBookmark(String id) async {
+    try {
       if (_bookmarkedItems.contains(id)) {
-        _bookmarkedItems.remove(id);
+        // TODO: Implement remove from library API
+        setState(() {
+          _bookmarkedItems.remove(id);
+        });
       } else {
-        _bookmarkedItems.add(id);
+        // Save to library - folder-002 is Visual Dictionary folder
+        await LibraryRepository().addItemToFolder(
+          folderId: 'folder-002',
+          itemType: 'dictionary_word',
+          itemId: id,
+        );
+        setState(() {
+          _bookmarkedItems.add(id);
+        });
+        // Refresh library folders
+        ref.read(libraryControllerProvider.notifier).loadFolders();
       }
-    });
+    } catch (e) {
+      print('Error toggling bookmark: $e');
+    }
+  }
+
+  Future<void> _playAudio(String itemId, String audioUrl) async {
+    try {
+      // If same item is playing, stop it
+      if (_playingItemId == itemId) {
+        await _audioPlayer.stop();
+        setState(() {
+          _playingItemId = null;
+        });
+        return;
+      }
+
+      // Stop any current playback
+      await _audioPlayer.stop();
+
+      // Play new audio
+      setState(() {
+        _playingItemId = itemId;
+      });
+
+      await _audioPlayer.play(UrlSource(audioUrl));
+      // Completion handled by the listener in initState
+    } catch (e) {
+      setState(() {
+        _playingItemId = null;
+      });
+      print('Error playing audio: $e');
+    }
   }
 
   @override
@@ -250,88 +321,109 @@ class _DictionaryCategoryViewState
   Widget _buildWordCard(Map<String, String> word, String id) {
     final isBookmarked = _bookmarkedItems.contains(id);
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  word['english']!,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  word['turkish']!,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          // Audio button
-          GestureDetector(
-            onTap: () {
-              print('Play audio: ${word['english']}');
-            },
-            child: SvgPicture.asset(
-              'assets/icons/visualdictionaryses.svg',
-              width: 40.w,
-              height: 40.h,
-            ),
-          ),
-          SizedBox(width: 8.w),
-          // Bookmark button
-          GestureDetector(
-            onTap: () => _toggleBookmark(id),
-            child: Container(
-              width: 40.w,
-              height: 40.h,
-              decoration: BoxDecoration(
-                color: isBookmarked
-                    ? Color(0xFF4ECDC4).withOpacity(0.2)
-                    : Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12.r),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: EdgeInsets.only(bottom: 0),
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: MyColors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 12,
+                offset: Offset(0, 4),
               ),
-              child: Center(
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      word['turkish']!,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      word['english']!,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 12.w),
+              // Audio button
+              GestureDetector(
+                onTap: () {
+                  final audioUrl = word['audioUrl'] ?? '';
+                  print('Playing audio: $audioUrl');
+                  if (audioUrl.isNotEmpty) {
+                    _playAudio(id, audioUrl);
+                  }
+                },
                 child: SvgPicture.asset(
-                  'assets/icons/visualdictionarysaved.svg',
-                  width: 11.w,
-                  height: 13.h,
-                  colorFilter: ColorFilter.mode(
-                    isBookmarked ? Color(0xFF4ECDC4) : Color(0xFFCBD5E1),
-                    BlendMode.srcIn,
+                  'assets/icons/visualdictionaryses.svg',
+                  width: 40.w,
+                  height: 40.h,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              // Bookmark button
+              GestureDetector(
+                onTap: () => _toggleBookmark(id),
+                child: Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: isBookmarked
+                        ? Color(0xFF4ECDC4).withOpacity(0.2)
+                        : Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/icons/visualdictionarysaved.svg',
+                      width: 11.w,
+                      height: 13.h,
+                      colorFilter: ColorFilter.mode(
+                        isBookmarked ? Color(0xFF4ECDC4) : Color(0xFFCBD5E1),
+                        BlendMode.srcIn,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+        // Progress bar at the bottom of the card - full width
+        AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          height: 3.h,
+          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 12.h),
+          decoration: BoxDecoration(
+            color: _playingItemId == id
+                ? Color(0xFF4ECDC4)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(2.r),
+          ),
+        ),
+      ],
     );
   }
 }

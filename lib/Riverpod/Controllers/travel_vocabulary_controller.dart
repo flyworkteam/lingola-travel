@@ -96,7 +96,8 @@ class TravelVocabularyController
   }
 }
 
-// Provider for controller
+// Provider for controller - COMPLETELY NORMAL (NO autoDispose)
+// This prevents premature disposal during audio/TTS operations
 final travelVocabularyControllerProvider =
     StateNotifierProvider<
       TravelVocabularyController,

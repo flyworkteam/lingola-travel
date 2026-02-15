@@ -34,6 +34,7 @@ class _LibraryFolderDetailViewState
   String? _playingItemId;
   bool _isEditMode = false;
   late String _currentFolderName;
+  late TtsService _ttsService;
 
   late AnimationController _progressController;
 
@@ -47,7 +48,8 @@ class _LibraryFolderDetailViewState
     );
 
     // Initialize TTS service
-    TtsService().init();
+    _ttsService = TtsService();
+    _ttsService.init();
 
     // Load folder items from backend
     Future.microtask(() {
@@ -63,7 +65,7 @@ class _LibraryFolderDetailViewState
   @override
   void dispose() {
     _progressController.dispose();
-    TtsService().stop(); // Stop any ongoing TTS
+    _ttsService.stop(); // Stop any ongoing TTS
     super.dispose();
   }
 
@@ -209,24 +211,26 @@ class _LibraryFolderDetailViewState
     }
   }
 
-  void _playAudio(String itemId, String englishWord) async {
-    final tts = TtsService();
-
+  void _playAudio(
+    String itemId,
+    String targetLanguageText,
+    String? languageCode,
+  ) async {
     setState(() {
       if (_playingItemId == itemId) {
         // Stop playing
         _playingItemId = null;
         _progressController.stop();
         _progressController.reset();
-        tts.stop();
+        _ttsService.stop();
       } else {
         // Start playing
         _playingItemId = itemId;
         _progressController.reset();
         _progressController.forward();
 
-        // Speak the English word
-        tts.speak(englishWord);
+        // Speak the target language word/phrase with correct language
+        _ttsService.speak(targetLanguageText, languageCode: languageCode);
       }
     });
 
@@ -650,7 +654,7 @@ class _LibraryFolderDetailViewState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.word,
+                            item.translation,
                             style: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w700,
@@ -660,7 +664,7 @@ class _LibraryFolderDetailViewState
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            item.translation,
+                            item.word,
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
@@ -668,27 +672,6 @@ class _LibraryFolderDetailViewState
                               color: Color(0xFF6B7280),
                             ),
                           ),
-                          if (item.category != null) ...[
-                            SizedBox(height: 8.h),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 4.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                              child: Text(
-                                item.category!,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF6B7280),
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -700,7 +683,11 @@ class _LibraryFolderDetailViewState
                         children: [
                           // Audio Play Button
                           GestureDetector(
-                            onTap: () => _playAudio(item.itemId, item.word),
+                            onTap: () => _playAudio(
+                              item.itemId,
+                              item.translation,
+                              item.targetLanguage,
+                            ),
                             child: Container(
                               width: 48.w,
                               height: 48.h,

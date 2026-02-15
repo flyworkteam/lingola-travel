@@ -2,19 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
+import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
 
 /// Creating Personalized Plan View - Loading Screen
 /// Shows animated progress while creating user's personalized plan
-class CreatingPlanView extends StatefulWidget {
+class CreatingPlanView extends ConsumerStatefulWidget {
   const CreatingPlanView({super.key});
 
   @override
-  State<CreatingPlanView> createState() => _CreatingPlanViewState();
+  ConsumerState<CreatingPlanView> createState() => _CreatingPlanViewState();
 }
 
-class _CreatingPlanViewState extends State<CreatingPlanView>
+class _CreatingPlanViewState extends ConsumerState<CreatingPlanView>
     with TickerProviderStateMixin {
   late AnimationController _rotationController1;
   late AnimationController _rotationController2;
@@ -96,10 +98,51 @@ class _CreatingPlanViewState extends State<CreatingPlanView>
     super.dispose();
   }
 
-  void _onGetStarted() {
+  void _onGetStarted() async {
+    print('🔵 Get Started button pressed');
+    print('🔵 Current progress: $_currentProgress');
+
     if (_currentProgress >= 100) {
-      // Navigate to home screen
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      print('🔵 Progress is 100%, attempting to save onboarding...');
+
+      // Save onboarding preferences to backend
+      try {
+        final success = await ref
+            .read(onboardingControllerProvider.notifier)
+            .saveOnboarding();
+
+        print('🔵 Save onboarding result: $success');
+
+        if (success) {
+          // Navigate to home screen
+          if (mounted) {
+            print('🔵 Navigating to home...');
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
+          }
+        } else {
+          // Show error but still navigate (graceful degradation)
+          if (mounted) {
+            print('⚠️ Save failed, navigating anyway...');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Tercihler kaydedilirken bir hata oluştu, ancak devam edebilirsiniz',
+                ),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
+          }
+        }
+      } catch (e) {
+        print('❌ Error in _onGetStarted: $e');
+        // Still navigate even if error
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
+      }
+    } else {
+      print('⚠️ Progress not 100% yet: $_currentProgress');
     }
   }
 
