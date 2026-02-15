@@ -7,9 +7,20 @@ class TtsService {
 
   final FlutterTts _flutterTts = FlutterTts();
   bool _isInitialized = false;
+  bool _isInitializing = false;
+  String? _currentLanguage;
 
   Future<void> init() async {
     if (_isInitialized) return;
+    if (_isInitializing) {
+      // Wait for ongoing initialization
+      while (_isInitializing) {
+        await Future.delayed(Duration(milliseconds: 50));
+      }
+      return;
+    }
+
+    _isInitializing = true;
 
     try {
       print('🔊 TTS: Initializing...');
@@ -38,10 +49,12 @@ class TtsService {
       print('✅ TTS Service initialized successfully');
     } catch (e) {
       print('❌ TTS initialization error: $e');
+    } finally {
+      _isInitializing = false;
     }
   }
 
-  Future<void> speak(String text) async {
+  Future<void> speak(String text, {String? languageCode}) async {
     if (!_isInitialized) {
       await init();
     }
@@ -49,26 +62,57 @@ class TtsService {
     try {
       print('🔊 TTS: Attempting to speak: "$text"');
 
-      // Check if TTS is available
-      final isAvailable = await _flutterTts.awaitSpeakCompletion(false);
-      print('🔊 TTS: Service available: $isAvailable');
+      // Set language if provided and different from current
+      if (languageCode != null && languageCode != _currentLanguage) {
+        String ttsLanguage = _mapLanguageCode(languageCode);
+        await _flutterTts.setLanguage(ttsLanguage);
+        _currentLanguage = languageCode;
+        print(
+          '🔊 TTS: Language changed to $ttsLanguage for code $languageCode',
+        );
+      }
 
-      // Get available languages
-      final languages = await _flutterTts.getLanguages;
-      print('🔊 TTS: Available languages: $languages');
-
-      // Get current language
-      final currentLang = await _flutterTts.getDefaultEngine;
-      print('🔊 TTS: Current engine: $currentLang');
-
+      // Speak the text - awaitSpeakCompletion(true) is already set in init()
       final result = await _flutterTts.speak(text);
-      print('🔊 TTS: Speak result: $result');
+      print('🔊 TTS: Speak completed with result: $result');
     } catch (e) {
       print('❌ TTS speak error: $e');
     }
   }
 
+  // Map ISO 639-1 language codes to TTS language codes
+  String _mapLanguageCode(String code) {
+    switch (code) {
+      case 'en':
+        return 'en-US';
+      case 'de':
+        return 'de-DE';
+      case 'it':
+        return 'it-IT';
+      case 'fr':
+        return 'fr-FR';
+      case 'ja':
+        return 'ja-JP';
+      case 'es':
+        return 'es-ES';
+      case 'ru':
+        return 'ru-RU';
+      case 'tr':
+        return 'tr-TR';
+      case 'ko':
+        return 'ko-KR';
+      case 'hi':
+        return 'hi-IN';
+      case 'pt':
+        return 'pt-PT';
+      default:
+        return 'en-US';
+    }
+  }
+
   Future<void> stop() async {
+    if (!_isInitialized) return;
+
     try {
       await _flutterTts.stop();
     } catch (e) {
@@ -77,6 +121,8 @@ class TtsService {
   }
 
   Future<void> pause() async {
+    if (!_isInitialized) return;
+
     try {
       await _flutterTts.pause();
     } catch (e) {
