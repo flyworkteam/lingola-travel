@@ -145,6 +145,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
       body: Stack(
+        key: ValueKey('visual_dictionary_stack'), // Unique key to force rebuild
         children: [
           // Main content - STATIC, no loading state
           Column(
@@ -180,7 +181,11 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           ),
 
           // Floating bottom navigation
-          CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
+          CustomBottomNavBar(
+            key: ValueKey('bottom_nav_dictionary'), // Unique key
+            currentIndex: 2,
+            isPremium: widget.isPremium,
+          ),
         ],
       ),
     );

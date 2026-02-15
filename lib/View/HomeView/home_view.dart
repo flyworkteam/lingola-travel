@@ -31,11 +31,44 @@ class _HomeViewState extends ConsumerState<HomeView> {
   @override
   void initState() {
     super.initState();
-    // Load courses and dictionary categories from backend (FREE user)
-    Future.microtask(() {
-      ref.read(homeViewControllerProvider.notifier).init();
-      ref.read(dictionaryControllerProvider.notifier).init();
+    // ONLY load if NOT already loaded - prevents re-initialization on navigation back (FREE user)
+    Future.microtask(() async {
+      try {
+        // Check if home data already loaded
+        final homeState = ref.read(homeViewControllerProvider);
+        if (homeState.courses.isEmpty && !homeState.isLoading) {
+          print('📚 Loading courses for first time...');
+          await ref.read(homeViewControllerProvider.notifier).init();
+        } else {
+          print('📚 Courses already loaded, skipping init');
+        }
+
+        // Small delay before loading dictionary
+        await Future.delayed(Duration(milliseconds: 100));
+
+        // Check if dictionary categories already loaded
+        if (mounted) {
+          final dictState = ref.read(dictionaryControllerProvider);
+          if (dictState.categories.isEmpty && !dictState.isLoading) {
+            print('📖 Loading dictionary categories for first time...');
+            await ref.read(dictionaryControllerProvider.notifier).init();
+          } else {
+            print('📖 Dictionary categories already loaded, skipping init');
+          }
+        }
+      } catch (e) {
+        print('❌ Home init error: $e');
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    // Clear swipe progress map to prevent memory leaks
+    _swipeProgressMap.clear();
+    // Reset navigation flag
+    _isNavigating = false;
+    super.dispose();
   }
 
   @override
@@ -46,6 +79,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         top: false,
         bottom: false,
         child: Stack(
+          key: ValueKey('home_stack'), // Unique key to force rebuild
           children: [
             // Main scrollable content
             SingleChildScrollView(
@@ -102,7 +136,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ),
 
             // Floating bottom navigation
-            CustomBottomNavBar(currentIndex: 0),
+            CustomBottomNavBar(
+              key: ValueKey('bottom_nav_home'), // Unique key
+              currentIndex: 0,
+            ),
           ],
         ),
       ),
@@ -456,6 +493,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 )
               : ListView.builder(
                   scrollDirection: Axis.horizontal,
+                  // ✅ CRITICAL: Explicit physics for smooth scrolling
+                  physics: const ClampingScrollPhysics(),
                   padding: EdgeInsets.only(left: 16.w),
                   itemCount: dictionaryState.categories.length,
                   itemBuilder: (context, index) {
@@ -493,11 +532,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           });
 
                           try {
-                            // Small delay to prevent race conditions
-                            await Future.delayed(Duration(milliseconds: 100));
-
+                            // ✅ NO DELAY! Navigate immediately
                             if (!mounted) {
-                              print('❌ Widget disposed during delay');
+                              print('❌ Widget disposed before navigation');
                               return;
                             }
 
@@ -586,8 +623,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    // ✅ CRITICAL FIX: InkWell instead of GestureDetector
+    // This allows scroll gestures to pass through properly
+    return InkWell(
       onTap: onTap,
+      // ✅ Transparent to allow scroll gestures
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
       child: Column(
         children: [
           // Icon container
@@ -965,24 +1007,43 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           _swipeProgressMap[cardIndex] ?? 0.0;
                       return GestureDetector(
                         onHorizontalDragUpdate: (details) {
-                          setState(() {
-                            final newProgress =
-                                currentProgress + details.delta.dx;
-                            _swipeProgressMap[cardIndex] = newProgress.clamp(
-                              0.0,
-                              constraints.maxWidth - 60.w,
-                            );
-                          });
+                          if (!mounted) return; // Safety check
+
+                          try {
+                            setState(() {
+                              // ✅ CRITICAL FIX: Read current value from map INSIDE setState
+                              // This prevents using stale captured value
+                              final actualProgress =
+                                  _swipeProgressMap[cardIndex] ?? 0.0;
+                              final newProgress =
+                                  actualProgress + details.delta.dx;
+                              _swipeProgressMap[cardIndex] = newProgress.clamp(
+                                0.0,
+                                constraints.maxWidth - 60.w,
+                              );
+                            });
+                          } catch (e) {
+                            print('⚠️ Swipe update error: $e');
+                          }
                         },
                         onHorizontalDragEnd: (details) {
-                          if (currentProgress > constraints.maxWidth * 0.7) {
-                            // Success - Navigate
-                            print('Swipe completed! Navigating...');
-                            // TODO: Add navigation to course
+                          if (!mounted) return; // Safety check
+
+                          try {
+                            // ✅ CRITICAL FIX: Read current value from map at drag end
+                            final finalProgress =
+                                _swipeProgressMap[cardIndex] ?? 0.0;
+                            if (finalProgress > constraints.maxWidth * 0.7) {
+                              // Success - Navigate
+                              print('Swipe completed! Navigating...');
+                              // TODO: Add navigation to course
+                            }
+                            setState(() {
+                              _swipeProgressMap[cardIndex] = 0;
+                            });
+                          } catch (e) {
+                            print('⚠️ Swipe end error: $e');
                           }
-                          setState(() {
-                            _swipeProgressMap[cardIndex] = 0;
-                          });
                         },
                         child: Container(
                           width: double.infinity,

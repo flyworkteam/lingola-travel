@@ -156,6 +156,9 @@ class _DictionaryCategoryViewState
       backgroundColor: MyColors.background,
       appBar: _buildAppBar(),
       body: Stack(
+        key: ValueKey(
+          'dictionary_category_stack_${widget.categoryId}',
+        ), // Unique key to force rebuild
         children: [
           // Main content
           wordsState.isLoading
@@ -214,7 +217,11 @@ class _DictionaryCategoryViewState
                 ),
 
           // Floating bottom navigation
-          CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
+          CustomBottomNavBar(
+            key: ValueKey('bottom_nav_dictionary_category'), // Unique key
+            currentIndex: 2,
+            isPremium: widget.isPremium,
+          ),
         ],
       ),
     );

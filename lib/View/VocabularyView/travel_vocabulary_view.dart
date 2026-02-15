@@ -36,6 +36,8 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {}; // Will be loaded from backend
   bool _isLoadingCategory = false; // Prevent rapid category changes
+  int _categoryRequestId =
+      0; // Track category selection requests to prevent race conditions
   bool _isInitialized = false; // Track if initialization completed
 
   // Audio player
@@ -53,17 +55,28 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   void initState() {
     super.initState();
 
-    // Get TTS service singleton (will auto-initialize on first speak() call)
+    // Get TTS service singleton and STOP any ongoing speech from previous widgets
     _ttsService = TtsService();
 
-    // Setup audio completion listener once
+    // ✅ CRITICAL: Stop TTS immediately, non-blocking (fire and forget)
+    // Don't use microtask or await - just stop and move on
+    _ttsService.stop().catchError((e) {
+      print('⚠️ Error stopping TTS in initState: $e');
+    });
+
+    // Setup audio completion listener with ULTRA SAFE mounted checks
     _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
       event,
     ) {
-      if (mounted) {
-        setState(() {
-          _playingItemId = null;
-        });
+      // DOUBLE CHECK: both mounted AND subscription is not null
+      if (mounted && _audioCompletionSubscription != null) {
+        try {
+          setState(() {
+            _playingItemId = null;
+          });
+        } catch (e) {
+          print('⚠️ setState in audio completion failed: $e');
+        }
       }
     });
 
@@ -78,99 +91,99 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     });
   }
 
-  // ULTRA SIMPLE initialization - BULLETPROOF VERSION
+  // 🚀 ULTRA FAST initialization - NO DELAYS, NON-BLOCKING
   void _simpleInit() {
     if (!mounted || _isInitialized) {
       print('❌ Already initialized or widget not mounted');
       return;
     }
 
-    print('🚀 ULTRA Simple init BULLETPROOF');
+    print('🚀 ULTRA Simple init BULLETPROOF (NO DELAYS)');
 
     try {
-      // Load categories (async, don't wait) - with error handling
-      try {
-        ref.read(dictionaryControllerProvider.notifier).init();
-        print('✅ Dictionary controller init called');
-      } catch (e) {
-        print('❌ Dictionary init error: $e');
+      // Dictionary categories already loaded by parent
+      print('✅ Dictionary categories already loaded by parent');
+
+      // ✅ CRITICAL: NO DELAYS! Load immediately
+      if (widget.initialCategory != null) {
+        print('🎯 Filtering by category: ${widget.initialCategory}');
+        ref
+            .read(travelVocabularyControllerProvider.notifier)
+            .filterByCategory(widget.initialCategory);
+      } else {
+        print('🔄 Generic vocab init');
+        ref.read(travelVocabularyControllerProvider.notifier).init();
       }
 
-      // Load phrases with delay and ultra safe checks
-      Future.delayed(Duration(milliseconds: 300), () {
-        if (!mounted) {
-          print('❌ Widget disposed during delayed init');
-          return;
-        }
+      // ✅ CRITICAL: Load bookmarks in TRULY async way - fire and forget
+      // Don't await, don't block UI, just start loading in background
+      _loadBookmarkedItemsAsync();
 
-        try {
-          if (widget.initialCategory != null) {
-            print('🎯 Filtering by category: ${widget.initialCategory}');
-            ref
-                .read(travelVocabularyControllerProvider.notifier)
-                .filterByCategory(widget.initialCategory);
-          } else {
-            print('🔄 Generic vocab init');
-            ref.read(travelVocabularyControllerProvider.notifier).init();
-          }
-
-          // Load bookmarks safely
-          try {
-            _loadBookmarkedItems();
-          } catch (e) {
-            print('❌ Bookmark loading error: $e');
-          }
-
-          _isInitialized = true;
-          print('✅ Init completed successfully');
-        } catch (e, stackTrace) {
-          print('❌ CRITICAL delayed init error: $e');
-          print('📍 Stack: $stackTrace');
-        }
-      });
+      _isInitialized = true;
+      print('✅ Init completed successfully (bookmarks loading in background)');
     } catch (e, stackTrace) {
       print('❌ FATAL init error: $e');
       print('📍 Stack: $stackTrace');
     }
   }
 
-  // Load all bookmarked item IDs from backend
-  Future<void> _loadBookmarkedItems() async {
-    try {
-      final repository = LibraryRepository();
-      final allBookmarkedIds = <String>{};
-
-      // Get all folders
-      final foldersResponse = await repository.getFolders();
-      if (foldersResponse.success && foldersResponse.data != null) {
-        // For each folder, get items
-        for (final folder in foldersResponse.data!) {
-          final itemsResponse = await repository.getFolderItems(
-            folderId: folder.id,
-            limit: 1000,
-          );
-
-          if (itemsResponse.success && itemsResponse.data != null) {
-            // Add item IDs to set
-            for (final item in itemsResponse.data!) {
-              allBookmarkedIds.add(item.itemId);
-            }
-          }
-        }
-      }
-
+  // 🚀 Load bookmarks TRULY async - fire and forget, non-blocking
+  void _loadBookmarkedItemsAsync() {
+    // Background task - don't await, don't block
+    Future(() async {
       if (!mounted) return;
 
-      setState(() {
-        _bookmarkedItems = allBookmarkedIds;
-      });
+      try {
+        final repository = LibraryRepository();
+        final allBookmarkedIds = <String>{};
 
-      print(
-        '📚 Loaded ${_bookmarkedItems.length} bookmarked items from backend',
-      );
-    } catch (e) {
-      print('❌ Error loading bookmarks: $e');
-    }
+        // Get all folders
+        final foldersResponse = await repository.getFolders();
+        if (!mounted) return;
+
+        if (foldersResponse.success && foldersResponse.data != null) {
+          // ✅ CRITICAL FIX: Load ALL folders in PARALLEL instead of sequential
+          final futures = foldersResponse.data!.map((folder) async {
+            try {
+              final itemsResponse = await repository.getFolderItems(
+                folderId: folder.id,
+                limit: 100,
+              );
+
+              if (itemsResponse.success && itemsResponse.data != null) {
+                return itemsResponse.data!.map((item) => item.itemId).toList();
+              }
+            } catch (e) {
+              print('⚠️ Error loading folder ${folder.id}: $e');
+            }
+            return <String>[];
+          }).toList();
+
+          // Wait for ALL folders to load in parallel (much faster!)
+          final results = await Future.wait(futures);
+
+          if (!mounted) return;
+
+          // Merge all results
+          for (final ids in results) {
+            allBookmarkedIds.addAll(ids);
+          }
+
+          // Update UI only once
+          if (mounted) {
+            setState(() {
+              _bookmarkedItems = allBookmarkedIds;
+            });
+            print(
+              '📚 Loaded ${_bookmarkedItems.length} bookmarked items (parallel loading)',
+            );
+          }
+        }
+      } catch (e) {
+        print('❌ Error loading bookmarks: $e');
+        // Silently fail - bookmarks are not critical
+      }
+    });
   }
 
   // Load words by category from backend
@@ -251,11 +264,16 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     return [allTopicsCategory];
   }
 
-  // Category selection handler - SIMPLIFIED
+  // Category selection handler - RACE-CONDITION SAFE with REQUEST ID
   void _onCategorySelected(String categoryName) async {
-    if (!mounted || _isLoadingCategory) return;
+    if (!mounted || _isLoadingCategory) {
+      print('⏳ Already loading or widget disposed');
+      return;
+    }
 
-    print('📂 Selecting category: $categoryName');
+    // Generate unique request ID to track this specific selection
+    final requestId = ++_categoryRequestId;
+    print('📂 Selecting category: $categoryName (requestId: $requestId)');
 
     setState(() {
       _isLoadingCategory = true;
@@ -263,32 +281,65 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       _playingItemId = null;
     });
 
+    // ✅ Stop audio BEFORE async operations (fire-and-forget, non-blocking)
+    _audioPlayer.stop().catchError((e) => print('⚠️ Audio stop error: $e'));
+    _ttsService.stop().catchError((e) => print('⚠️ TTS stop error: $e'));
+
     try {
-      // Stop audio first
-      _audioPlayer.stop();
-      _ttsService.stop();
+      // ✅ NO DELAY! Check immediately
+      if (!mounted || requestId != _categoryRequestId) {
+        print(
+          '⏭️ Ignoring old category request $requestId (current: $_categoryRequestId)',
+        );
+        return;
+      }
 
-      // Small delay
-      await Future.delayed(Duration(milliseconds: 100));
+      // Load content with timeout protection
+      await Future.any([
+        Future(() async {
+          if (_isShowingWords) {
+            await _loadWords(
+              categoryName == 'All Topics' ? null : categoryName,
+            );
+          } else {
+            if (categoryName == 'All Topics') {
+              await ref
+                  .read(travelVocabularyControllerProvider.notifier)
+                  .init();
+            } else {
+              await ref
+                  .read(travelVocabularyControllerProvider.notifier)
+                  .filterByCategory(categoryName);
+            }
+          }
+        }),
+        Future.delayed(Duration(seconds: 10), () {
+          throw TimeoutException('Category loading timeout');
+        }),
+      ]);
 
-      if (!mounted) return;
-
-      // Load content
-      if (_isShowingWords) {
-        _loadWords(categoryName == 'All Topics' ? null : categoryName);
-      } else {
-        if (categoryName == 'All Topics') {
-          ref.read(travelVocabularyControllerProvider.notifier).init();
-        } else {
-          ref
-              .read(travelVocabularyControllerProvider.notifier)
-              .filterByCategory(categoryName);
-        }
+      // After loading, check if this is still the current request
+      if (!mounted || requestId != _categoryRequestId) {
+        print(
+          '⏭️ Ignoring old category result $requestId (current: $_categoryRequestId)',
+        );
+        return;
+      }
+    } on TimeoutException catch (e) {
+      print('⏱️ Category selection timeout: $e');
+      if (mounted && requestId == _categoryRequestId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Loading timeout. Please try again.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e) {
       print('❌ Category selection error: $e');
     } finally {
-      if (mounted) {
+      // Only reset loading flag if this is still the current request
+      if (mounted && requestId == _categoryRequestId) {
         setState(() {
           _isLoadingCategory = false;
         });
@@ -297,34 +348,64 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   }
 
   @override
+  void deactivate() {
+    // Called when widget is removed from tree but might be reinserted
+    // Stop audio BEFORE dispose
+    print('🔄 TravelVocabularyView deactivating...');
+
+    // ✅ Fire-and-forget - don't block deactivate lifecycle
+    _audioPlayer.stop().catchError((e) {
+      print('⚠️ AudioPlayer stop error in deactivate: $e');
+    });
+
+    _ttsService.stop().catchError((e) {
+      print('⚠️ TTS stop error in deactivate: $e');
+    });
+
+    _playingItemId = null;
+
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     print('🗑️ TravelVocabularyView disposing SAFELY...');
 
+    // Invalidate any pending category requests
+    _categoryRequestId = -1;
+
+    // CRITICAL: Cancel subscription FIRST before any setState can happen
     try {
-      // Stop all audio FIRST
-      _audioPlayer.stop();
+      _audioCompletionSubscription?.cancel();
+      _audioCompletionSubscription = null;
     } catch (e) {
-      print('⚠️ AudioPlayer dispose error: $e');
+      print('⚠️ Subscription cancel error: $e');
     }
 
-    try {
-      _ttsService.stop();
-    } catch (e) {
-      print('⚠️ TTS dispose error: $e');
-    }
+    // Clear playing state
+    _playingItemId = null;
 
+    // Reset initialization flag
+    _isInitialized = false;
+
+    // ✅ Stop audio WITHOUT await (fire-and-forget to prevent blocking dispose)
+    _audioPlayer.stop().catchError((e) {
+      print('⚠️ AudioPlayer stop error: $e');
+    });
+
+    // ✅ Stop TTS WITHOUT await (fire-and-forget)
+    _ttsService.stop().catchError((e) {
+      print('⚠️ TTS stop error: $e');
+    });
+
+    // Dispose controllers
     try {
       _searchController.dispose();
     } catch (e) {
       print('⚠️ SearchController dispose error: $e');
     }
 
-    try {
-      _audioCompletionSubscription?.cancel();
-    } catch (e) {
-      print('⚠️ Subscription dispose error: $e');
-    }
-
+    // Finally dispose audio player
     try {
       _audioPlayer.dispose();
     } catch (e) {
@@ -342,9 +423,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     String translation,
     String? targetLanguage,
   ) async {
-    // ULTRA safe checks
-    if (!mounted) {
-      print('❌ Widget not mounted, skipping audio');
+    // ULTRA safe checks - also check if subscription exists
+    if (!mounted || _audioCompletionSubscription == null) {
+      print('❌ Widget not mounted or disposed, skipping audio');
       return;
     }
 
@@ -355,8 +436,8 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       if (_playingItemId == itemId) {
         print('⏹️ Stopping current audio');
         try {
-          _audioPlayer.stop();
-          _ttsService.stop();
+          await _audioPlayer.stop();
+          await _ttsService.stop();
         } catch (e) {
           print('⚠️ Error stopping: $e');
         }
@@ -371,8 +452,8 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
       // Stop any current audio
       try {
-        _audioPlayer.stop();
-        _ttsService.stop();
+        await _audioPlayer.stop();
+        await _ttsService.stop();
       } catch (e) {
         print('⚠️ Error stopping previous: $e');
       }
@@ -387,19 +468,21 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       if (audioUrl != null && audioUrl.isNotEmpty) {
         print('🎵 Playing audio URL');
         try {
-          _audioPlayer.play(UrlSource(audioUrl));
+          await _audioPlayer.play(UrlSource(audioUrl));
         } catch (e) {
           print('❌ Audio player error: $e');
-          setState(() {
-            _playingItemId = null;
-          });
+          if (mounted) {
+            setState(() {
+              _playingItemId = null;
+            });
+          }
         }
       } else {
         print('🔊 Using TTS for: $translation');
         try {
           // TTS with mounted check
           if (mounted) {
-            _ttsService.speak(translation, languageCode: targetLanguage);
+            await _ttsService.speak(translation, languageCode: targetLanguage);
           }
         } catch (e) {
           print('❌ TTS error: $e');
@@ -539,43 +622,58 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: MyColors.white, // Consistent white background
-      appBar: _buildAppBar(),
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            // Main content
-            Column(
-              children: [
-                SizedBox(height: 16.h), // Added spacing from AppBar
-                // Search bar
-                _buildSearchBar(),
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        // Don't use async here - just trigger cleanup
+        // Audio is already stopped in deactivate()
+        print('🔙 Pop invoked, didPop: $didPop');
+      },
+      child: Scaffold(
+        backgroundColor: MyColors.white, // Consistent white background
+        appBar: _buildAppBar(),
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            key: ValueKey(
+              'travel_vocab_stack_${widget.initialCategory}',
+            ), // Unique key to force rebuild
+            children: [
+              // Main content
+              Column(
+                children: [
+                  SizedBox(height: 16.h), // Added spacing from AppBar
+                  // Search bar
+                  _buildSearchBar(),
 
-                SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                // Word/Phrases toggle switch
-                _buildTabSwitcher(),
+                  // Word/Phrases toggle switch
+                  _buildTabSwitcher(),
 
-                SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                // Category filters
-                _buildCategoryFilters(),
+                  // Category filters
+                  _buildCategoryFilters(),
 
-                SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                // Content
-                Expanded(child: _buildContent()),
-              ],
-            ),
+                  // Content
+                  Expanded(child: _buildContent()),
+                ],
+              ),
 
-            // Bottom Navigation Bar
-            CustomBottomNavBar(currentIndex: 1, isPremium: widget.isPremium),
-          ],
+              // Bottom Navigation Bar
+              CustomBottomNavBar(
+                key: ValueKey('bottom_nav_travel_vocab'), // Unique key
+                currentIndex: 1,
+                isPremium: widget.isPremium,
+              ),
+            ],
+          ),
         ),
       ),
-    );
+    ); // PopScope child end
   }
 
   /// AppBar
@@ -587,7 +685,13 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: MyColors.textPrimary, size: 24.sp),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () {
+          // Audio will be stopped in deactivate() automatically
+          // Just navigate back without blocking operations
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        },
       ),
       title: Text(
         'Travel Vocabulary',
@@ -677,9 +781,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     _playingItemId = null;
                   });
 
-                  // Small delay
-                  await Future.delayed(Duration(milliseconds: 50));
-
+                  // ✅ NO DELAY! Load immediately
                   if (!mounted) return;
 
                   // Load words for selected category
@@ -731,9 +833,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     _playingItemId = null;
                   });
 
-                  // Small delay
-                  await Future.delayed(Duration(milliseconds: 50));
-
+                  // ✅ NO DELAY! Load immediately
                   if (!mounted) return;
 
                   // Load phrases for selected category

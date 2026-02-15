@@ -30,11 +30,60 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   @override
   void initState() {
     super.initState();
-    // Load courses and dictionary categories from backend
-    Future.microtask(() {
-      ref.read(homeViewControllerProvider.notifier).init();
-      ref.read(dictionaryControllerProvider.notifier).init();
+    print('🏠 PremiumHomeView initState called');
+
+    // ONLY load if NOT already loaded - prevents re-initialization on navigation back
+    Future.microtask(() async {
+      try {
+        // Check if home data already loaded
+        final homeState = ref.read(homeViewControllerProvider);
+        print(
+          '📊 Home state: courses=${homeState.courses.length}, isLoading=${homeState.isLoading}',
+        );
+
+        if (homeState.courses.isEmpty && !homeState.isLoading) {
+          print('📚 Loading courses for first time...');
+          await ref.read(homeViewControllerProvider.notifier).init();
+        } else {
+          print(
+            '📚 Courses already loaded (${homeState.courses.length} courses), skipping init',
+          );
+        }
+
+        // Small delay before loading dictionary
+        await Future.delayed(Duration(milliseconds: 100));
+
+        // Check if dictionary categories already loaded
+        if (mounted) {
+          final dictState = ref.read(dictionaryControllerProvider);
+          print(
+            '📖 Dictionary state: categories=${dictState.categories.length}, isLoading=${dictState.isLoading}',
+          );
+
+          if (dictState.categories.isEmpty && !dictState.isLoading) {
+            print('📖 Loading dictionary categories for first time...');
+            await ref.read(dictionaryControllerProvider.notifier).init();
+          } else {
+            print(
+              '📖 Dictionary categories already loaded (${dictState.categories.length} categories), skipping init',
+            );
+          }
+        }
+
+        print('✅ PremiumHomeView init completed');
+      } catch (e) {
+        print('❌ Premium home init error: $e');
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    // Clear swipe progress map to prevent memory leaks
+    _swipeProgressMap.clear();
+    // Reset navigation flag
+    _isNavigating = false;
+    super.dispose();
   }
 
   @override
@@ -45,6 +94,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         top: false,
         bottom: false,
         child: Stack(
+          key: ValueKey('premium_home_stack'), // Unique key to force rebuild
           children: [
             // Main scrollable content
             SingleChildScrollView(
@@ -96,7 +146,11 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             ),
 
             // Floating bottom navigation
-            CustomBottomNavBar(currentIndex: 0, isPremium: true),
+            CustomBottomNavBar(
+              key: ValueKey('bottom_nav_premium_home'), // Unique key
+              currentIndex: 0,
+              isPremium: true,
+            ),
           ],
         ),
       ),
@@ -474,6 +528,8 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 )
               : ListView.builder(
                   scrollDirection: Axis.horizontal,
+                  // ✅ CRITICAL: Explicit physics for smooth scrolling
+                  physics: const ClampingScrollPhysics(),
                   padding: EdgeInsets.only(left: 16.w),
                   itemCount: dictionaryState.categories.length,
                   itemBuilder: (context, index) {
@@ -511,11 +567,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                           });
 
                           try {
-                            // Small delay to prevent race conditions
-                            await Future.delayed(Duration(milliseconds: 100));
-
+                            // ✅ NO DELAY! Navigate immediately
                             if (!mounted) {
-                              print('❌ Widget disposed during delay');
+                              print('❌ Widget disposed before navigation');
                               return;
                             }
 
@@ -529,6 +583,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) {
                                       return TravelVocabularyView(
+                                        key: ValueKey(
+                                          'travel_vocab_${category.name}_${DateTime.now().millisecondsSinceEpoch}',
+                                        ),
                                         isPremium: true,
                                         initialCategory: category.name,
                                       );
@@ -571,6 +628,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                                 await navigator.push(
                                   MaterialPageRoute(
                                     builder: (context) => TravelVocabularyView(
+                                      key: ValueKey(
+                                        'travel_vocab_fallback_${category.name}_${DateTime.now().millisecondsSinceEpoch}',
+                                      ),
                                       isPremium: true,
                                       initialCategory: category.name,
                                     ),
@@ -610,8 +670,13 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    // ✅ CRITICAL FIX: InkWell instead of GestureDetector
+    // This allows scroll gestures to pass through properly
+    return InkWell(
       onTap: onTap,
+      // ✅ Transparent to allow scroll gestures
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
       child: Column(
         children: [
           // Icon container
@@ -1007,24 +1072,43 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                           _swipeProgressMap[cardIndex] ?? 0.0;
                       return GestureDetector(
                         onHorizontalDragUpdate: (details) {
-                          setState(() {
-                            final newProgress =
-                                currentProgress + details.delta.dx;
-                            _swipeProgressMap[cardIndex] = newProgress.clamp(
-                              0.0,
-                              constraints.maxWidth - 60.w,
-                            );
-                          });
+                          if (!mounted) return; // Safety check
+
+                          try {
+                            setState(() {
+                              // ✅ CRITICAL FIX: Read current value from map INSIDE setState
+                              // This prevents using stale captured value
+                              final actualProgress =
+                                  _swipeProgressMap[cardIndex] ?? 0.0;
+                              final newProgress =
+                                  actualProgress + details.delta.dx;
+                              _swipeProgressMap[cardIndex] = newProgress.clamp(
+                                0.0,
+                                constraints.maxWidth - 60.w,
+                              );
+                            });
+                          } catch (e) {
+                            print('⚠️ Swipe update error: $e');
+                          }
                         },
                         onHorizontalDragEnd: (details) {
-                          if (currentProgress > constraints.maxWidth * 0.7) {
-                            // Success - Navigate
-                            print('Swipe completed! Navigating...');
-                            // TODO: Add navigation to course
+                          if (!mounted) return; // Safety check
+
+                          try {
+                            // ✅ CRITICAL FIX: Read current value from map at drag end
+                            final finalProgress =
+                                _swipeProgressMap[cardIndex] ?? 0.0;
+                            if (finalProgress > constraints.maxWidth * 0.7) {
+                              // Success - Navigate
+                              print('Swipe completed! Navigating...');
+                              // TODO: Add navigation to course
+                            }
+                            setState(() {
+                              _swipeProgressMap[cardIndex] = 0;
+                            });
+                          } catch (e) {
+                            print('⚠️ Swipe end error: $e');
                           }
-                          setState(() {
-                            _swipeProgressMap[cardIndex] = 0;
-                          });
                         },
                         child: Container(
                           width: double.infinity,

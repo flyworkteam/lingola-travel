@@ -34,6 +34,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
       body: SafeArea(
         bottom: false,
         child: Stack(
+          key: ValueKey('library_stack'), // Unique key to force rebuild
           children: [
             // Show loading indicator
             if (viewModel.isLoading && folders.isEmpty)
@@ -171,7 +172,11 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
               ),
 
             // Bottom Navigation Bar
-            CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
+            CustomBottomNavBar(
+              key: ValueKey('bottom_nav_library'), // Unique key
+              currentIndex: 2,
+              isPremium: widget.isPremium,
+            ),
           ],
         ),
       ),

@@ -42,8 +42,9 @@ class TtsService {
       print('🔊 TTS: Pitch set to 1.2');
 
       // Set additional properties for Android
-      await _flutterTts.awaitSpeakCompletion(true);
-      print('🔊 TTS: Await speak completion enabled');
+      // ⚠️ CRITICAL: Set to FALSE to prevent blocking main thread
+      await _flutterTts.awaitSpeakCompletion(false);
+      print('🔊 TTS: Non-blocking mode enabled (awaitSpeakCompletion=false)');
 
       _isInitialized = true;
       print('✅ TTS Service initialized successfully');
@@ -72,9 +73,18 @@ class TtsService {
         );
       }
 
-      // Speak the text - awaitSpeakCompletion(true) is already set in init()
-      final result = await _flutterTts.speak(text);
-      print('🔊 TTS: Speak completed with result: $result');
+      // ✅ CRITICAL: Fire-and-forget! Don't await speak() to prevent blocking
+      // awaitSpeakCompletion is already false, so this returns immediately
+      _flutterTts
+          .speak(text)
+          .then((result) {
+            print('🔊 TTS: Speak completed with result: $result');
+          })
+          .catchError((e) {
+            print('❌ TTS speak error in callback: $e');
+          });
+
+      print('🔊 TTS: Speak started (non-blocking)');
     } catch (e) {
       print('❌ TTS speak error: $e');
     }
@@ -111,12 +121,13 @@ class TtsService {
   }
 
   Future<void> stop() async {
-    if (!_isInitialized) return;
-
     try {
+      // Always try to stop, even if not initialized
+      // This ensures we clean up any ongoing speech
       await _flutterTts.stop();
     } catch (e) {
       print('❌ TTS stop error: $e');
+      // Ignore errors during stop - better to continue than crash
     }
   }
 

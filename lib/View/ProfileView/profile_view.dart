@@ -28,6 +28,7 @@ class _ProfileViewState extends State<ProfileView> {
       body: SafeArea(
         bottom: false,
         child: Stack(
+          key: ValueKey('profile_stack'), // Unique key to force rebuild
           children: [
             // Main content
             SingleChildScrollView(
@@ -196,16 +197,18 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                     ),
 
-                    SizedBox(
-                      height: 110.h,
-                    ), // Space for bottom nav
+                    SizedBox(height: 110.h), // Space for bottom nav
                   ],
                 ),
               ),
             ),
 
             // Floating bottom navigation
-            CustomBottomNavBar(currentIndex: 3, isPremium: widget.isPremium),
+            CustomBottomNavBar(
+              key: ValueKey('bottom_nav_profile'), // Unique key
+              currentIndex: 3,
+              isPremium: widget.isPremium,
+            ),
           ],
         ),
       ),
@@ -232,7 +235,10 @@ class _ProfileViewState extends State<ProfileView> {
                 'assets/icons/userlogo.svg',
                 width: 50.w,
                 height: 50.w,
-                colorFilter: const ColorFilter.mode(Color(0xFF4ECDC4), BlendMode.srcIn),
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFF4ECDC4),
+                  BlendMode.srcIn,
+                ),
               ),
             ),
           ),
@@ -578,7 +584,10 @@ class _ProfileViewState extends State<ProfileView> {
               'assets/icons/cikisyap.svg',
               width: 20.w,
               height: 20.w,
-              colorFilter: const ColorFilter.mode(Color(0xFFF44336), BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(
+                Color(0xFFF44336),
+                BlendMode.srcIn,
+              ),
               fit: BoxFit.contain,
             ),
             SizedBox(width: 8.w),
@@ -631,7 +640,10 @@ class _ProfileViewState extends State<ProfileView> {
                         'assets/icons/cikisyap.svg',
                         width: 32.w,
                         height: 32.w,
-                        colorFilter: const ColorFilter.mode(Color(0xFFE57373), BlendMode.srcIn),
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFFE57373),
+                          BlendMode.srcIn,
+                        ),
                         fit: BoxFit.contain,
                       ),
                     ),
