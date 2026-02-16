@@ -8,27 +8,39 @@ class LessonRepository extends BaseRepository {
   final ApiClient _apiClient = ApiClient();
 
   /// Get lesson by ID
-  Future<ApiResponse<LessonModel>> getLessonById(int lessonId) async {
+  Future<ApiResponse<LessonModel>> getLessonById(String lessonId) async {
     try {
+      print('🔍 Fetching lesson: $lessonId');
       final response = await _apiClient.get('/lessons/$lessonId');
+      print('📡 API Response success: ${response.success}');
+      print('📦 Response data: ${response.data}');
 
       if (response.success && response.data != null) {
-        final lesson = LessonModel.fromJson(
-          response.data['lesson'] as Map<String, dynamic>,
-        );
+        print('✅ Response data is not null');
+        print('🔑 Response keys: ${response.data.keys.toList()}');
 
+        final lessonData = response.data['lesson'];
+        print('📄 Lesson data type: ${lessonData.runtimeType}');
+        print('📄 Lesson data: $lessonData');
+
+        final lesson = LessonModel.fromJson(lessonData as Map<String, dynamic>);
+
+        print('✅ Lesson parsed successfully: ${lesson.title}');
         return ApiResponse(success: true, data: lesson);
       }
 
+      print('❌ Response not successful or data is null');
       return ApiResponse(success: false, error: response.error);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Exception in getLessonById: $e');
+      print('📚 Stack trace: $stackTrace');
       return handleError(e);
     }
   }
 
   /// Get lesson vocabulary
   Future<ApiResponse<List<LessonVocabularyModel>>> getLessonVocabulary(
-    int lessonId,
+    String lessonId,
   ) async {
     try {
       final response = await _apiClient.get('/lessons/$lessonId/vocabulary');
@@ -52,8 +64,8 @@ class LessonRepository extends BaseRepository {
   }
 
   /// Mark lesson as completed
-  Future<ApiResponse<bool>> completLesson({
-    required int lessonId,
+  Future<ApiResponse<bool>> completeLesson({
+    required String lessonId,
     int? timeSpent,
     int? wordsLearned,
   }) async {
@@ -78,7 +90,7 @@ class LessonRepository extends BaseRepository {
 
   /// Get user's lesson progress
   Future<ApiResponse<Map<String, dynamic>>> getUserLessonProgress(
-    int lessonId,
+    String lessonId,
   ) async {
     try {
       final response = await _apiClient.get('/lessons/$lessonId/progress');
@@ -91,6 +103,31 @@ class LessonRepository extends BaseRepository {
       }
 
       return ApiResponse(success: false, error: response.error);
+    } catch (e) {
+      return handleError(e);
+    }
+  }
+
+  /// Update lesson progress
+  Future<ApiResponse<bool>> updateLessonProgress({
+    required String lessonId,
+    required int progressPercentage,
+    int? timeSpentSeconds,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/lessons/$lessonId/progress',
+        data: {
+          'progress_percentage': progressPercentage,
+          if (timeSpentSeconds != null) 'time_spent_seconds': timeSpentSeconds,
+        },
+      );
+
+      return ApiResponse(
+        success: response.success,
+        data: response.success,
+        error: response.error,
+      );
     } catch (e) {
       return handleError(e);
     }

@@ -1,4 +1,5 @@
 import 'package:flutter_tts/flutter_tts.dart';
+import 'dart:io' show Platform;
 
 class TtsService {
   static final TtsService _instance = TtsService._internal();
@@ -25,6 +26,25 @@ class TtsService {
     try {
       print('🔊 TTS: Initializing...');
 
+      // iOS-specific audio configuration
+      if (Platform.isIOS) {
+        await _flutterTts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.playback,
+          [
+            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+            IosTextToSpeechAudioCategoryOptions.duckOthers,
+          ],
+          IosTextToSpeechAudioMode.defaultMode,
+        );
+        print('🔊 TTS: iOS audio category configured');
+      }
+
+      // Android-specific configuration
+      if (Platform.isAndroid) {
+        await _flutterTts.setSharedInstance(true);
+        print('🔊 TTS: Android shared instance enabled');
+      }
+
       // Set language to English
       await _flutterTts.setLanguage("en-US");
       print('🔊 TTS: Language set to en-US');
@@ -41,10 +61,9 @@ class TtsService {
       await _flutterTts.setPitch(1.2);
       print('🔊 TTS: Pitch set to 1.2');
 
-      // Set additional properties for Android
-      // ⚠️ CRITICAL: Set to FALSE to prevent blocking main thread
-      await _flutterTts.awaitSpeakCompletion(false);
-      print('🔊 TTS: Non-blocking mode enabled (awaitSpeakCompletion=false)');
+      // ⚠️ Use TRUE to ensure speech completes
+      await _flutterTts.awaitSpeakCompletion(true);
+      print('🔊 TTS: Blocking mode enabled (awaitSpeakCompletion=true)');
 
       _isInitialized = true;
       print('✅ TTS Service initialized successfully');
@@ -73,18 +92,17 @@ class TtsService {
         );
       }
 
-      // ✅ CRITICAL: Fire-and-forget! Don't await speak() to prevent blocking
-      // awaitSpeakCompletion is already false, so this returns immediately
-      _flutterTts
-          .speak(text)
-          .then((result) {
-            print('🔊 TTS: Speak completed with result: $result');
-          })
-          .catchError((e) {
-            print('❌ TTS speak error in callback: $e');
-          });
+      // Ensure volume is set before speaking
+      await _flutterTts.setVolume(1.0);
 
-      print('🔊 TTS: Speak started (non-blocking)');
+      // Speak and wait for completion (awaitSpeakCompletion is true)
+      print('🔊 TTS: Starting speak (blocking)...');
+      final result = await _flutterTts.speak(text);
+      print('🔊 TTS: Speak completed with result: $result');
+
+      if (result == 0) {
+        print('❌ TTS: Speak failed (result=0)');
+      }
     } catch (e) {
       print('❌ TTS speak error: $e');
     }

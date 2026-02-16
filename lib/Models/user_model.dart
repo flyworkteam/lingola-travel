@@ -11,6 +11,11 @@ class UserModel {
   final DateTime? trialStartedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? targetLanguage; // de, it, fr, es, etc.
+  final String? profession;
+  final String? englishLevel;
+  final String? dailyGoal;
+  final int? dailyGoalMinutes;
 
   UserModel({
     required this.id,
@@ -24,6 +29,11 @@ class UserModel {
     this.trialStartedAt,
     required this.createdAt,
     required this.updatedAt,
+    this.targetLanguage,
+    this.profession,
+    this.englishLevel,
+    this.dailyGoal,
+    this.dailyGoalMinutes,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -43,6 +53,11 @@ class UserModel {
           : null,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+      targetLanguage: json['target_language'],
+      profession: json['profession'],
+      englishLevel: json['english_level'],
+      dailyGoal: json['daily_goal'],
+      dailyGoalMinutes: json['daily_goal_minutes'],
     );
   }
 
@@ -59,6 +74,11 @@ class UserModel {
       'trialStartedAt': trialStartedAt?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'target_language': targetLanguage,
+      'profession': profession,
+      'english_level': englishLevel,
+      'daily_goal': dailyGoal,
+      'daily_goal_minutes': dailyGoalMinutes,
     };
   }
 
@@ -74,6 +94,11 @@ class UserModel {
     DateTime? trialStartedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? targetLanguage,
+    String? profession,
+    String? englishLevel,
+    String? dailyGoal,
+    int? dailyGoalMinutes,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -87,6 +112,11 @@ class UserModel {
       trialStartedAt: trialStartedAt ?? this.trialStartedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      targetLanguage: targetLanguage ?? this.targetLanguage,
+      profession: profession ?? this.profession,
+      englishLevel: englishLevel ?? this.englishLevel,
+      dailyGoal: dailyGoal ?? this.dailyGoal,
+      dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
     );
   }
 

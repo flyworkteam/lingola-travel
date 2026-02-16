@@ -1,22 +1,28 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import '../../Riverpod/Controllers/course_controller.dart';
+import '../../Models/course_model.dart';
+import '../../Repositories/profile_repository.dart';
 import 'course_detail_view.dart';
 
-class CourseView extends StatefulWidget {
+class CourseView extends ConsumerStatefulWidget {
   final bool isPremium;
   const CourseView({super.key, this.isPremium = false});
 
   @override
-  State<CourseView> createState() => _CourseViewState();
+  ConsumerState<CourseView> createState() => _CourseViewState();
 }
 
-class _CourseViewState extends State<CourseView> {
+class _CourseViewState extends ConsumerState<CourseView> {
   final TextEditingController _searchController = TextEditingController();
+  final ProfileRepository _profileRepository = ProfileRepository();
   int _selectedFilterIndex = 0;
+  String? _userTargetLanguage; // User's selected language from onboarding
 
   final List<String> _filters = [
     'All Courses',
@@ -25,97 +31,58 @@ class _CourseViewState extends State<CourseView> {
     'Intermediate',
   ];
 
-  // Course data
-  final List<Map<String, dynamic>> _courses = [
-    {
-      'category': 'General',
-      'title': 'Daily Conversation',
-      'lessons': 12,
-      'progress': 100,
-      'isUnlocked': true,
-      'image': 'assets/images/coursegenel.png',
-    },
-    {
-      'category': 'Trip',
-      'title': 'Terminal Talk',
-      'lessons': 12,
-      'progress': 65,
-      'isUnlocked': true,
-      'image': 'assets/images/courseairport.png',
-    },
-    {
-      'category': 'Food & Drink',
-      'title': 'Place an order',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/courseyemeicme.png',
-    },
-    {
-      'category': 'Accommodation',
-      'title': 'I have a reservation',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/coursekonaklama.png',
-    },
-    {
-      'category': 'Culture',
-      'title': 'How can I get there?',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/coursekultur.png',
-    },
-    {
-      'category': 'Shopping',
-      'title': 'How much is this?',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/courseshoping.png',
-    },
-    {
-      'category': 'Direction & Navigation',
-      'title': 'How can I get there?',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/coursenavigation.png',
-    },
-    {
-      'category': 'Sport',
-      'title': 'Is there a gym?',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/coursesport.png',
-    },
-    {
-      'category': 'Health',
-      'title': 'Where is the pharmacy?',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/coursehealth.png',
-    },
-    {
-      'category': 'Business',
-      'title': 'We have a meeting',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/coursebusiness.png',
-    },
-    {
-      'category': 'Emergency',
-      'title': 'Call the police',
-      'lessons': 12,
-      'progress': 0,
-      'isUnlocked': false,
-      'image': 'assets/images/courseemergency.png',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load user profile and courses
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserProfileAndCourses();
+    });
+  }
+
+  /// Load user profile to get target language, then load courses
+  Future<void> _loadUserProfileAndCourses() async {
+    try {
+      final response = await _profileRepository.getProfile();
+      if (response.success && response.data != null) {
+        final userData = response.data['user'];
+        final targetLanguage = userData['target_language'] as String?;
+
+        if (mounted) {
+          setState(() {
+            _userTargetLanguage = targetLanguage ?? 'en';
+          });
+
+          // Load courses with user's target language
+          ref
+              .read(courseControllerProvider.notifier)
+              .init(targetLanguage: _userTargetLanguage);
+
+          print('✅ Loaded courses for language: $_userTargetLanguage');
+        }
+      } else {
+        // Fallback to English if profile fetch fails
+        if (mounted) {
+          setState(() {
+            _userTargetLanguage = 'en';
+          });
+          ref
+              .read(courseControllerProvider.notifier)
+              .init(targetLanguage: 'en');
+          print('⚠️ Profile fetch failed, using default language: en');
+        }
+      }
+    } catch (e) {
+      print('❌ Error loading user profile: $e');
+      // Fallback to English on error
+      if (mounted) {
+        setState(() {
+          _userTargetLanguage = 'en';
+        });
+        ref.read(courseControllerProvider.notifier).init(targetLanguage: 'en');
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -291,17 +258,60 @@ class _CourseViewState extends State<CourseView> {
 
   /// Course list
   Widget _buildCourseList() {
-    return ListView.builder(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
-      itemCount: _courses.length,
-      itemBuilder: (context, index) {
-        return _buildCourseCard(_courses[index]);
-      },
+    final courseState = ref.watch(courseControllerProvider);
+
+    if (courseState.isLoading && courseState.courses.isEmpty) {
+      return Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)));
+    }
+
+    if (courseState.errorMessage != null && courseState.courses.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+            SizedBox(height: 16.h),
+            Text(
+              courseState.errorMessage!,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16.sp, color: Colors.red),
+            ),
+            SizedBox(height: 16.h),
+            ElevatedButton(
+              onPressed: () =>
+                  ref.read(courseControllerProvider.notifier).refresh(),
+              child: Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (courseState.courses.isEmpty) {
+      return Center(
+        child: Text(
+          'No courses available',
+          style: TextStyle(fontSize: 16.sp, color: MyColors.textSecondary),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(courseControllerProvider.notifier).refresh(),
+      color: Color(0xFF4ECDC4),
+      child: ListView.builder(
+        padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
+        itemCount: courseState.courses.length,
+        itemBuilder: (context, index) {
+          final course = courseState.courses[index];
+          return _buildCourseCard(course);
+        },
+      ),
     );
   }
 
   /// Course card
-  Widget _buildCourseCard(Map<String, dynamic> course) {
+  Widget _buildCourseCard(CourseModel course) {
     return Container(
       height: 200.h,
       margin: EdgeInsets.only(bottom: 16.h),
@@ -322,7 +332,7 @@ class _CourseViewState extends State<CourseView> {
             // Background image
             Positioned.fill(
               child: Image.asset(
-                course['image'],
+                course.imageUrl,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.high,
                 errorBuilder: (context, error, stackTrace) {
@@ -354,7 +364,7 @@ class _CourseViewState extends State<CourseView> {
             ),
 
             // Progress badge (top-right)
-            if (course['progress'] > 0)
+            if (course.progressPercentage > 0)
               Positioned(
                 top: 16.h,
                 right: 16.w,
@@ -368,7 +378,7 @@ class _CourseViewState extends State<CourseView> {
                     borderRadius: BorderRadius.circular(20.r),
                   ),
                   child: Text(
-                    'IN PROGRESS (${course['progress']}%)',
+                    'IN PROGRESS (${course.progressPercentage}%)',
                     style: TextStyle(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.w700,
@@ -408,7 +418,7 @@ class _CourseViewState extends State<CourseView> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${course['category']}:',
+                                '${course.category}:',
                                 style: TextStyle(
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.w600,
@@ -418,7 +428,7 @@ class _CourseViewState extends State<CourseView> {
                               ),
                               SizedBox(height: 4.h),
                               Text(
-                                course['title'],
+                                course.title,
                                 style: TextStyle(
                                   fontSize: 18.sp,
                                   fontWeight: FontWeight.w700,
@@ -443,7 +453,7 @@ class _CourseViewState extends State<CourseView> {
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    '${course['lessons']} Lessons',
+                                    '${course.totalLessons} Lessons',
                                     style: TextStyle(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w500,
@@ -462,19 +472,34 @@ class _CourseViewState extends State<CourseView> {
                         // Play/Lock button
                         GestureDetector(
                           onTap: () {
-                            if (course['isUnlocked']) {
+                            final isUnlocked =
+                                course.isFree || widget.isPremium;
+                            if (isUnlocked) {
                               // Navigate to course detail
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CourseDetailView(
-                                    courseData: course,
+                                    courseData: {
+                                      'id': course.id,
+                                      'title': course.title,
+                                      'category': course.category,
+                                      'description': course.description,
+                                      'total_lessons': course.totalLessons,
+                                      'lessons_completed':
+                                          course.lessonsCompleted,
+                                      'progress_percentage':
+                                          course.progressPercentage,
+                                      'image_url': course.imageUrl,
+                                      'is_free': course.isFree,
+                                      'level': 'Intermediate', // Default level
+                                    },
                                     isPremium: widget.isPremium,
                                   ),
                                 ),
                               );
                             } else {
-                              print('Course locked: ${course['title']}');
+                              print('Course locked: ${course.title}');
                               // TODO: Show premium dialog
                             }
                           },
@@ -482,13 +507,13 @@ class _CourseViewState extends State<CourseView> {
                             width: 56.w,
                             height: 56.w,
                             decoration: BoxDecoration(
-                              color: course['isUnlocked']
+                              color: (course.isFree || widget.isPremium)
                                   ? Color(0xFF4ECDC4)
                                   : MyColors.white.withOpacity(0.3),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              course['isUnlocked']
+                              (course.isFree || widget.isPremium)
                                   ? Icons.play_arrow
                                   : Icons.lock,
                               color: MyColors.white,

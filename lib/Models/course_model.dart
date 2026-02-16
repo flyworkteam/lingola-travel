@@ -73,46 +73,89 @@ class CourseModel extends Equatable {
 
 /// Lesson Model - Represents a lesson within a course
 class LessonModel extends Equatable {
-  final int id;
-  final int courseId;
+  final String id;
+  final String courseId;
   final String title;
-  final String titleTr;
-  final String? content;
-  final String? contentTr;
-  final int lessonNumber;
-  final int? orderIndex;
-  final bool isActive;
+  final String description;
+  final String? exampleSentence;
+  final String? keyVocabularyTerm;
+  final int lessonOrder;
+  final int totalSteps;
+  final String? imageUrl;
+  final String? audioUrl;
+  final String targetLanguage;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? userStatus;
+  final int? userProgress;
+  final int? timeSpent;
+  final DateTime? completedAt;
+  final List<LessonVocabularyModel>? vocabulary;
 
   const LessonModel({
     required this.id,
     required this.courseId,
     required this.title,
-    required this.titleTr,
-    this.content,
-    this.contentTr,
-    required this.lessonNumber,
-    this.orderIndex,
-    required this.isActive,
+    required this.description,
+    this.exampleSentence,
+    this.keyVocabularyTerm,
+    required this.lessonOrder,
+    required this.totalSteps,
+    this.imageUrl,
+    this.audioUrl,
+    required this.targetLanguage,
     required this.createdAt,
     required this.updatedAt,
+    this.userStatus,
+    this.userProgress,
+    this.timeSpent,
+    this.completedAt,
+    this.vocabulary,
   });
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
     return LessonModel(
-      id: json['id'] as int,
-      courseId: json['course_id'] as int,
+      id: json['id'] as String,
+      courseId: json['course_id'] as String,
       title: json['title'] as String,
-      titleTr: json['title_tr'] as String,
-      content: json['content'] as String?,
-      contentTr: json['content_tr'] as String?,
-      lessonNumber: json['lesson_number'] as int,
-      orderIndex: json['order_index'] as int?,
-      isActive: json['is_active'] as bool? ?? true,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      description: json['description'] as String? ?? '',
+      exampleSentence: json['example_sentence'] as String?,
+      keyVocabularyTerm: json['key_vocabulary_term'] as String?,
+      lessonOrder: json['lesson_order'] as int,
+      totalSteps: json['total_steps'] as int? ?? 10,
+      imageUrl: json['image_url'] as String?,
+      audioUrl: json['audio_url'] as String?,
+      targetLanguage: json['target_language'] as String? ?? 'en',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(),
+      userStatus: json['user_status'] as String?,
+      userProgress: _parseInt(json['user_progress']),
+      timeSpent: _parseInt(json['time_spent']),
+      completedAt: json['completed_at'] != null
+          ? DateTime.parse(json['completed_at'] as String)
+          : null,
+      vocabulary: json['vocabulary'] != null
+          ? (json['vocabulary'] as List)
+                .map(
+                  (v) =>
+                      LessonVocabularyModel.fromJson(v as Map<String, dynamic>),
+                )
+                .toList()
+          : null,
     );
+  }
+
+  // Helper method to safely parse int from dynamic value
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is double) return value.round();
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -120,14 +163,21 @@ class LessonModel extends Equatable {
       'id': id,
       'course_id': courseId,
       'title': title,
-      'title_tr': titleTr,
-      'content': content,
-      'content_tr': contentTr,
-      'lesson_number': lessonNumber,
-      'order_index': orderIndex,
-      'is_active': isActive,
+      'description': description,
+      'example_sentence': exampleSentence,
+      'key_vocabulary_term': keyVocabularyTerm,
+      'lesson_order': lessonOrder,
+      'total_steps': totalSteps,
+      'image_url': imageUrl,
+      'audio_url': audioUrl,
+      'target_language': targetLanguage,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'user_status': userStatus,
+      'user_progress': userProgress,
+      'time_spent': timeSpent,
+      'completed_at': completedAt?.toIso8601String(),
+      'vocabulary': vocabulary?.map((v) => v.toJson()).toList(),
     };
   }
 
@@ -136,74 +186,86 @@ class LessonModel extends Equatable {
     id,
     courseId,
     title,
-    titleTr,
-    content,
-    contentTr,
-    lessonNumber,
-    orderIndex,
-    isActive,
+    description,
+    exampleSentence,
+    keyVocabularyTerm,
+    lessonOrder,
+    totalSteps,
+    imageUrl,
+    audioUrl,
+    targetLanguage,
     createdAt,
     updatedAt,
+    userStatus,
+    userProgress,
+    timeSpent,
+    completedAt,
+    vocabulary,
   ];
 }
 
 /// Lesson Vocabulary Model - Words/phrases in a lesson
 class LessonVocabularyModel extends Equatable {
-  final int id;
-  final int lessonId;
-  final String word;
-  final String wordTr;
-  final String? pronunciation;
-  final String? exampleSentence;
-  final String? exampleSentenceTr;
+  final String id;
+  final String? lessonId;
+  final String term;
+  final String definition;
+  final String? iconPath;
+  final String? iconColor;
   final String? audioUrl;
-  final int? orderIndex;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final int? displayOrder;
+  final String? sourceLanguage;
+  final String targetLanguage;
 
   const LessonVocabularyModel({
     required this.id,
-    required this.lessonId,
-    required this.word,
-    required this.wordTr,
-    this.pronunciation,
-    this.exampleSentence,
-    this.exampleSentenceTr,
+    this.lessonId,
+    required this.term,
+    required this.definition,
+    this.iconPath,
+    this.iconColor,
     this.audioUrl,
-    this.orderIndex,
-    required this.createdAt,
-    required this.updatedAt,
+    this.displayOrder,
+    this.sourceLanguage,
+    required this.targetLanguage,
   });
 
   factory LessonVocabularyModel.fromJson(Map<String, dynamic> json) {
     return LessonVocabularyModel(
-      id: json['id'] as int,
-      lessonId: json['lesson_id'] as int,
-      word: json['word'] as String,
-      wordTr: json['word_tr'] as String,
-      pronunciation: json['pronunciation'] as String?,
-      exampleSentence: json['example_sentence'] as String?,
-      exampleSentenceTr: json['example_sentence_tr'] as String?,
+      id: json['id'] as String,
+      lessonId: json['lesson_id'] as String?,
+      term: json['term'] as String? ?? '',
+      definition: json['definition'] as String? ?? '',
+      iconPath: json['icon_path'] as String?,
+      iconColor: json['icon_color'] as String?,
       audioUrl: json['audio_url'] as String?,
-      orderIndex: json['order_index'] as int?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      displayOrder: _parseInt(json['display_order']),
+      sourceLanguage: json['source_language'] as String?,
+      targetLanguage: json['target_language'] as String? ?? 'en',
     );
+  }
+
+  // Helper method to safely parse int from dynamic value
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is double) return value.round();
+    return null;
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'lesson_id': lessonId,
-      'word': word,
-      'word_tr': wordTr,
-      'pronunciation': pronunciation,
-      'example_sentence': exampleSentence,
-      'example_sentence_tr': exampleSentenceTr,
+      'term': term,
+      'definition': definition,
+      'icon_path': iconPath,
+      'icon_color': iconColor,
       'audio_url': audioUrl,
-      'order_index': orderIndex,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'display_order': displayOrder,
+      'source_language': sourceLanguage,
+      'target_language': targetLanguage,
     };
   }
 
@@ -211,14 +273,13 @@ class LessonVocabularyModel extends Equatable {
   List<Object?> get props => [
     id,
     lessonId,
-    word,
-    wordTr,
-    pronunciation,
-    exampleSentence,
-    exampleSentenceTr,
+    term,
+    definition,
+    iconPath,
+    iconColor,
     audioUrl,
-    orderIndex,
-    createdAt,
-    updatedAt,
+    displayOrder,
+    sourceLanguage,
+    targetLanguage,
   ];
 }

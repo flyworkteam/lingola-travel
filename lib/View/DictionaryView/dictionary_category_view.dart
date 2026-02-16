@@ -9,6 +9,7 @@ import 'dart:async';
 import '../../Riverpod/Controllers/visual_dictionary_words_controller.dart';
 import '../../Riverpod/Controllers/library_controller.dart';
 import '../../Repositories/library_repository.dart';
+import '../../Services/tts_service.dart';
 
 class DictionaryCategoryView extends ConsumerStatefulWidget {
   final String categoryName;
@@ -37,9 +38,23 @@ class _DictionaryCategoryViewState
   String? _playingItemId;
   StreamSubscription? _audioCompletionSubscription;
 
+  // TTS Service
+  late final TtsService _ttsService;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize TTS service
+    _ttsService = TtsService();
+    _ttsService
+        .init()
+        .then((_) {
+          print('✅ TTS initialized in dictionary_category_view');
+        })
+        .catchError((e) {
+          print('⚠️ Error initializing TTS: $e');
+        });
 
     // Setup audio completion listener once
     _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
@@ -117,11 +132,12 @@ class _DictionaryCategoryViewState
     }
   }
 
-  Future<void> _playAudio(String itemId, String audioUrl) async {
+  Future<void> _playAudio(String itemId, String audioUrl, String word) async {
     try {
       // If same item is playing, stop it
       if (_playingItemId == itemId) {
         await _audioPlayer.stop();
+        await _ttsService.stop();
         setState(() {
           _playingItemId = null;
         });
@@ -130,13 +146,37 @@ class _DictionaryCategoryViewState
 
       // Stop any current playback
       await _audioPlayer.stop();
+      await _ttsService.stop();
 
       // Play new audio
       setState(() {
         _playingItemId = itemId;
       });
 
-      await _audioPlayer.play(UrlSource(audioUrl));
+      // If audioUrl is available, use audioplayer; otherwise use TTS
+      if (audioUrl.isNotEmpty) {
+        await _audioPlayer.play(UrlSource(audioUrl));
+      } else {
+        print('🔊 Using TTS for: $word');
+        // Use TTS with English pronunciation - don't await to prevent UI blocking
+        _ttsService
+            .speak(word, languageCode: 'en')
+            .then((_) {
+              print('✅ TTS completed for: $word');
+            })
+            .catchError((e) {
+              print('❌ TTS error in callback: $e');
+            });
+
+        // Reset playing state after estimated TTS duration
+        Future.delayed(Duration(seconds: 3), () {
+          if (mounted && _playingItemId == itemId) {
+            setState(() {
+              _playingItemId = null;
+            });
+          }
+        });
+      }
       // Completion handled by the listener in initState
     } catch (e) {
       setState(() {
@@ -378,10 +418,9 @@ class _DictionaryCategoryViewState
               GestureDetector(
                 onTap: () {
                   final audioUrl = word['audioUrl'] ?? '';
-                  print('Playing audio: $audioUrl');
-                  if (audioUrl.isNotEmpty) {
-                    _playAudio(id, audioUrl);
-                  }
+                  final englishWord = word['english'] ?? '';
+                  print('Playing audio for: $englishWord');
+                  _playAudio(id, audioUrl, englishWord);
                 },
                 child: SvgPicture.asset(
                   'assets/icons/visualdictionaryses.svg',

@@ -147,12 +147,25 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
+    final fullUrl = _dio.options.baseUrl + path;
+    print('🌐 API GET Request - Path: $path');
+    print('🌐 Base URL: ${_dio.options.baseUrl}');
+    print('🌐 Full URL: $fullUrl');
+
     try {
+      print('🌐 API GET Request - Path: $path');
+      print('🌐 Base URL: ${_dio.options.baseUrl}');
+      print('🌐 Full URL: ${_dio.options.baseUrl}$path');
+
       final response = await _dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
       );
+
+      print('🌐 API Response Status: ${response.statusCode}');
+      print('🌐 API Response Data Keys: ${response.data?.keys}');
+
       return ApiResponse<dynamic>(
         success: response.data['success'] ?? true,
         data: response.data['data'],
@@ -161,6 +174,10 @@ class ApiClient {
             : null,
       );
     } on DioException catch (e) {
+      print('💥 API GET Error: ${e.type} - ${e.message}');
+      if (e.response?.data != null) {
+        print('💥 Error Response: ${e.response?.data}');
+      }
       return _handleError(e);
     }
   }
@@ -271,12 +288,19 @@ class ApiClient {
 
   // Error Handler
   ApiResponse<dynamic> _handleError(DioException error) {
-    String errorMessage = 'An error occurred';
+    String errorMessage = 'Bir hata oluştu. Lütfen tekrar deneyin.';
     String errorCode = 'UNKNOWN_ERROR';
+
+    print('💥 DioException Details:');
+    print('   Type: ${error.type}');
+    print('   Message: ${error.message}');
+    print('   Status Code: ${error.response?.statusCode}');
 
     if (error.response != null) {
       // Server error
       final data = error.response!.data;
+      print('   Response Data: $data');
+
       if (data is Map<String, dynamic>) {
         errorMessage = data['error']?['message'] ?? errorMessage;
         errorCode = data['error']?['code'] ?? errorCode;
@@ -285,13 +309,15 @@ class ApiClient {
       // Network error
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout) {
-        errorMessage = 'Connection timeout';
+        errorMessage = 'Bağlantı zaman aşımına uğradı';
         errorCode = 'TIMEOUT';
       } else if (error.type == DioExceptionType.connectionError) {
-        errorMessage = 'No internet connection';
+        errorMessage = 'İnternet bağlantısı yok';
         errorCode = 'NO_CONNECTION';
       }
     }
+
+    print('   Final Error: $errorCode - $errorMessage');
 
     return ApiResponse<dynamic>(
       success: false,

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Models/course_model.dart';
+import 'package:lingola_travel/Repositories/course_repository.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../LessonView/lesson_detail_view.dart';
 
@@ -22,7 +24,13 @@ class CourseDetailView extends StatefulWidget {
 
 class _CourseDetailViewState extends State<CourseDetailView> {
   final ScrollController _scrollController = ScrollController();
+  final CourseRepository _courseRepository = CourseRepository();
   double _scrollOffset = 0.0;
+
+  List<LessonModel> _lessons = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+  int _completedCount = 0;
 
   @override
   void initState() {
@@ -32,6 +40,49 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         _scrollOffset = _scrollController.offset;
       });
     });
+    _loadLessons();
+  }
+
+  Future<void> _loadLessons() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final courseId = widget.courseData['id'] as String;
+      print('🔍 Loading lessons for course: $courseId');
+
+      final response = await _courseRepository.getLessonsByCourse(courseId);
+
+      print('📦 API Response - success: ${response.success}');
+      print('📦 API Response - data length: ${response.data?.length}');
+      print('📦 API Response - error: ${response.error}');
+
+      if (response.success && response.data != null) {
+        setState(() {
+          _lessons = response.data!;
+          _completedCount = _lessons
+              .where((l) => l.userStatus == 'completed')
+              .length;
+          _isLoading = false;
+        });
+        print('✅ Loaded ${_lessons.length} lessons');
+      } else {
+        setState(() {
+          _errorMessage = response.error?.message ?? 'Dersler yüklenemedi';
+          _isLoading = false;
+        });
+        print('❌ Error loading lessons: $_errorMessage');
+      }
+    } catch (e, stackTrace) {
+      print('💥 Exception in _loadLessons: $e');
+      print('Stack trace: $stackTrace');
+      setState(() {
+        _errorMessage = 'Bir hata oluştu: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -39,33 +90,6 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     _scrollController.dispose();
     super.dispose();
   }
-
-  final List<Map<String, dynamic>> _lessons = [
-    {
-      'number': 1,
-      'title': 'At the Check-in Desk',
-      'duration': 8,
-      'status': 'completed',
-    },
-    {
-      'number': 2,
-      'title': 'Security Procedures',
-      'duration': 12,
-      'status': 'in_progress',
-    },
-    {
-      'number': 3,
-      'title': 'Finding Your Gate',
-      'duration': 10,
-      'status': 'locked',
-    },
-    {
-      'number': 4,
-      'title': 'Duty-Free Dialogue',
-      'duration': 15,
-      'status': 'locked',
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +112,8 @@ class _CourseDetailViewState extends State<CourseDetailView> {
               children: [
                 // Base image
                 Image.asset(
-                  widget.courseData['image'],
+                  widget.courseData['image_url'] as String? ??
+                      'assets/images/coursegenel.png',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
@@ -156,7 +181,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                     children: [
                       // Title
                       Text(
-                        'Terminal Talk:\nAirport Basics',
+                        widget.courseData['title'] as String? ?? 'Course',
                         style: TextStyle(
                           fontSize: 28.sp,
                           fontWeight: FontWeight.w700,
@@ -173,12 +198,14 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                         children: [
                           _buildStatChip(
                             iconPath: 'assets/icons/12lesson.svg',
-                            text: '12 Lessons',
+                            text:
+                                '${widget.courseData['total_lessons'] ?? 12} Lessons',
                           ),
                           SizedBox(width: 16.w),
                           _buildStatChip(
                             iconPath: 'assets/icons/45min.svg',
-                            text: '45 Mins',
+                            text:
+                                '${(widget.courseData['total_lessons'] as int? ?? 12) * 8} Mins',
                           ),
                         ],
                       ),
@@ -188,14 +215,17 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                       // Level chip
                       _buildStatChip(
                         iconPath: 'assets/icons/intermediate.svg',
-                        text: 'Intermediate',
+                        text:
+                            widget.courseData['level'] as String? ??
+                            'Intermediate',
                       ),
 
                       SizedBox(height: 20.h),
 
                       // Description
                       Text(
-                        'Master the essential English phrases you\'ll need from the moment you step off the plane. Focus on vocabulary used in real-world airport scenarios.',
+                        widget.courseData['description'] as String? ??
+                            'Course description',
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w400,
@@ -220,27 +250,84 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                               color: Colors.black,
                             ),
                           ),
-                          Text(
-                            '65% Completed',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Montserrat',
-                              color: Color(0xFF4ECDC4),
+                          if (!_isLoading && _lessons.isNotEmpty)
+                            Text(
+                              '${((_completedCount / _lessons.length) * 100).round()}% Completed',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Montserrat',
+                                color: Color(0xFF4ECDC4),
+                              ),
                             ),
-                          ),
                         ],
                       ),
 
                       SizedBox(height: 20.h),
 
-                      // Lessons list
-                      ..._lessons.map((lesson) => _buildLessonItem(lesson)),
+                      // Loading, error, or lessons list
+                      if (_isLoading)
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40.h),
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF4ECDC4),
+                            ),
+                          ),
+                        )
+                      else if (_errorMessage != null)
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40.h),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  size: 48.sp,
+                                  color: Colors.red[300],
+                                ),
+                                SizedBox(height: 16.h),
+                                Text(
+                                  _errorMessage!,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: Colors.red[700],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 16.h),
+                                ElevatedButton(
+                                  onPressed: _loadLessons,
+                                  child: Text('Tekrar Dene'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (_lessons.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40.h),
+                            child: Text(
+                              'Bu kursta henüz ders yok',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        ..._lessons.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final lesson = entry.value;
+                          return _buildLessonItem(lesson, index + 1);
+                        }),
 
                       SizedBox(height: 24.h),
 
-                      // Resume button
-                      _buildResumeButton(),
+                      // Resume button - only show when lessons are loaded
+                      if (_lessons.isNotEmpty) _buildResumeButton(),
                     ],
                   ),
                 ),
@@ -267,16 +354,8 @@ class _CourseDetailViewState extends State<CourseDetailView> {
             ),
           ),
 
-          // Bottom navigation
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 8.h,
-            child: CustomBottomNavBar(
-              currentIndex: 1,
-              isPremium: widget.isPremium,
-            ),
-          ),
+          // Bottom navigation - Remove Positioned since CustomBottomNavBar handles its own positioning
+          CustomBottomNavBar(currentIndex: 1, isPremium: widget.isPremium),
         ],
       ),
     );
@@ -325,17 +404,16 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     );
   }
 
-  Widget _buildLessonItem(Map<String, dynamic> lesson) {
-    final status = lesson['status'];
-    final isCompleted = status == 'completed';
-    final isInProgress = status == 'in_progress';
-    final isLocked = status == 'locked';
+  Widget _buildLessonItem(LessonModel lesson, int displayNumber) {
+    final isCompleted = lesson.userStatus == 'completed';
+    final isInProgress = lesson.userStatus == 'in_progress';
+    final isLocked = lesson.userStatus == 'locked';
 
     Color bgColor;
-    Color iconBgColor;
     Widget iconWidget;
 
     if (isCompleted) {
+      // Completed - Checkmark with green background
       bgColor = Color(0xFFF0F9FF);
       iconWidget = Container(
         width: 48.w,
@@ -345,15 +423,15 @@ class _CourseDetailViewState extends State<CourseDetailView> {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: SvgPicture.asset(
-            'assets/icons/tamamlandi.svg',
-            width: 24.w,
-            height: 24.w,
-            fit: BoxFit.contain,
+          child: Icon(
+            Icons.check_circle,
+            color: Color(0xFF4ECDC4),
+            size: 28.sp,
           ),
         ),
       );
-    } else if (isInProgress) {
+    } else if (isInProgress || (!isLocked && !isCompleted)) {
+      // In Progress or Available - Play button with turquoise background
       bgColor = Color(0xFFE8F9F7);
       iconWidget = Container(
         width: 48.w,
@@ -367,6 +445,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         ),
       );
     } else {
+      // Locked - Lock icon with gray background
       bgColor = Color(0xFFF9F9F9);
       iconWidget = Container(
         width: 48.w,
@@ -376,12 +455,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: SvgPicture.asset(
-            'assets/icons/tamamlanmadi.svg',
-            width: 20.w,
-            height: 20.w,
-            fit: BoxFit.contain,
-          ),
+          child: Icon(Icons.lock, color: Color(0xFF9CA3AF), size: 24.sp),
         ),
       );
     }
@@ -389,11 +463,14 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     return GestureDetector(
       onTap: () {
         if (!isLocked) {
+          print('🎯 Opening lesson: ${lesson.id}');
+
           Navigator.push(
             context,
             MaterialPageRoute(
+              fullscreenDialog: true,
               builder: (context) => LessonDetailView(
-                lessonData: lesson,
+                lessonId: lesson.id, // Use actual lesson ID from API
                 isPremium: widget.isPremium,
               ),
             ),
@@ -420,31 +497,62 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${lesson['number']}. ${lesson['title']}',
+                    '$displayNumber. ${lesson.title}',
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Montserrat',
-                      color: isLocked ? Color(0xFFBDBDBD) : Colors.black,
+                      color: Colors.black,
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    isCompleted
-                        ? '${lesson['duration']} Mins • Completed'
-                        : isInProgress
-                        ? '${lesson['duration']} Mins • In Progress'
-                        : '${lesson['duration']} Mins',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF999999),
+                  if (lesson.description.isNotEmpty) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      lesson.description,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Montserrat',
+                        color: Color(0xFF666666),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
+
+            SizedBox(width: 12.w),
+
+            // Duration or progress
+            if (isCompleted)
+              Icon(Icons.check_circle, color: Color(0xFF4ECDC4), size: 24.sp)
+            else if (isInProgress && lesson.userProgress != null)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Color(0xFF4ECDC4).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  '${lesson.userProgress}%',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat',
+                    color: Color(0xFF4ECDC4),
+                  ),
+                ),
+              )
+            else if (isLocked)
+              Icon(Icons.lock_outline, color: Color(0xFFBDBDBD), size: 20.sp)
+            else
+              Icon(
+                Icons.play_circle_outline,
+                color: Color(0xFF4ECDC4),
+                size: 24.sp,
+              ),
           ],
         ),
       ),
@@ -452,13 +560,32 @@ class _CourseDetailViewState extends State<CourseDetailView> {
   }
 
   Widget _buildResumeButton() {
+    // Safety check - should not be called with empty lessons
+    if (_lessons.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    // Find first in-progress or not-started lesson
+    late LessonModel resumeLesson;
+    try {
+      resumeLesson = _lessons.firstWhere(
+        (l) => l.userStatus == 'in_progress' || l.userStatus == 'not_started',
+      );
+    } catch (e) {
+      // If no in-progress or not-started lesson found, use first lesson
+      resumeLesson = _lessons.first;
+    }
+
+    final lessonNumber = _lessons.indexOf(resumeLesson) + 1;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
+            fullscreenDialog: true,
             builder: (context) => LessonDetailView(
-              lessonData: _lessons[1],
+              lessonId: resumeLesson.id,
               isPremium: widget.isPremium,
             ),
           ),
@@ -484,7 +611,9 @@ class _CourseDetailViewState extends State<CourseDetailView> {
             Icon(Icons.play_circle_filled, color: Colors.white, size: 24.sp),
             SizedBox(width: 10.w),
             Text(
-              'RESUME LESSON 2',
+              resumeLesson.userStatus == 'in_progress'
+                  ? 'RESUME LESSON $lessonNumber'
+                  : 'START LESSON $lessonNumber',
               style: TextStyle(
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w700,

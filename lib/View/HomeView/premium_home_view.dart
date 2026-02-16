@@ -532,6 +532,11 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                   physics: const ClampingScrollPhysics(),
                   padding: EdgeInsets.only(left: 16.w),
                   itemCount: dictionaryState.categories.length,
+                  // ✅ PERFORMANCE: Optimize rendering
+                  cacheExtent: 500, // Pre-render nearby items
+                  addAutomaticKeepAlives:
+                      true, // Keep items alive when scrolling
+                  addRepaintBoundaries: true, // Prevent unnecessary repaints
                   itemBuilder: (context, index) {
                     final category = dictionaryState.categories[index];
                     final isSelected = _selectedCategoryIndex == index;
@@ -706,6 +711,16 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                 width: 28.w,
                 height: 28.h,
                 fit: BoxFit.contain,
+                // ✅ CRITICAL FIX: Add errorBuilder to prevent crash
+                errorBuilder: (context, error, stackTrace) {
+                  print('❌ Failed to load icon: $iconPath - Error: $error');
+                  // Show fallback icon
+                  return Icon(
+                    Icons.image_not_supported,
+                    size: 28.w,
+                    color: MyColors.textSecondary,
+                  );
+                },
               ),
             ),
           ),

@@ -31,7 +31,7 @@ class TravelVocabularyView extends ConsumerStatefulWidget {
 class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   // State variables
   bool _isShowingWords =
-      false; // false = Phrases (Cümleler), true = Words (Kelimeler)
+      true; // ✅ DEFAULT: Words (Kelimeler) - changed from false to true
   String _selectedCategory = 'All Topics';
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {}; // Will be loaded from backend
@@ -55,8 +55,16 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   void initState() {
     super.initState();
 
-    // Get TTS service singleton and STOP any ongoing speech from previous widgets
+    // Get TTS service singleton and initialize it
     _ttsService = TtsService();
+    _ttsService
+        .init()
+        .then((_) {
+          print('✅ TTS initialized in travel_vocabulary_view');
+        })
+        .catchError((e) {
+          print('⚠️ Error initializing TTS: $e');
+        });
 
     // ✅ CRITICAL: Stop TTS immediately, non-blocking (fire and forget)
     // Don't use microtask or await - just stop and move on
@@ -107,12 +115,15 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       // ✅ CRITICAL: NO DELAYS! Load immediately
       if (widget.initialCategory != null) {
         print('🎯 Filtering by category: ${widget.initialCategory}');
+        // ✅ Load words for selected category (since _isShowingWords = true by default)
+        _loadWords(widget.initialCategory);
+      } else {
+        print('🔄 Generic vocab init - Loading All Topics');
+        // ✅ Load All Topics for both Words and Phrases
+        _loadWords(null); // null = All Topics for Words
         ref
             .read(travelVocabularyControllerProvider.notifier)
-            .filterByCategory(widget.initialCategory);
-      } else {
-        print('🔄 Generic vocab init');
-        ref.read(travelVocabularyControllerProvider.notifier).init();
+            .init(); // All Topics for Phrases
       }
 
       // ✅ CRITICAL: Load bookmarks in TRULY async way - fire and forget
@@ -198,26 +209,39 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     try {
       final repository = DictionaryRepository();
 
-      // Get category ID if specific category selected
-      String? categoryId;
-      if (categoryName != null && categoryName != 'All Topics') {
+      // ✅ All Topics seçiliyse tüm kategoriler için kelime yükle
+      if (categoryName == null || categoryName == 'All Topics') {
         final dictionaryState = ref.read(dictionaryControllerProvider);
-        final category = dictionaryState.categories.firstWhere(
-          (cat) => cat.name == categoryName,
-          orElse: () => dictionaryState.categories.first,
-        );
-        categoryId = category.id;
-      }
+        final allWords = <dynamic>[];
 
-      // If no specific category (All Topics), show message
-      if (categoryId == null) {
+        // Her kategori için kelime yükle
+        for (var category in dictionaryState.categories) {
+          final response = await repository.getWordsByCategory(
+            categoryId: category.id,
+            limit: 12, // Her kategoriden 12 kelime
+          );
+
+          if (response.success && response.data != null) {
+            allWords.addAll(response.data!);
+          }
+        }
+
         if (!mounted) return;
         setState(() {
-          _words = [];
+          _words = allWords;
           _isLoadingWords = false;
         });
         return;
       }
+
+      // Belirli bir kategori seçiliyse
+      String? categoryId;
+      final dictionaryState = ref.read(dictionaryControllerProvider);
+      final category = dictionaryState.categories.firstWhere(
+        (cat) => cat.name == categoryName,
+        orElse: () => dictionaryState.categories.first,
+      );
+      categoryId = category.id;
 
       final response = await repository.getWordsByCategory(
         categoryId: categoryId,
@@ -480,9 +504,17 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       } else {
         print('🔊 Using TTS for: $translation');
         try {
-          // TTS with mounted check
+          // TTS with mounted check - don't await to prevent UI blocking
           if (mounted) {
-            await _ttsService.speak(translation, languageCode: targetLanguage);
+            // Fire and forget - TTS will complete in background
+            _ttsService
+                .speak(translation, languageCode: targetLanguage)
+                .then((_) {
+                  print('✅ TTS completed for: $translation');
+                })
+                .catchError((e) {
+                  print('❌ TTS error in callback: $e');
+                });
           }
         } catch (e) {
           print('❌ TTS error: $e');
@@ -992,6 +1024,45 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       );
     }
 
+    // ✅ All Topics seçiliyse kategorilere göre gruplandır
+    if (_selectedCategory == 'All Topics') {
+      // Kelimeleri kategoriye göre grupla
+      final Map<String, List<dynamic>> groupedWords = {};
+      for (var word in _words) {
+        final categoryId = word.categoryId ?? 'unknown';
+        if (!groupedWords.containsKey(categoryId)) {
+          groupedWords[categoryId] = [];
+        }
+        groupedWords[categoryId]!.add(word);
+      }
+
+      // Kategori bilgilerini al
+      final dictionaryState = ref.read(dictionaryControllerProvider);
+
+      return ListView.builder(
+        padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
+        itemCount: groupedWords.length,
+        itemBuilder: (context, index) {
+          final categoryId = groupedWords.keys.elementAt(index);
+          final categoryWords = groupedWords[categoryId]!;
+
+          // Kategori bilgisini bul
+          final category = dictionaryState.categories.firstWhere(
+            (cat) => cat.id == categoryId,
+            orElse: () => dictionaryState.categories.first,
+          );
+
+          return _buildCategoryGroup(
+            categoryName: category.name,
+            iconPath: category.iconPath,
+            words: categoryWords,
+            isWords: true,
+          );
+        },
+      );
+    }
+
+    // ✅ Belirli kategori seçiliyse düz liste
     return ListView.builder(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
       itemCount: _words.length,
@@ -1142,6 +1213,94 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     );
   }
 
+  /// Category group widget - Kategorilere göre gruplandırılmış kelime/cümle gösterimi
+  Widget _buildCategoryGroup({
+    required String categoryName,
+    required String iconPath,
+    required List<dynamic> words,
+    required bool isWords,
+  }) {
+    // İlk 3 item göster, geri kalanını "Load More" ile
+    final displayCount = words.length > 3 ? 3 : words.length;
+    final hasMore = words.length > 3;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Kategori başlığı
+        Padding(
+          padding: EdgeInsets.only(top: 16.h, bottom: 12.h),
+          child: Row(
+            children: [
+              // Icon
+              Image.asset(
+                iconPath,
+                width: 24.w,
+                height: 24.h,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.category, size: 24.w);
+                },
+              ),
+              SizedBox(width: 12.w),
+              // Category name
+              Text(
+                categoryName,
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textPrimary,
+                ),
+              ),
+              Spacer(),
+              // Word count
+              Text(
+                '${words.length} ${isWords ? "Words" : "Phrases"}',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // İlk 3 item
+        ...words.take(displayCount).map((item) {
+          return isWords
+              ? _buildDynamicWordCard(item)
+              : _buildDynamicPhraseCard(item);
+        }).toList(),
+
+        // Load More butonu (varsa)
+        if (hasMore)
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
+            child: Center(
+              child: TextButton(
+                onPressed: () {
+                  // Kategoriye göre filtrele
+                  _onCategorySelected(categoryName);
+                },
+                child: Text(
+                  '+ Load More',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.lingolaPrimaryColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   /// Phrases content - TAMAMEN DİNAMİK! Backend'den geliyor 🔥
   Widget _buildPhrasesContent() {
     final vocabularyState = ref.watch(travelVocabularyControllerProvider);
@@ -1199,6 +1358,45 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       );
     }
 
+    // ✅ All Topics seçiliyse kategorilere göre gruplandır
+    if (_selectedCategory == 'All Topics') {
+      // Cümleleri kategoriye göre grupla
+      final Map<String, List<dynamic>> groupedPhrases = {};
+      for (var phrase in phrases) {
+        final category = phrase.category;
+        if (!groupedPhrases.containsKey(category)) {
+          groupedPhrases[category] = [];
+        }
+        groupedPhrases[category]!.add(phrase);
+      }
+
+      // Kategori bilgilerini al
+      final dictionaryState = ref.read(dictionaryControllerProvider);
+
+      return ListView.builder(
+        padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
+        itemCount: groupedPhrases.length,
+        itemBuilder: (context, index) {
+          final categoryName = groupedPhrases.keys.elementAt(index);
+          final categoryPhrases = groupedPhrases[categoryName]!;
+
+          // Kategori bilgisini bul
+          final category = dictionaryState.categories.firstWhere(
+            (cat) => cat.name == categoryName,
+            orElse: () => dictionaryState.categories.first,
+          );
+
+          return _buildCategoryGroup(
+            categoryName: category.name,
+            iconPath: category.iconPath,
+            words: categoryPhrases,
+            isWords: false,
+          );
+        },
+      );
+    }
+
+    // ✅ Belirli kategori seçiliyse düz liste
     return ListView.builder(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
       itemCount: phrases.length,

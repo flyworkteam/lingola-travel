@@ -8,9 +8,14 @@ class CourseRepository extends BaseRepository {
   final ApiClient _apiClient = ApiClient();
 
   /// Get all courses
-  Future<ApiResponse<List<CourseModel>>> getCourses() async {
+  Future<ApiResponse<List<CourseModel>>> getCourses({
+    String? targetLanguage,
+  }) async {
     try {
-      final response = await _apiClient.get('/courses');
+      final queryParams = targetLanguage != null
+          ? '?language=$targetLanguage'
+          : '';
+      final response = await _apiClient.get('/courses$queryParams');
 
       if (response.success && response.data != null) {
         final List<dynamic> coursesJson = response.data['courses'] ?? [];
@@ -28,7 +33,7 @@ class CourseRepository extends BaseRepository {
   }
 
   /// Get course by ID
-  Future<ApiResponse<CourseModel>> getCourseById(int courseId) async {
+  Future<ApiResponse<CourseModel>> getCourseById(String courseId) async {
     try {
       final response = await _apiClient.get('/courses/$courseId');
 
@@ -48,22 +53,33 @@ class CourseRepository extends BaseRepository {
 
   /// Get lessons for a specific course
   Future<ApiResponse<List<LessonModel>>> getLessonsByCourse(
-    int courseId,
+    String courseId,
   ) async {
     try {
+      print('📡 CourseRepository.getLessonsByCourse - courseId: $courseId');
       final response = await _apiClient.get('/courses/$courseId/lessons');
+
+      print('📡 Raw response - success: ${response.success}');
+      print('📡 Raw response - data: ${response.data}');
+      print('📡 Raw response - error: ${response.error}');
 
       if (response.success && response.data != null) {
         final List<dynamic> lessonsJson = response.data['lessons'] ?? [];
+        print('📡 Lessons JSON count: ${lessonsJson.length}');
+
         final lessons = lessonsJson
             .map((json) => LessonModel.fromJson(json as Map<String, dynamic>))
             .toList();
 
+        print('📡 Parsed lessons count: ${lessons.length}');
         return ApiResponse(success: true, data: lessons);
       }
 
+      print('❌ Response not successful or data is null');
       return ApiResponse(success: false, error: response.error);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('💥 Exception in getLessonsByCourse: $e');
+      print('Stack trace: $stackTrace');
       return handleError(e);
     }
   }

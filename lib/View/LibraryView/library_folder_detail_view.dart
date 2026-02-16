@@ -49,7 +49,14 @@ class _LibraryFolderDetailViewState
 
     // Initialize TTS service
     _ttsService = TtsService();
-    _ttsService.init();
+    _ttsService
+        .init()
+        .then((_) {
+          print('✅ TTS initialized in library_folder_detail_view');
+        })
+        .catchError((e) {
+          print('⚠️ Error initializing TTS: $e');
+        });
 
     // Load folder items from backend
     Future.microtask(() {
@@ -230,7 +237,14 @@ class _LibraryFolderDetailViewState
         _progressController.forward();
 
         // Speak the target language word/phrase with correct language
-        _ttsService.speak(targetLanguageText, languageCode: languageCode);
+        _ttsService
+            .speak(targetLanguageText, languageCode: languageCode)
+            .then((_) {
+              print('✅ TTS completed for: $targetLanguageText');
+            })
+            .catchError((e) {
+              print('❌ TTS error in callback: $e');
+            });
       }
     });
 

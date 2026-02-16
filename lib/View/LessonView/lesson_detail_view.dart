@@ -4,15 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import 'lesson_result_view.dart';
+import 'package:lingola_travel/Services/speech_recognition_service.dart';
+import 'package:lingola_travel/Services/tts_service.dart';
+import 'package:lingola_travel/Repositories/lesson_repository.dart';
+import 'package:lingola_travel/Models/course_model.dart';
 
 class LessonDetailView extends StatefulWidget {
-  final Map<String, dynamic> lessonData;
+  final String lessonId;
   final bool isPremium;
 
   const LessonDetailView({
     super.key,
-    required this.lessonData,
+    required this.lessonId,
     this.isPremium = false,
   });
 
@@ -20,7 +23,20 @@ class LessonDetailView extends StatefulWidget {
   State<LessonDetailView> createState() => _LessonDetailViewState();
 }
 
-class _LessonDetailViewState extends State<LessonDetailView> {
+class _LessonDetailViewState extends State<LessonDetailView>
+    with TickerProviderStateMixin {
+  final SpeechRecognitionService _speechService = SpeechRecognitionService();
+  final TtsService _ttsService = TtsService();
+  final LessonRepository _lessonRepository = LessonRepository();
+
+  late AnimationController _listenButtonController;
+  late Animation<double> _listenButtonAnimation;
+
+  // Lesson data from backend
+  LessonModel? _lesson;
+  bool _isLoading = true;
+  String? _errorMessage;
+
   int currentStep = 3;
   int totalSteps = 10;
   bool isBookmarked = false; // Bookmark state
@@ -28,95 +44,181 @@ class _LessonDetailViewState extends State<LessonDetailView> {
   bool isPlaying = false; // Audio playing state
   String recordedText = ''; // Recorded text from speech recognition
   bool showResult = false; // Show result screen
+  double similarityScore = 0.0; // Similarity score from speech comparison
   final GlobalKey _bookmarkButtonKey = GlobalKey(); // Key for bookmark button
 
-  // The correct sentence to match
-  final String targetSentence =
-      'I would like to check in for my flight to London';
+  // Recording timer
+  Timer? _recordingTimer;
+  int _recordingSeconds = 0;
 
-  // Mock vocabulary data
-  final List<Map<String, dynamic>> _vocabulary = [
-    {
-      'iconPath': 'assets/icons/checkin.svg',
-      'iconColor': Color(0xFF4ECDC4),
-      'term': 'Check-in',
-      'definition':
-          'The process of reporting your arrival at an airport or hotel.',
-    },
-    {
-      'iconPath': 'assets/icons/boardingpass.svg',
-      'iconColor': Color(0xFF4ECDC4),
-      'term': 'Boarding Pass',
-      'definition':
-          'A document provided by an airline during check-in, giving a passenger permission to board.',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize animation controller for listen button border
+    _listenButtonController = AnimationController(
+      duration: Duration(milliseconds: 3000), // 3 seconds for sentence
+      vsync: this,
+    );
+
+    _listenButtonAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _listenButtonController, curve: Curves.linear),
+    );
+
+    _initializeServices();
+    _loadLessonData();
+  }
+
+  /// Load lesson data from backend
+  Future<void> _loadLessonData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response = await _lessonRepository.getLessonById(widget.lessonId);
+
+      if (response.success && response.data != null) {
+        setState(() {
+          _lesson = response.data;
+          totalSteps = response.data!.totalSteps;
+          _isLoading = false;
+        });
+        print('✅ Lesson loaded: ${_lesson?.title}');
+        print('📝 Example sentence: ${_lesson?.exampleSentence}');
+        print('🔑 Key vocabulary: ${_lesson?.keyVocabularyTerm}');
+        print('📚 Vocabulary count: ${_lesson?.vocabulary?.length ?? 0}');
+      } else {
+        setState(() {
+          _errorMessage = (response.error ?? 'Ders yüklenemedi').toString();
+          _isLoading = false;
+        });
+        print('❌ Lesson load failed: ${response.error}');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Bir hata oluştu: $e';
+        _isLoading = false;
+      });
+      print('❌ Error loading lesson: $e');
+    }
+  }
+
+  /// Initialize TTS and Speech Recognition services
+  Future<void> _initializeServices() async {
+    try {
+      await _ttsService.init();
+      await _speechService.initialize();
+      print('✅ TTS and Speech Recognition initialized');
+    } catch (e) {
+      print('❌ Error initializing services: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _listenButtonController.dispose();
+    _recordingTimer?.cancel();
+    _ttsService.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading indicator
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: MyColors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF4ECDC4)),
+        ),
+      );
+    }
+
+    // Show error message
+    if (_errorMessage != null || _lesson == null) {
+      return Scaffold(
+        backgroundColor: MyColors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48.sp, color: MyColors.grey400),
+              SizedBox(height: 16.h),
+              Text(
+                _errorMessage ?? 'Ders bulunamadı',
+                style: TextStyle(fontSize: 16.sp, color: MyColors.grey600),
+              ),
+              SizedBox(height: 24.h),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Geri Dön'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
         child: Stack(
           children: [
-            // Main content
-            Column(
-              children: [
-                // Top bar with progress
-                _buildTopBar(),
+            // Main scrollable content with bottom buttons
+            SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top bar with progress
+                  _buildTopBar(),
 
-                // Scrollable content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                        // Unit title
-                        _buildUnitTitle(),
+                  // Unit title
+                  _buildUnitTitle(),
 
-                        SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                        // Lesson image
-                        _buildLessonImage(),
+                  // Lesson image
+                  _buildLessonImage(),
 
-                        SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                        // Listen & Repeat badge
-                        _buildListenRepeatBadge(),
+                  // Listen & Repeat badge
+                  _buildListenRepeatBadge(),
 
-                        SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                        // Sentence with highlighted word
-                        _buildSentence(),
+                  // Sentence with highlighted word
+                  _buildSentence(),
 
-                        SizedBox(height: 32.h),
+                  SizedBox(height: 32.h),
 
-                        // Audio controls
-                        _buildAudioControls(),
+                  // Audio controls
+                  _buildAudioControls(),
 
-                        // Recording indicator (shown when recording)
-                        if (isRecording) ...[
-                          SizedBox(height: 16.h),
-                          _buildRecordingIndicator(),
-                        ],
+                  // Recording indicator (shown when recording)
+                  if (isRecording) ...[
+                    SizedBox(height: 16.h),
+                    _buildRecordingIndicator(),
+                  ],
 
-                        SizedBox(height: 40.h),
+                  SizedBox(height: 40.h),
 
-                        // Key Vocabulary section
-                        _buildVocabularySection(),
+                  // Key Vocabulary section
+                  _buildVocabularySection(),
 
-                        SizedBox(height: 100.h), // Space for bottom buttons
-                      ],
-                    ),
-                  ),
-                ),
+                  SizedBox(height: 24.h),
 
-                // Bottom navigation buttons
-                _buildBottomButtons(),
-              ],
+                  // Bottom navigation buttons (inside scroll)
+                  _buildBottomButtons(),
+
+                  SizedBox(height: 32.h), // Extra bottom padding
+                ],
+              ),
             ),
 
             // Result overlay with blur effect
@@ -129,8 +231,8 @@ class _LessonDetailViewState extends State<LessonDetailView> {
 
   /// Top bar with close button and progress
   Widget _buildTopBar() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Row(
         children: [
           // Close button
@@ -188,6 +290,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
           SizedBox(width: 16.w),
 
           // Progress text
+          // Progress text
           Text(
             '$currentStep/$totalSteps',
             style: TextStyle(
@@ -205,7 +308,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
   /// Unit title
   Widget _buildUnitTitle() {
     return Text(
-      'UNIT 1: At the Airport',
+      _lesson?.title.toUpperCase() ?? 'LOADING...',
       style: TextStyle(
         fontSize: 16.sp,
         fontWeight: FontWeight.w700,
@@ -269,6 +372,28 @@ class _LessonDetailViewState extends State<LessonDetailView> {
 
   /// Sentence with highlighted word
   Widget _buildSentence() {
+    final sentence = _lesson?.exampleSentence ?? '';
+    final keyTerm = _lesson?.keyVocabularyTerm ?? '';
+
+    if (sentence.isEmpty) {
+      return Center(
+        child: Text(
+          'Cümle yükleniyor...',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Montserrat',
+            color: MyColors.textSecondary,
+          ),
+        ),
+      );
+    }
+
+    // Find the key vocabulary term in the sentence (case insensitive)
+    final lowerSentence = sentence.toLowerCase();
+    final lowerKeyTerm = keyTerm.toLowerCase();
+    final startIndex = lowerSentence.indexOf(lowerKeyTerm);
+
     return Center(
       child: RichText(
         textAlign: TextAlign.center,
@@ -280,20 +405,34 @@ class _LessonDetailViewState extends State<LessonDetailView> {
             color: MyColors.textPrimary,
             height: 1.4,
           ),
-          children: [
-            TextSpan(text: '"I would like to '),
-            TextSpan(
-              text: 'check in',
-              style: TextStyle(
-                color: Color(0xFF4ECDC4),
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline,
-                decorationColor: Color(0xFF4ECDC4),
-                decorationThickness: 2,
-              ),
-            ),
-            TextSpan(text: ' for my flight to London."'),
-          ],
+          children: startIndex >= 0 && keyTerm.isNotEmpty
+              ? [
+                  // Text before the key term
+                  if (startIndex > 0)
+                    TextSpan(text: '"${sentence.substring(0, startIndex)}'),
+                  // Highlighted key term
+                  TextSpan(
+                    text: sentence.substring(
+                      startIndex,
+                      startIndex + keyTerm.length,
+                    ),
+                    style: TextStyle(
+                      color: Color(0xFF4ECDC4),
+                      fontWeight: FontWeight.w700,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Color(0xFF4ECDC4),
+                      decorationThickness: 2,
+                    ),
+                  ),
+                  // Text after the key term
+                  TextSpan(
+                    text: '${sentence.substring(startIndex + keyTerm.length)}"',
+                  ),
+                ]
+              : [
+                  // No highlighting if key term not found
+                  TextSpan(text: '"$sentence"'),
+                ],
         ),
       ),
     );
@@ -304,18 +443,60 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Speaker button
-        _buildAudioButton(
-          iconPath: 'assets/icons/volume.svg',
-          size: 56.w,
-          iconSize: 22.sp,
-          color: MyColors.grey200,
-          iconColor: MyColors.textSecondary,
-          onTap: () {
-            setState(() {
-              isPlaying = !isPlaying;
-            });
-            // TODO: Play audio
+        // Speaker button with progress animation
+        AnimatedBuilder(
+          animation: _listenButtonAnimation,
+          builder: (context, child) {
+            return _buildAudioButton(
+              iconPath: 'assets/icons/volume.svg',
+              size: 56.w,
+              iconSize: 22.sp,
+              color: MyColors.grey200,
+              iconColor: MyColors.textSecondary,
+              borderProgress: isPlaying ? _listenButtonAnimation.value : 0.0,
+              onTap: () async {
+                if (isPlaying) {
+                  // Stop TTS
+                  await _ttsService.stop();
+                  _listenButtonController.stop();
+                  _listenButtonController.reset();
+                  setState(() {
+                    isPlaying = false;
+                  });
+                } else {
+                  final sentence = _lesson?.exampleSentence ?? '';
+                  if (sentence.isEmpty) {
+                    print('❌ No sentence to speak');
+                    return;
+                  }
+
+                  // Start TTS and animation
+                  setState(() {
+                    isPlaying = true;
+                  });
+
+                  // Start border animation
+                  _listenButtonController.reset();
+                  _listenButtonController.forward();
+
+                  try {
+                    await _ttsService.speak(sentence);
+                    // Wait a bit to ensure completion
+                    await Future.delayed(Duration(milliseconds: 500));
+                  } catch (e) {
+                    print('❌ TTS error: $e');
+                  } finally {
+                    if (mounted) {
+                      _listenButtonController.stop();
+                      _listenButtonController.reset();
+                      setState(() {
+                        isPlaying = false;
+                      });
+                    }
+                  }
+                }
+              },
+            );
           },
         ),
 
@@ -330,14 +511,11 @@ class _LessonDetailViewState extends State<LessonDetailView> {
           iconColor: MyColors.white,
           onTap: () {
             if (isRecording) {
-              // Stop recording and simulate speech recognition
+              // Stop recording and check
               _stopRecordingAndCheck();
             } else {
               // Start recording
-              setState(() {
-                isRecording = true;
-                recordedText = '';
-              });
+              _startRecording();
             }
           },
         ),
@@ -370,11 +548,11 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     required Color color,
     required Color iconColor,
     required VoidCallback onTap,
+    double borderProgress = 0.0,
   }) {
     final bool isMicButton = size == 72.w;
     final bool showPulse = isMicButton && isRecording;
-    final bool isSpeakerButton = iconPath.contains('volume.svg');
-    final bool showProgress = isSpeakerButton && isPlaying;
+    final bool showBorderProgress = borderProgress > 0.0;
 
     return GestureDetector(
       onTap: onTap,
@@ -395,11 +573,15 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               ),
             ),
 
-          // Progress arc for speaker button
-          if (showProgress)
+          // Progress arc for speaker button (green border fill)
+          if (showBorderProgress)
             CustomPaint(
-              size: Size(size + 10.w, size + 10.w),
-              painter: AudioProgressPainter(),
+              size: Size(size + 12.w, size + 12.w),
+              painter: CircularProgressPainter(
+                progress: borderProgress,
+                color: Color(0xFF4ECDC4),
+                strokeWidth: 4,
+              ),
             ),
 
           // Main button
@@ -436,6 +618,32 @@ class _LessonDetailViewState extends State<LessonDetailView> {
 
   /// Vocabulary section
   Widget _buildVocabularySection() {
+    final vocabulary = _lesson?.vocabulary ?? [];
+
+    if (vocabulary.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Key Vocabulary',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Montserrat',
+              color: MyColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Center(
+            child: Text(
+              'Kelime bulunamadı',
+              style: TextStyle(fontSize: 14.sp, color: MyColors.textSecondary),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -451,13 +659,25 @@ class _LessonDetailViewState extends State<LessonDetailView> {
 
         SizedBox(height: 16.h),
 
-        ..._vocabulary.map((vocab) => _buildVocabularyCard(vocab)).toList(),
+        ...vocabulary.map((vocab) => _buildVocabularyCard(vocab)).toList(),
       ],
     );
   }
 
   /// Single vocabulary card
-  Widget _buildVocabularyCard(Map<String, dynamic> vocab) {
+  Widget _buildVocabularyCard(LessonVocabularyModel vocab) {
+    // Parse icon color from string (e.g., "#4ECDC4")
+    Color iconColor = Color(0xFF4ECDC4);
+    if (vocab.iconColor != null && vocab.iconColor!.startsWith('#')) {
+      try {
+        iconColor = Color(
+          int.parse(vocab.iconColor!.substring(1), radix: 16) + 0xFF000000,
+        );
+      } catch (e) {
+        // Use default color if parsing fails
+      }
+    }
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
@@ -473,29 +693,12 @@ class _LessonDetailViewState extends State<LessonDetailView> {
             width: 48.w,
             height: 48.w,
             decoration: BoxDecoration(
-              color: vocab['iconColor'].withOpacity(0.1),
+              color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
-            child: (vocab['iconPath'] != null)
-                ? Center(
-                    child: SvgPicture.asset(
-                      vocab['iconPath'],
-                      width: 20.w,
-                      height: 20.w,
-                      colorFilter: ColorFilter.mode(
-                        vocab['iconColor'] ?? Color(0xFF4ECDC4),
-                        BlendMode.srcIn,
-                      ),
-                      fit: BoxFit.contain,
-                    ),
-                  )
-                : Center(
-                    child: Icon(
-                      vocab['icon'] ?? Icons.help_outline,
-                      size: 20.sp,
-                      color: vocab['iconColor'] ?? Color(0xFF4ECDC4),
-                    ),
-                  ),
+            child: Center(
+              child: _buildVocabularyIcon(vocab.iconPath, iconColor),
+            ),
           ),
 
           SizedBox(width: 12.w),
@@ -506,7 +709,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  vocab['term'],
+                  vocab.term,
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -516,7 +719,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  vocab['definition'],
+                  vocab.definition,
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w400,
@@ -533,145 +736,185 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     );
   }
 
+  /// Build vocabulary icon with error handling
+  Widget _buildVocabularyIcon(String? iconPath, Color iconColor) {
+    // If no icon path, show default icon
+    if (iconPath == null || iconPath.isEmpty) {
+      return Icon(Icons.translate, size: 20.sp, color: iconColor);
+    }
+
+    // Return icon builder that handles errors gracefully
+    return Builder(
+      builder: (context) {
+        try {
+          // Check if asset exists before loading
+          return SvgPicture.asset(
+            iconPath,
+            width: 20.w,
+            height: 20.w,
+            colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+            fit: BoxFit.contain,
+            placeholderBuilder: (context) =>
+                Icon(Icons.translate, size: 20.sp, color: iconColor),
+          );
+        } catch (e) {
+          print('⚠️ SVG error for $iconPath: $e');
+          // Return safe fallback icon
+          return Icon(Icons.translate, size: 20.sp, color: iconColor);
+        }
+      },
+    );
+  }
+
   /// Bottom navigation buttons
   Widget _buildBottomButtons() {
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: MyColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Previous button (shorter)
-          Expanded(
-            flex: 2,
-            child: GestureDetector(
-              onTap: () {
-                print('Previous lesson');
-                // TODO: Navigate to previous
-              },
-              child: Container(
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: MyColors.grey200,
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Arrow with glassmorphism on the far left
-                    Positioned(
-                      left: 8.w,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.r),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                          child: Container(
-                            padding: EdgeInsets.all(6.w),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back,
-                              size: 18.sp,
-                              color: MyColors.textSecondary,
-                            ),
+    return Row(
+      children: [
+        // Previous button (shorter)
+        Expanded(
+          flex: 2,
+          child: GestureDetector(
+            onTap: () {
+              // Navigate back to previous screen (course detail)
+              Navigator.pop(context);
+            },
+            child: Container(
+              height: 48.h, // 56.h'den 48.h'ye küçültüldü
+              decoration: BoxDecoration(
+                color: MyColors.grey200,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Arrow with glassmorphism on the far left
+                  Positioned(
+                    left: 8.w,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Icon(
+                            Icons.arrow_back,
+                            size: 16.sp, // 18.sp'den 16.sp'ye küçültüldü
+                            color: MyColors.textSecondary,
                           ),
                         ),
                       ),
                     ),
-                    Text(
-                      'Previous',
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.textSecondary,
-                      ),
+                  ),
+                  Text(
+                    'Previous',
+                    style: TextStyle(
+                      fontSize: 14.sp, // 15.sp'den 14.sp'ye küçültüldü
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: MyColors.textSecondary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
+        ),
 
-          SizedBox(width: 12.w),
+        SizedBox(width: 12.w),
 
-          // Continue button (longer)
-          Expanded(
-            flex: 3,
-            child: GestureDetector(
-              onTap: () {
-                print('Next lesson');
-                // TODO: Navigate to next
-              },
-              child: Container(
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: Color(0xFF4ECDC4),
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0xFF4ECDC4).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
+        // Continue button (longer)
+        Expanded(
+          flex: 3,
+          child: GestureDetector(
+            onTap: () {
+              // Check if lesson is completed successfully
+              if (currentStep < totalSteps) {
+                // Move to next step within lesson
+                setState(() {
+                  currentStep++;
+                });
+                print('✅ Moved to step $currentStep/$totalSteps');
+              } else {
+                // Lesson completed, go back to course detail
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('🎉 Lesson completed!'),
+                    duration: Duration(seconds: 2),
+                    backgroundColor: Color(0xFF4ECDC4),
+                  ),
+                );
+                Future.delayed(Duration(seconds: 2), () {
+                  Navigator.pop(context);
+                });
+              }
+            },
+            child: Container(
+              height: 48.h, // 56.h'den 48.h'ye küçültüldü
+              decoration: BoxDecoration(
+                color: Color(0xFF4ECDC4),
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF4ECDC4).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontSize: 15.sp, // 16.sp'den 15.sp'ye küçültüldü
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: MyColors.white,
                     ),
-                  ],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.white,
-                      ),
-                    ),
-                    // Arrow with glassmorphism on the far right
-                    Positioned(
-                      right: 8.w,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.r),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                          child: Container(
-                            padding: EdgeInsets.all(6.w),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: Icon(
-                              Icons.arrow_forward,
-                              size: 18.sp,
-                              color: MyColors.white,
-                            ),
+                  ),
+                  // Arrow with glassmorphism on the far right
+                  Positioned(
+                    right: 8.w,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward,
+                            size: 16.sp, // 18.sp'den 16.sp'ye küçültüldü
+                            color: MyColors.white,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   /// Recording indicator with waveform
   Widget _buildRecordingIndicator() {
+    // Format seconds as MM:SS
+    final minutes = _recordingSeconds ~/ 60;
+    final seconds = _recordingSeconds % 60;
+    final timeString = '$minutes:${seconds.toString().padLeft(2, '0')}';
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       decoration: BoxDecoration(
@@ -682,7 +925,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
         children: [
           // Timer
           Text(
-            '0:02',
+            timeString,
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
@@ -701,9 +944,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
           // Stop button
           GestureDetector(
             onTap: () {
-              setState(() {
-                isRecording = false;
-              });
+              _stopRecordingAndCheck();
             },
             child: Container(
               width: 40.w,
@@ -832,61 +1073,119 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     print('Saved as $type');
   }
 
+  /// Start speech recognition
+  void _startRecording() async {
+    setState(() {
+      isRecording = true;
+      recordedText = '';
+      similarityScore = 0.0;
+      _recordingSeconds = 0;
+    });
+
+    // Start recording timer
+    _recordingTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (mounted && isRecording) {
+        setState(() {
+          _recordingSeconds++;
+        });
+      }
+    });
+
+    // Get language code from lesson
+    final languageCode = _lesson?.targetLanguage ?? 'en';
+
+    try {
+      await _speechService.startListening(
+        languageCode: languageCode,
+        onResult: (recognizedText) {
+          // Final result
+          print('🎤 Recognized: $recognizedText');
+          setState(() {
+            recordedText = recognizedText;
+          });
+          _stopRecordingAndCheck();
+        },
+        onPartialResult: (partialText) {
+          // Partial recognition (optional)
+          print('🎤 Partial: $partialText');
+        },
+      );
+    } catch (e) {
+      print('❌ Speech recognition error: $e');
+      _recordingTimer?.cancel();
+      setState(() {
+        isRecording = false;
+        _recordingSeconds = 0;
+      });
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Mikrofon hatası. Lütfen tekrar deneyin.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   /// Stop recording and check text match
-  void _stopRecordingAndCheck() {
+  void _stopRecordingAndCheck() async {
+    _recordingTimer?.cancel();
+
     setState(() {
       isRecording = false;
     });
 
-    // Simulate speech recognition with delay
-    Future.delayed(Duration(milliseconds: 500), () {
-      // TODO: Replace with actual speech recognition
-      // For now, simulate random success/failure
-      final random = DateTime.now().millisecond % 2 == 0;
+    await _speechService.stopListening();
 
+    // Check if we have recorded text
+    if (recordedText.isEmpty) {
+      print('⚠️ No text was recognized');
       setState(() {
-        // Simulate recognized text
-        recordedText = random
-            ? 'I would like to check in for my flight to London'
-            : 'I would like to checking for my flight to London';
-        showResult = true;
+        _recordingSeconds = 0;
       });
+      return;
+    }
 
-      // Auto-hide result after 2 seconds
-      final isSuccess = _checkTextMatch(
-        random
-            ? 'I would like to check in for my flight to London'
-            : 'I would like to checking for my flight to London',
-        targetSentence,
-      );
+    // Get target sentence from lesson
+    final targetSentence = _lesson?.exampleSentence ?? '';
+    if (targetSentence.isEmpty) {
+      print('⚠️ No target sentence available');
+      return;
+    }
 
-      Future.delayed(Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            showResult = false;
-            recordedText = '';
-          });
-        }
-      });
+    // Calculate similarity score
+    similarityScore = _speechService.compareTexts(recordedText, targetSentence);
+    print('📊 Similarity score: $similarityScore');
+    print('🎯 Target: $targetSentence');
+    print('🗣️ Spoken: $recordedText');
+
+    // Show result
+    setState(() {
+      showResult = true;
+    });
+
+    // Auto-hide result after 2.5 seconds
+    Future.delayed(Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          showResult = false;
+          recordedText = '';
+          _recordingSeconds = 0;
+        });
+      }
     });
   }
 
-  /// Check if recorded text matches target sentence
-  bool _checkTextMatch(String recorded, String target) {
-    // Normalize both texts: lowercase, remove punctuation
-    String normalize(String text) {
-      return text.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').trim();
-    }
-
-    final normalizedRecorded = normalize(recorded);
-    final normalizedTarget = normalize(target);
-
-    return normalizedRecorded == normalizedTarget;
+  /// Check if speech is successful (similarity >= 0.8)
+  bool _isSuccessful() {
+    return similarityScore >= 0.8;
   }
 
   /// Build result overlay with blur effect
   Widget _buildResultOverlay() {
-    final isSuccess = _checkTextMatch(recordedText, targetSentence);
+    final isSuccess = _isSuccessful();
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -912,6 +1211,16 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                   color: isSuccess ? Color(0xFF2EC4B6) : Color(0xFFF44336),
                 ),
               ),
+              SizedBox(height: 8.h),
+              Text(
+                'Score: ${(similarityScore * 100).toInt()}%',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Montserrat',
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
         ),
@@ -920,29 +1229,42 @@ class _LessonDetailViewState extends State<LessonDetailView> {
   }
 }
 
-class AudioProgressPainter extends CustomPainter {
+/// Custom painter for circular progress indicator around listen button
+class CircularProgressPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
+
+  CircularProgressPainter({
+    required this.progress,
+    required this.color,
+    this.strokeWidth = 4,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Color(0xFF4ECDC4)
+      ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
+      ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
 
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - 3) / 2;
+    final radius = (size.width - strokeWidth) / 2;
 
-    // Draw arc starting from top (-pi/2) and going clockwise
-    // Drawing about 240 degrees (4*pi/3) to simulate progress
+    // Draw arc starting from top (-pi/2) and going clockwise based on progress
+    // progress = 0.0 means no arc, progress = 1.0 means full circle
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      -1.57, // Start at top (-pi/2)
-      4.18, // Sweep angle (approx 240 degrees)
+      -1.5708, // Start at top (-pi/2)
+      6.2832 * progress, // Sweep angle based on progress (2*pi * progress)
       false,
       paint,
     );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(CircularProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
 }
