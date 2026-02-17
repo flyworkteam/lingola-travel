@@ -38,26 +38,36 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] ?? '',
-      email: json['email'],
-      name: json['name'],
-      photoUrl: json['photoUrl'],
-      phoneNumber: json['phoneNumber'],
-      isAnonymous: json['isAnonymous'] ?? false,
-      isPremium: json['isPremium'] ?? false,
-      premiumExpiresAt: json['premiumExpiresAt'] != null
-          ? DateTime.parse(json['premiumExpiresAt'])
+      id: json['id']?.toString() ?? '',
+      email: json['email']?.toString(),
+      name: json['name']?.toString(),
+      photoUrl: json['photo_url']?.toString(), // Backend snake_case
+      phoneNumber: json['phone_number']?.toString(), // Backend snake_case
+      isAnonymous:
+          (json['is_anonymous'] == 1 ||
+          json['is_anonymous'] == true), // Backend may send 1 or true
+      isPremium:
+          (json['is_premium'] == 1 ||
+          json['is_premium'] == true), // Backend may send 1 or true
+      premiumExpiresAt: json['premium_expires_at'] != null
+          ? DateTime.tryParse(json['premium_expires_at'].toString())
           : null,
-      trialStartedAt: json['trialStartedAt'] != null
-          ? DateTime.parse(json['trialStartedAt'])
+      trialStartedAt: json['trial_started_at'] != null
+          ? DateTime.tryParse(json['trial_started_at'].toString())
           : null,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
-      targetLanguage: json['target_language'],
-      profession: json['profession'],
-      englishLevel: json['english_level'],
-      dailyGoal: json['daily_goal'],
-      dailyGoalMinutes: json['daily_goal_minutes'],
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(), // Backend snake_case
+      updatedAt:
+          DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+          DateTime.now(), // Backend snake_case
+      targetLanguage: json['target_language']?.toString(),
+      profession: json['profession']?.toString(),
+      englishLevel: json['english_level']?.toString(),
+      dailyGoal: json['daily_goal']?.toString(),
+      dailyGoalMinutes: json['daily_goal_minutes'] != null
+          ? int.tryParse(json['daily_goal_minutes'].toString())
+          : null,
     );
   }
 

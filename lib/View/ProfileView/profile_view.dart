@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Added for SVG icons
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import '../../Repositories/profile_repository.dart';
 import 'profile_settings_view.dart';
 import 'share_friend_view.dart';
 import 'faq_view.dart';
@@ -20,6 +21,31 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   bool _notificationsEnabled = true;
+  String _userName = 'Guest';
+  final ProfileRepository _profileRepository = ProfileRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  /// Load user profile from backend
+  Future<void> _loadUserProfile() async {
+    try {
+      final response = await _profileRepository.getProfile();
+      if (response.success && response.data != null) {
+        final userData = response.data['user'];
+        if (mounted && userData['name'] != null) {
+          setState(() {
+            _userName = userData['name'];
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading profile: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +273,7 @@ class _ProfileViewState extends State<ProfileView> {
 
           // Name
           Text(
-            'Alex Johnson',
+            _userName,
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.w700,

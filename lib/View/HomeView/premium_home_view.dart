@@ -7,6 +7,7 @@ import 'package:lingola_travel/Models/language.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Riverpod/Controllers/home_view_controller.dart';
 import '../../Riverpod/Controllers/dictionary_controller.dart';
+import '../../Repositories/profile_repository.dart';
 import '../NotificationsView/notifications_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../CourseView/course_view.dart';
@@ -26,11 +27,14 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
   Map<int, double> _swipeProgressMap =
       {}; // Track swipe progress for each feature card
   bool _isNavigating = false; // Prevent double navigation
+  String _userName = 'Guest';
+  final ProfileRepository _profileRepository = ProfileRepository();
 
   @override
   void initState() {
     super.initState();
     print('🏠 PremiumHomeView initState called');
+    _loadUserProfile();
 
     // ONLY load if NOT already loaded - prevents re-initialization on navigation back
     Future.microtask(() async {
@@ -75,6 +79,23 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         print('❌ Premium home init error: $e');
       }
     });
+  }
+
+  /// Load user profile from backend
+  Future<void> _loadUserProfile() async {
+    try {
+      final response = await _profileRepository.getProfile();
+      if (response.success && response.data != null) {
+        final userData = response.data['user'];
+        if (mounted && userData['name'] != null) {
+          setState(() {
+            _userName = userData['name'];
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading profile: $e');
+    }
   }
 
   @override
@@ -416,7 +437,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
         children: [
           // Greeting text
           Text(
-            'Hey, Alex 👋',
+            'Hey, $_userName 👋',
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w400,

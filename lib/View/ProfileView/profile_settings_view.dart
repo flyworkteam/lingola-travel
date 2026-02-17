@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../Models/language.dart';
+import '../../Repositories/profile_repository.dart';
 
 class ProfileSettingsView extends StatefulWidget {
   const ProfileSettingsView({super.key});
@@ -12,17 +13,81 @@ class ProfileSettingsView extends StatefulWidget {
 }
 
 class _ProfileSettingsViewState extends State<ProfileSettingsView> {
+  final ProfileRepository _profileRepository = ProfileRepository();
+  bool _isSaving = false;
+  bool _isLoading = true;
+
   String _selectedGender = 'Male';
   Language _selectedLanguage = AppLanguages.all.first; // English
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Alex Johnson',
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: 'alex.johnson@icloud.com',
-  );
-  final TextEditingController _ageController = TextEditingController(
-    text: '28',
-  );
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  /// Load user profile from backend
+  Future<void> _loadProfile() async {
+    try {
+      final response = await _profileRepository.getProfile();
+
+      if (response.success && response.data != null) {
+        final userData = response.data['user'];
+
+        // Set name
+        if (userData['name'] != null) {
+          _nameController.text = userData['name'];
+        }
+
+        // Set email
+        if (userData['email'] != null) {
+          _emailController.text = userData['email'];
+        }
+
+        // Set age (if available in backend)
+        if (userData['age'] != null) {
+          _ageController.text = userData['age'].toString();
+        }
+
+        // Set gender (if available in backend)
+        if (userData['gender'] != null) {
+          _selectedGender = userData['gender'];
+        }
+
+        // Set target language from backend
+        final targetLanguageCode = userData['target_language'] as String?;
+        if (targetLanguageCode != null) {
+          final language = AppLanguages.all.firstWhere(
+            (lang) => lang.code == targetLanguageCode,
+            orElse: () => AppLanguages.all.first,
+          );
+          _selectedLanguage = language;
+        }
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading profile: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -37,274 +102,296 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Custom AppBar
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: Row(
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)))
+            : Column(
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 18.sp,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                  // Custom AppBar
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 16.h,
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'Profile Settings',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 40.w),
-                ],
-              ),
-            ),
-
-            // Scrollable Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 8.h),
-
-                    // Profile Photo
-                    Center(
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 130.w,
-                            height: 130.w,
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 40.w,
+                            height: 40.w,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [Color(0xFFFFB3C1), Color(0xFFFF85A1)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0xFFFFB3C1).withOpacity(0.4),
-                                  blurRadius: 20,
+                                  color: Colors.black.withOpacity(0.06),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 18.sp,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Profile Settings',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Montserrat',
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 40.w),
+                      ],
+                    ),
+                  ),
+
+                  // Scrollable Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 8.h),
+
+                          // Profile Photo
+                          Center(
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 130.w,
+                                  height: 130.w,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFFFFB3C1),
+                                        Color(0xFFFF85A1),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(
+                                          0xFFFFB3C1,
+                                        ).withOpacity(0.4),
+                                        blurRadius: 20,
+                                        offset: Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: SvgPicture.asset(
+                                      'assets/icons/userlogo.svg',
+                                      width: 65.w,
+                                      height: 65.w,
+                                      colorFilter: const ColorFilter.mode(
+                                        Colors.white,
+                                        BlendMode.srcIn,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Transform.translate(
+                                  offset: Offset(40.w, -30.h),
+                                  child: Container(
+                                    width: 44.w,
+                                    height: 44.w,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.15),
+                                          blurRadius: 10,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: SvgPicture.asset(
+                                        'assets/icons/changephoto.svg',
+                                        width: 22.w,
+                                        height: 22.w,
+                                        colorFilter: const ColorFilter.mode(
+                                          Color(0xFF4ECDC4),
+                                          BlendMode.srcIn,
+                                        ),
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Transform.translate(
+                                  offset: Offset(0, -20.h),
+                                  child: Text(
+                                    'Change Photo',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Montserrat',
+                                      color: Color(0xFF4ECDC4),
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 12.h),
+
+                          // Full Name
+                          _buildLabel('Full Name'),
+                          SizedBox(height: 10.h),
+                          _buildInputField(
+                            controller: _nameController,
+                            iconPath: 'assets/icons/fullname.svg',
+                            hint: 'Enter your name',
+                            enabled: true,
+                          ),
+
+                          SizedBox(height: 20.h),
+
+                          // E-mail
+                          _buildLabel('E-mail'),
+                          SizedBox(height: 10.h),
+                          _buildInputField(
+                            controller: _emailController,
+                            iconPath: 'assets/icons/email.svg',
+                            hint: 'Enter your email',
+                            enabled: false,
+                            showLock: true,
+                          ),
+
+                          SizedBox(height: 20.h),
+
+                          // Age
+                          _buildLabel('Age'),
+                          SizedBox(height: 10.h),
+                          _buildInputField(
+                            controller: _ageController,
+                            iconPath: 'assets/icons/age.svg',
+                            hint: 'Enter your age',
+                            enabled: false,
+                            showLock: true,
+                          ),
+
+                          SizedBox(height: 24.h),
+
+                          // Gender
+                          _buildLabel('Gender'),
+                          SizedBox(height: 12.h),
+                          _buildGenderSelector(),
+
+                          SizedBox(height: 24.h),
+
+                          // Language
+                          _buildLabel('Select Learn Language'),
+                          SizedBox(height: 10.h),
+                          _buildLanguageDropdown(),
+
+                          SizedBox(height: 40.h),
+
+                          // Save Button
+                          Container(
+                            width: double.infinity,
+                            height: 56.h,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFF4ECDC4).withOpacity(0.4),
+                                  blurRadius: 16,
                                   offset: Offset(0, 8),
                                 ),
                               ],
                             ),
-                            child: Center(
-                              child: SvgPicture.asset(
-                                'assets/icons/userlogo.svg',
-                                width: 65.w,
-                                height: 65.w,
-                                colorFilter: const ColorFilter.mode(
-                                  Colors.white,
-                                  BlendMode.srcIn,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _isSaving ? null : _saveProfile,
+                                borderRadius: BorderRadius.circular(16.r),
+                                child: Center(
+                                  child: _isSaving
+                                      ? SizedBox(
+                                          width: 24.w,
+                                          height: 24.h,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                          ),
+                                        )
+                                      : Text(
+                                          'Save',
+                                          style: TextStyle(
+                                            fontSize: 17.sp,
+                                            fontWeight: FontWeight.w700,
+                                            fontFamily: 'Montserrat',
+                                            color: Colors.white,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
                                 ),
                               ),
                             ),
                           ),
-                          Transform.translate(
-                            offset: Offset(40.w, -30.h),
-                            child: Container(
-                              width: 44.w,
-                              height: 44.w,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2.5,
+
+                          SizedBox(height: 20.h),
+
+                          // Delete Account
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                _showDeleteAccountDialog();
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20.w,
+                                  vertical: 12.h,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 10,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
                               ),
-                              child: Center(
-                                child: SvgPicture.asset(
-                                  'assets/icons/changephoto.svg',
-                                  width: 22.w,
-                                  height: 22.w,
-                                  colorFilter: const ColorFilter.mode(
-                                    Color(0xFF4ECDC4),
-                                    BlendMode.srcIn,
-                                  ),
-                                  fit: BoxFit.contain,
+                              child: Text(
+                                'Delete Account',
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Montserrat',
+                                  color: Color(0xFFE57373),
                                 ),
                               ),
                             ),
                           ),
-                          Transform.translate(
-                            offset: Offset(0, -20.h),
-                            child: Text(
-                              'Change Photo',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Montserrat',
-                                color: Color(0xFF4ECDC4),
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ),
+
+                          SizedBox(height: 30.h),
                         ],
                       ),
                     ),
-
-                    SizedBox(height: 12.h),
-
-                    // Full Name
-                    _buildLabel('Full Name'),
-                    SizedBox(height: 10.h),
-                    _buildInputField(
-                      controller: _nameController,
-                      iconPath: 'assets/icons/fullname.svg',
-                      hint: 'Enter your name',
-                      enabled: true,
-                    ),
-
-                    SizedBox(height: 20.h),
-
-                    // E-mail
-                    _buildLabel('E-mail'),
-                    SizedBox(height: 10.h),
-                    _buildInputField(
-                      controller: _emailController,
-                      iconPath: 'assets/icons/email.svg',
-                      hint: 'Enter your email',
-                      enabled: false,
-                      showLock: true,
-                    ),
-
-                    SizedBox(height: 20.h),
-
-                    // Age
-                    _buildLabel('Age'),
-                    SizedBox(height: 10.h),
-                    _buildInputField(
-                      controller: _ageController,
-                      iconPath: 'assets/icons/age.svg',
-                      hint: 'Enter your age',
-                      enabled: false,
-                      showLock: true,
-                    ),
-
-                    SizedBox(height: 24.h),
-
-                    // Gender
-                    _buildLabel('Gender'),
-                    SizedBox(height: 12.h),
-                    _buildGenderSelector(),
-
-                    SizedBox(height: 24.h),
-
-                    // Language
-                    _buildLabel('Select Learn Language'),
-                    SizedBox(height: 10.h),
-                    _buildLanguageDropdown(),
-
-                    SizedBox(height: 40.h),
-
-                    // Save Button
-                    Container(
-                      width: double.infinity,
-                      height: 56.h,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFF4ECDC4).withOpacity(0.4),
-                            blurRadius: 16,
-                            offset: Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => Navigator.pop(context),
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: Center(
-                            child: Text(
-                              'Save',
-                              style: TextStyle(
-                                fontSize: 17.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Montserrat',
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20.h),
-
-                    // Delete Account
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          _showDeleteAccountDialog();
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20.w,
-                            vertical: 12.h,
-                          ),
-                        ),
-                        child: Text(
-                          'Delete Account',
-                          style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Montserrat',
-                            color: Color(0xFFE57373),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 30.h),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -695,6 +782,124 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
     );
   }
 
+  /// Save profile changes
+  Future<void> _saveProfile() async {
+    if (_isSaving) return;
+
+    // Validate name
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please enter your name',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Montserrat',
+            ),
+          ),
+          backgroundColor: Color(0xFFE57373),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          margin: EdgeInsets.all(16.w),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final result = await _profileRepository.updateProfile(
+        name: _nameController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (result.success) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  'Profile updated successfully!',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Color(0xFF4ECDC4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            margin: EdgeInsets.all(16.w),
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Close the page after a brief delay
+        await Future.delayed(Duration(milliseconds: 500));
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } else {
+        // Show error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result.error?.message ??
+                  'Failed to update profile. Please try again.',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Montserrat',
+              ),
+            ),
+            backgroundColor: Color(0xFFE57373),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            margin: EdgeInsets.all(16.w),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'An error occurred: ${e.toString()}',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Montserrat',
+            ),
+          ),
+          backgroundColor: Color(0xFFE57373),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          margin: EdgeInsets.all(16.w),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
@@ -810,7 +1015,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                       child: InkWell(
                         onTap: () {
                           Navigator.pop(context);
-                          // TODO: Implement delete account logic
+                          _showDeleteAccountConfirmation();
                         },
                         borderRadius: BorderRadius.circular(16.r),
                         child: Row(
@@ -860,6 +1065,93 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
           ),
         );
       },
+    );
+  }
+
+  /// Show final confirmation before deleting account
+  void _showDeleteAccountConfirmation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 64.w,
+                height: 64.h,
+                decoration: BoxDecoration(
+                  color: Color(0xFFFFEBEE),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.info_outline,
+                  size: 32.w,
+                  color: Color(0xFFE57373),
+                ),
+              ),
+              SizedBox(height: 20.h),
+
+              // Title
+              Text(
+                'Feature Not Available',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Montserrat',
+                  color: Color(0xFF1A1A1A),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+
+              // Message
+              Text(
+                'Account deletion feature is currently under development.\n\nIf you need to delete your account, please contact our support team.',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Montserrat',
+                  color: Color(0xFF6B7280),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24.h),
+
+              // OK Button
+              SizedBox(
+                width: double.infinity,
+                height: 48.h,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF4ECDC4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Montserrat',
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
