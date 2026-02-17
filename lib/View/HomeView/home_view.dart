@@ -946,242 +946,264 @@ class _HomeViewState extends ConsumerState<HomeView> {
     required List<Color> gradientColors,
     required int cardIndex,
   }) {
-    return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to feature detail page
-        print('Tapped on feature: $title');
-      },
-      child: Container(
-        width: 240.w,
-        height: 300.h,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradientColors,
-          ),
-          borderRadius: BorderRadius.circular(20.r),
+    return Container(
+      width: 240.w,
+      height: 300.h,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: gradientColors,
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            // Decorative circles
-            Positioned(
-              bottom: -30.h,
-              right: -20.w,
-              child: Container(
-                width: 150.w,
-                height: 150.h,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                ),
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // Decorative circles
+          Positioned(
+            bottom: -30.h,
+            right: -20.w,
+            child: Container(
+              width: 150.w,
+              height: 150.h,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
               ),
             ),
-            Positioned(
-              bottom: 40.h,
-              right: 60.w,
-              child: Container(
-                width: 80.w,
-                height: 80.h,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
-                ),
+          ),
+          Positioned(
+            bottom: 40.h,
+            right: 60.w,
+            child: Container(
+              width: 80.w,
+              height: 80.h,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.08),
               ),
             ),
-            Positioned(
-              top: 100.h,
-              left: -40.w,
-              child: Container(
-                width: 120.w,
-                height: 120.h,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
-                ),
+          ),
+          Positioned(
+            top: 100.h,
+            left: -40.w,
+            child: Container(
+              width: 120.w,
+              height: 120.h,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.06),
               ),
             ),
+          ),
 
-            // Content
-            Padding(
-              padding: EdgeInsets.all(20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Icon
-                  Container(
-                    width: 60.w,
-                    height: 60.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Center(
-                      child: Image.asset(
-                        'assets/images/messagebox.png',
-                        width: 32.w,
-                        height: 32.h,
-                        color: Colors.white,
-                      ),
-                    ),
+          // Content
+          Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon
+                Container(
+                  width: 60.w,
+                  height: 60.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(20.r),
                   ),
-
-                  SizedBox(height: 24.h),
-
-                  // Title
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/messagebox.png',
+                      width: 32.w,
+                      height: 32.h,
                       color: Colors.white,
-                      height: 1.2,
                     ),
                   ),
+                ),
 
-                  SizedBox(height: 8.h),
+                SizedBox(height: 24.h),
 
-                  // Subtitle
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                      color: Colors.white.withOpacity(0.9),
-                    ),
+                // Title
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Montserrat',
+                    color: Colors.white,
+                    height: 1.2,
                   ),
+                ),
 
-                  Spacer(),
+                SizedBox(height: 8.h),
 
-                  // Swipe to start button - SlideAction style
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final currentProgress =
-                          _swipeProgressMap[cardIndex] ?? 0.0;
-                      return GestureDetector(
-                        onHorizontalDragUpdate: (details) {
-                          if (!mounted) return; // Safety check
+                // Subtitle
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Montserrat',
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
 
-                          try {
-                            setState(() {
-                              // ✅ CRITICAL FIX: Read current value from map INSIDE setState
-                              // This prevents using stale captured value
-                              final actualProgress =
-                                  _swipeProgressMap[cardIndex] ?? 0.0;
-                              final newProgress =
-                                  actualProgress + details.delta.dx;
-                              _swipeProgressMap[cardIndex] = newProgress.clamp(
-                                0.0,
-                                constraints.maxWidth - 60.w,
-                              );
-                            });
-                          } catch (e) {
-                            print('⚠️ Swipe update error: $e');
-                          }
-                        },
-                        onHorizontalDragEnd: (details) {
-                          if (!mounted) return; // Safety check
+                Spacer(),
 
-                          try {
-                            // ✅ CRITICAL FIX: Read current value from map at drag end
-                            final finalProgress =
+                // Swipe to start button - SlideAction style
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final currentProgress = _swipeProgressMap[cardIndex] ?? 0.0;
+                    return GestureDetector(
+                      onHorizontalDragUpdate: (details) {
+                        if (!mounted) return; // Safety check
+
+                        try {
+                          setState(() {
+                            // ✅ CRITICAL FIX: Read current value from map INSIDE setState
+                            // This prevents using stale captured value
+                            final actualProgress =
                                 _swipeProgressMap[cardIndex] ?? 0.0;
-                            if (finalProgress > constraints.maxWidth * 0.7) {
-                              // Success - Navigate
-                              print('Swipe completed! Navigating...');
-                              // TODO: Add navigation to course
-                            }
-                            setState(() {
-                              _swipeProgressMap[cardIndex] = 0;
-                            });
-                          } catch (e) {
-                            print('⚠️ Swipe end error: $e');
-                          }
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          height: 56.h,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(28.r),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.4),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              // Background progress
-                              if (currentProgress > 0)
-                                Positioned(
-                                  left: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    width: currentProgress + 48.w,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.35),
-                                      borderRadius: BorderRadius.circular(28.r),
-                                    ),
-                                  ),
-                                ),
-                              // Slider button
-                              AnimatedPositioned(
-                                duration: Duration(milliseconds: 200),
-                                left: currentProgress,
-                                top: 8.h,
-                                bottom: 8.h,
-                                child: Container(
-                                  width: 40.w,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 8,
-                                        offset: Offset(0, 2),
+                            final newProgress =
+                                actualProgress + details.delta.dx;
+                            _swipeProgressMap[cardIndex] = newProgress.clamp(
+                              0.0,
+                              constraints.maxWidth - 60.w,
+                            );
+                          });
+                        } catch (e) {
+                          print('⚠️ Swipe update error: $e');
+                        }
+                      },
+                      onHorizontalDragEnd: (details) {
+                        if (!mounted) return; // Safety check
+
+                        try {
+                          // ✅ CRITICAL FIX: Read current value from map at drag end
+                          final finalProgress =
+                              _swipeProgressMap[cardIndex] ?? 0.0;
+                          if (finalProgress > constraints.maxWidth * 0.7) {
+                            // Success - Navigate based on feature type
+                            if (title.contains('Sentence')) {
+                              // Learn New Sentence -> Travel Vocabulary (Phrases tab)
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const TravelVocabularyView(
+                                        isPremium: false,
                                       ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.arrow_forward,
-                                    color: gradientColors[0],
-                                    size: 20.sp,
-                                  ),
                                 ),
-                              ),
-                              // Text - Aligned to left to avoid being hidden by button
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Padding(
-                                  padding: EdgeInsets.only(left: 50.w),
-                                  child: Text(
-                                    'SWIPE TO START',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: 'Montserrat',
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
+                              );
+                            } else if (title.contains('Words')) {
+                              // Learn New Words -> Visual Dictionary
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const VisualDictionaryView(
+                                        isPremium: false,
+                                      ),
                                 ),
-                              ),
-                            ],
+                              );
+                            } else if (title.contains('Speaking')) {
+                              // Practice Speaking -> Course View
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CourseView(isPremium: false),
+                                ),
+                              );
+                            }
+                          }
+                          setState(() {
+                            _swipeProgressMap[cardIndex] = 0;
+                          });
+                        } catch (e) {
+                          print('⚠️ Swipe end error: $e');
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(28.r),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.4),
+                            width: 1.5,
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                        child: Stack(
+                          children: [
+                            // Background progress
+                            if (currentProgress > 0)
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: currentProgress + 48.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.35),
+                                    borderRadius: BorderRadius.circular(28.r),
+                                  ),
+                                ),
+                              ),
+                            // Slider button
+                            Positioned(
+                              left: currentProgress,
+                              top: 8.h,
+                              bottom: 8.h,
+                              child: Container(
+                                width: 40.w,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.arrow_forward,
+                                  color: gradientColors[0],
+                                  size: 20.sp,
+                                ),
+                              ),
+                            ),
+                            // Text - Aligned to left to avoid being hidden by button
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 50.w),
+                                child: Text(
+                                  'SWIPE TO START',
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Montserrat',
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
