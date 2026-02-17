@@ -91,6 +91,7 @@ class LessonModel extends Equatable {
   final int? timeSpent;
   final DateTime? completedAt;
   final List<LessonVocabularyModel>? vocabulary;
+  final String? courseImageUrl; // Course image from joined data
 
   const LessonModel({
     required this.id,
@@ -111,6 +112,7 @@ class LessonModel extends Equatable {
     this.timeSpent,
     this.completedAt,
     this.vocabulary,
+    this.courseImageUrl,
   });
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
@@ -146,6 +148,7 @@ class LessonModel extends Equatable {
                 )
                 .toList()
           : null,
+      courseImageUrl: json['course_image_url'] as String?,
     );
   }
 
@@ -178,6 +181,7 @@ class LessonModel extends Equatable {
       'time_spent': timeSpent,
       'completed_at': completedAt?.toIso8601String(),
       'vocabulary': vocabulary?.map((v) => v.toJson()).toList(),
+      'course_image_url': courseImageUrl,
     };
   }
 
@@ -201,6 +205,7 @@ class LessonModel extends Equatable {
     timeSpent,
     completedAt,
     vocabulary,
+    courseImageUrl,
   ];
 }
 

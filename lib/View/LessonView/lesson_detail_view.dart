@@ -321,28 +321,43 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
   /// Lesson image
   Widget _buildLessonImage() {
+    // Prefer course image, fallback to lesson image
+    final imageUrl = _lesson?.courseImageUrl ?? _lesson?.imageUrl;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20.r),
-      child: Image.asset(
-        'assets/images/courseairport.png',
-        width: double.infinity,
-        height: 200.h,
-        fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: double.infinity,
-            height: 200.h,
-            color: MyColors.grey200,
-            child: Center(
-              child: Icon(
-                Icons.image_not_supported,
-                size: 48.sp,
-                color: MyColors.grey400,
-              ),
-            ),
-          );
-        },
+      child: imageUrl != null && imageUrl.isNotEmpty
+          ? Image.asset(
+              imageUrl,
+              width: double.infinity,
+              height: 200.h,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) {
+                print('⚠️ Image error for $imageUrl: $error');
+                return _buildDefaultImage();
+              },
+            )
+          : _buildDefaultImage(),
+    );
+  }
+
+  Widget _buildDefaultImage() {
+    return Container(
+      width: double.infinity,
+      height: 200.h,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF4ECDC4).withOpacity(0.2),
+            Color(0xFF556270).withOpacity(0.2),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(Icons.school, size: 64.sp, color: Color(0xFF4ECDC4)),
       ),
     );
   }
@@ -618,6 +633,26 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
   /// Vocabulary section
   Widget _buildVocabularySection() {
+    // Ensure lesson is loaded
+    if (_lesson == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Key Vocabulary',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Montserrat',
+              color: MyColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4))),
+        ],
+      );
+    }
+
     final vocabulary = _lesson?.vocabulary ?? [];
 
     if (vocabulary.isEmpty) {
@@ -636,7 +671,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
           SizedBox(height: 16.h),
           Center(
             child: Text(
-              'Kelime bulunamadı',
+              'Bu derste henüz kelime eklenmemiş',
               style: TextStyle(fontSize: 14.sp, color: MyColors.textSecondary),
             ),
           ),
@@ -738,31 +773,98 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
   /// Build vocabulary icon with error handling
   Widget _buildVocabularyIcon(String? iconPath, Color iconColor) {
+    // Comprehensive icon mapping for various vocabulary types
+    final Map<String, IconData> iconMapping = {
+      // Greetings & Social
+      'greeting': Icons.waving_hand,
+      'goodbye': Icons.exit_to_app,
+      'hello': Icons.emoji_people,
+      'handshake': Icons.handshake,
+      'happy': Icons.sentiment_satisfied_alt,
+      'please': Icons.volunteer_activism,
+      'thanks': Icons.favorite,
+
+      // Questions & Help
+      'question': Icons.help_outline,
+      'help': Icons.support_agent,
+
+      // People & Identity
+      'person': Icons.person,
+      'family': Icons.family_restroom,
+      'name': Icons.badge,
+
+      // Travel & Transport
+      'plane': Icons.flight,
+      'airport': Icons.local_airport,
+      'gate': Icons.meeting_room,
+      'departure': Icons.flight_takeoff,
+      'checkin': Icons.check_circle_outline,
+      'boardingpass': Icons.confirmation_number,
+      'transport': Icons.directions_bus,
+      'taxi': Icons.local_taxi,
+      'train': Icons.train,
+
+      // Colors
+      'color': Icons.palette,
+      'red': Icons.circle,
+      'blue': Icons.circle,
+      'green': Icons.circle,
+
+      // Numbers
+      'number': Icons.numbers,
+      'one': Icons.looks_one,
+      'two': Icons.looks_two,
+
+      // Food & Drink
+      'food': Icons.restaurant,
+      'drink': Icons.local_cafe,
+      'coffee': Icons.coffee,
+      'water': Icons.water_drop,
+
+      // Accommodation
+      'hotel': Icons.hotel,
+      'room': Icons.bed,
+
+      // Shopping
+      'shopping': Icons.shopping_bag,
+      'money': Icons.attach_money,
+      'card': Icons.credit_card,
+
+      // Time & Weather
+      'time': Icons.access_time,
+      'weather': Icons.wb_sunny,
+    };
+
     // If no icon path, show default icon
     if (iconPath == null || iconPath.isEmpty) {
-      return Icon(Icons.translate, size: 20.sp, color: iconColor);
+      return Icon(Icons.school, size: 20.sp, color: iconColor);
     }
 
-    // Return icon builder that handles errors gracefully
-    return Builder(
-      builder: (context) {
-        try {
-          // Check if asset exists before loading
-          return SvgPicture.asset(
-            iconPath,
-            width: 20.w,
-            height: 20.w,
-            colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
-            fit: BoxFit.contain,
-            placeholderBuilder: (context) =>
-                Icon(Icons.translate, size: 20.sp, color: iconColor),
-          );
-        } catch (e) {
-          print('⚠️ SVG error for $iconPath: $e');
-          // Return safe fallback icon
-          return Icon(Icons.translate, size: 20.sp, color: iconColor);
-        }
-      },
+    // Extract icon name from path (e.g., "assets/icons/greeting.svg" -> "greeting")
+    final iconName = iconPath
+        .split('/')
+        .last
+        .replaceAll('.svg', '')
+        .replaceAll('.png', '')
+        .toLowerCase()
+        .trim();
+
+    final matchedIcon = iconMapping[iconName];
+
+    // If we have a mapping, use Material Icon
+    if (matchedIcon != null) {
+      return Icon(matchedIcon, size: 20.sp, color: iconColor);
+    }
+
+    // Try to load SVG with comprehensive error handling
+    return SvgPicture.asset(
+      iconPath,
+      width: 20.w,
+      height: 20.w,
+      colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+      fit: BoxFit.contain,
+      placeholderBuilder: (context) =>
+          Icon(Icons.school, size: 20.sp, color: iconColor),
     );
   }
 

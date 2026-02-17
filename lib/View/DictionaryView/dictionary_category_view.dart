@@ -85,9 +85,10 @@ class _DictionaryCategoryViewState
     // Convert DictionaryWordModel to Map for compatibility with existing UI
     return wordsState.words.map((word) {
       return {
-        'english': word.word,
-        'turkish': word.translation,
+        'word': word.word, // Target language word
+        'translation': word.translation, // Turkish translation
         'audioUrl': word.audioUrl ?? '',
+        'targetLanguage': word.targetLanguage ?? 'en', // Language code
       };
     }).toList();
   }
@@ -132,7 +133,12 @@ class _DictionaryCategoryViewState
     }
   }
 
-  Future<void> _playAudio(String itemId, String audioUrl, String word) async {
+  Future<void> _playAudio(
+    String itemId,
+    String audioUrl,
+    String word,
+    String? targetLanguage,
+  ) async {
     try {
       // If same item is playing, stop it
       if (_playingItemId == itemId) {
@@ -158,9 +164,9 @@ class _DictionaryCategoryViewState
         await _audioPlayer.play(UrlSource(audioUrl));
       } else {
         print('🔊 Using TTS for: $word');
-        // Use TTS with English pronunciation - don't await to prevent UI blocking
+        // Use TTS with target language pronunciation - don't await to prevent UI blocking
         _ttsService
-            .speak(word, languageCode: 'en')
+            .speak(word, languageCode: targetLanguage)
             .then((_) {
               print('✅ TTS completed for: $word');
             })
@@ -392,7 +398,7 @@ class _DictionaryCategoryViewState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      word['turkish']!,
+                      word['word']!, // Target language word (e.g., "Airport")
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
@@ -402,7 +408,7 @@ class _DictionaryCategoryViewState
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      word['english']!,
+                      word['translation']!, // Turkish translation
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w400,
@@ -418,9 +424,10 @@ class _DictionaryCategoryViewState
               GestureDetector(
                 onTap: () {
                   final audioUrl = word['audioUrl'] ?? '';
-                  final englishWord = word['english'] ?? '';
-                  print('Playing audio for: $englishWord');
-                  _playAudio(id, audioUrl, englishWord);
+                  final targetWord = word['word'] ?? '';
+                  final targetLang = word['targetLanguage'];
+                  print('Playing audio for: $targetWord');
+                  _playAudio(id, audioUrl, targetWord, targetLang);
                 },
                 child: SvgPicture.asset(
                   'assets/icons/visualdictionaryses.svg',

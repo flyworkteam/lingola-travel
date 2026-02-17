@@ -546,13 +546,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                 ),
               )
             else if (isLocked)
-              Icon(Icons.lock_outline, color: Color(0xFFBDBDBD), size: 20.sp)
-            else
-              Icon(
-                Icons.play_circle_outline,
-                color: Color(0xFF4ECDC4),
-                size: 24.sp,
-              ),
+              Icon(Icons.lock_outline, color: Color(0xFFBDBDBD), size: 20.sp),
           ],
         ),
       ),

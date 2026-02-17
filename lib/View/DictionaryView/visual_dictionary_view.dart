@@ -28,13 +28,6 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
       'count': 10,
     },
     {
-      'id': 'dict-cat-001',
-      'name': 'General', // Database has General words (Yes, No, Please)
-      'icon': 'assets/icons/airport.png', // Keep your icon design
-      'color': '#4ECDC4',
-      'count': 10,
-    },
-    {
       'id': 'dict-cat-002',
       'name': 'Accommodation',
       'icon': 'assets/icons/accommodation.png',

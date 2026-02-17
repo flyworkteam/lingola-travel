@@ -61,9 +61,19 @@ class TtsService {
       await _flutterTts.setPitch(1.2);
       print('🔊 TTS: Pitch set to 1.2');
 
-      // ⚠️ Use TRUE to ensure speech completes
-      await _flutterTts.awaitSpeakCompletion(true);
-      print('🔊 TTS: Blocking mode enabled (awaitSpeakCompletion=true)');
+      // ✅ Use FALSE for non-blocking mode (better for UI responsiveness)
+      await _flutterTts.awaitSpeakCompletion(false);
+      print('🔊 TTS: Non-blocking mode enabled (awaitSpeakCompletion=false)');
+
+      // Set completion handler
+      _flutterTts.setCompletionHandler(() {
+        print('🔊 TTS: Speech completed (callback)');
+      });
+
+      // Set error handler
+      _flutterTts.setErrorHandler((msg) {
+        print('❌ TTS: Error - $msg');
+      });
 
       _isInitialized = true;
       print('✅ TTS Service initialized successfully');
@@ -82,6 +92,12 @@ class TtsService {
     try {
       print('🔊 TTS: Attempting to speak: "$text"');
 
+      // Stop any ongoing speech first
+      await _flutterTts.stop();
+
+      // Small delay to ensure clean state
+      await Future.delayed(Duration(milliseconds: 50));
+
       // Set language if provided and different from current
       if (languageCode != null && languageCode != _currentLanguage) {
         String ttsLanguage = _mapLanguageCode(languageCode);
@@ -95,16 +111,18 @@ class TtsService {
       // Ensure volume is set before speaking
       await _flutterTts.setVolume(1.0);
 
-      // Speak and wait for completion (awaitSpeakCompletion is true)
-      print('🔊 TTS: Starting speak (blocking)...');
+      // Speak (non-blocking since awaitSpeakCompletion is false)
+      print('🔊 TTS: Starting speak (non-blocking)...');
       final result = await _flutterTts.speak(text);
-      print('🔊 TTS: Speak completed with result: $result');
 
-      if (result == 0) {
-        print('❌ TTS: Speak failed (result=0)');
+      if (result == 1) {
+        print('✅ TTS: Speak started successfully');
+      } else {
+        print('❌ TTS: Speak failed with result: $result');
       }
     } catch (e) {
       print('❌ TTS speak error: $e');
+      rethrow; // Re-throw to let caller handle it
     }
   }
 
@@ -142,7 +160,9 @@ class TtsService {
     try {
       // Always try to stop, even if not initialized
       // This ensures we clean up any ongoing speech
+      print('🔊 TTS: Stopping...');
       await _flutterTts.stop();
+      print('✅ TTS: Stopped successfully');
     } catch (e) {
       print('❌ TTS stop error: $e');
       // Ignore errors during stop - better to continue than crash
