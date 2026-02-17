@@ -111,14 +111,17 @@ class LessonRepository extends BaseRepository {
   /// Update lesson progress
   Future<ApiResponse<bool>> updateLessonProgress({
     required String lessonId,
-    required int progressPercentage,
+    int? currentStep,
+    int? progressPercentage,
     int? timeSpentSeconds,
   }) async {
     try {
       final response = await _apiClient.post(
         '/lessons/$lessonId/progress',
         data: {
-          'progress_percentage': progressPercentage,
+          if (currentStep != null) 'current_step': currentStep,
+          if (progressPercentage != null)
+            'progress_percentage': progressPercentage,
           if (timeSpentSeconds != null) 'time_spent_seconds': timeSpentSeconds,
         },
       );

@@ -7,6 +7,7 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Services/speech_recognition_service.dart';
 import 'package:lingola_travel/Services/tts_service.dart';
 import 'package:lingola_travel/Repositories/lesson_repository.dart';
+import 'package:lingola_travel/Repositories/library_repository.dart';
 import 'package:lingola_travel/Models/course_model.dart';
 
 class LessonDetailView extends StatefulWidget {
@@ -28,6 +29,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
   final SpeechRecognitionService _speechService = SpeechRecognitionService();
   final TtsService _ttsService = TtsService();
   final LessonRepository _lessonRepository = LessonRepository();
+  final LibraryRepository _libraryRepository = LibraryRepository();
 
   late AnimationController _listenButtonController;
   late Animation<double> _listenButtonAnimation;
@@ -37,7 +39,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
   bool _isLoading = true;
   String? _errorMessage;
 
-  int currentStep = 3;
+  int currentStep = 1; // Will be set from backend (user's current progress)
   int totalSteps = 10;
   bool isBookmarked = false; // Bookmark state
   bool isRecording = false; // Recording state
@@ -83,6 +85,8 @@ class _LessonDetailViewState extends State<LessonDetailView>
         setState(() {
           _lesson = response.data;
           totalSteps = response.data!.totalSteps;
+          // Set current step from backend (user's progress in this lesson)
+          currentStep = response.data!.currentUserStep ?? 1;
           _isLoading = false;
         });
         print('✅ Lesson loaded: ${_lesson?.title}');
@@ -495,7 +499,11 @@ class _LessonDetailViewState extends State<LessonDetailView>
                   _listenButtonController.forward();
 
                   try {
-                    await _ttsService.speak(sentence);
+                    final languageCode = _lesson?.targetLanguage ?? 'en';
+                    await _ttsService.speak(
+                      sentence,
+                      languageCode: languageCode,
+                    );
                     // Wait a bit to ensure completion
                     await Future.delayed(Duration(milliseconds: 500));
                   } catch (e) {
@@ -1165,14 +1173,63 @@ class _LessonDetailViewState extends State<LessonDetailView>
   }
 
   /// Save item to library
-  void _saveItem(String type) {
-    setState(() {
-      isBookmarked = true;
-    });
+  void _saveItem(String type) async {
+    try {
+      // Show loading state
+      setState(() {
+        isBookmarked = true; // Visual feedback
+      });
 
-    // SnackBar feedback removed as requested by user
-    // Button color change in build method provides the visual feedback
-    print('Saved as $type');
+      if (type == 'word') {
+        // Save key vocabulary term
+        if (_lesson?.keyVocabularyTerm != null && _lesson!.vocabulary != null) {
+          // Find the vocabulary item that matches the key vocabulary term
+          final vocabItem = _lesson!.vocabulary!.firstWhere(
+            (v) =>
+                v.term.toLowerCase() ==
+                _lesson!.keyVocabularyTerm!.toLowerCase(),
+            orElse: () =>
+                _lesson!.vocabulary!.first, // Fallback to first vocabulary
+          );
+
+          // Save to backend
+          final response = await _libraryRepository.addBookmark(
+            itemType: 'lesson_vocabulary',
+            itemId: vocabItem.id,
+          );
+
+          if (response.success) {
+            print('✅ Word saved to library: ${vocabItem.term}');
+            // Bookmark icon color change provides visual feedback
+          } else {
+            print('❌ Failed to save word: ${response.error}');
+            setState(() {
+              isBookmarked = false; // Revert visual state
+            });
+          }
+        }
+      } else if (type == 'phrase') {
+        // Save all vocabulary items from this lesson
+        if (_lesson?.vocabulary != null && _lesson!.vocabulary!.isNotEmpty) {
+          int successCount = 0;
+          for (var vocabItem in _lesson!.vocabulary!) {
+            final response = await _libraryRepository.addBookmark(
+              itemType: 'lesson_vocabulary',
+              itemId: vocabItem.id,
+            );
+            if (response.success) successCount++;
+          }
+
+          print('✅ Saved $successCount vocabulary items to library');
+          // Bookmark icon color change provides visual feedback
+        }
+      }
+    } catch (e) {
+      print('❌ Error saving item: $e');
+      setState(() {
+        isBookmarked = false; // Revert on error
+      });
+    }
   }
 
   /// Start speech recognition
@@ -1266,6 +1323,12 @@ class _LessonDetailViewState extends State<LessonDetailView>
     // Show result
     setState(() {
       showResult = true;
+      // Increment progress on successful attempt (>= 80%)
+      if (similarityScore >= 0.8 && currentStep < totalSteps) {
+        currentStep++;
+        // Save progress to backend
+        _saveProgressToBackend();
+      }
     });
 
     // Auto-hide result after 2.5 seconds
@@ -1278,6 +1341,25 @@ class _LessonDetailViewState extends State<LessonDetailView>
         });
       }
     });
+  }
+
+  /// Save current progress to backend
+  Future<void> _saveProgressToBackend() async {
+    if (_lesson == null) return;
+
+    try {
+      final progressPercentage = ((currentStep / totalSteps) * 100).round();
+      await _lessonRepository.updateLessonProgress(
+        lessonId: _lesson!.id,
+        currentStep: currentStep,
+        progressPercentage: progressPercentage,
+      );
+      print(
+        '✅ Progress saved: $currentStep/$totalSteps ($progressPercentage%)',
+      );
+    } catch (e) {
+      print('❌ Failed to save progress: $e');
+    }
   }
 
   /// Check if speech is successful (similarity >= 0.8)

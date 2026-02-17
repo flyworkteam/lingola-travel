@@ -79,6 +79,28 @@ class LibraryRepository extends BaseRepository {
     }
   }
 
+  /// Add a bookmark (without folder)
+  Future<ApiResponse<bool>> addBookmark({
+    required String
+    itemType, // 'dictionary_word', 'travel_phrase', 'lesson_vocabulary'
+    required String itemId,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/library/bookmarks',
+        data: {'item_type': itemType, 'item_id': itemId},
+      );
+
+      return ApiResponse(
+        success: response.success,
+        data: response.success,
+        error: response.error,
+      );
+    } catch (e) {
+      return handleError(e);
+    }
+  }
+
   /// Remove item from library
   Future<ApiResponse<bool>> removeItem(int libraryItemId) async {
     try {

@@ -88,6 +88,8 @@ class LessonModel extends Equatable {
   final DateTime updatedAt;
   final String? userStatus;
   final int? userProgress;
+  final int?
+  currentUserStep; // User's current step in this lesson (from backend)
   final int? timeSpent;
   final DateTime? completedAt;
   final List<LessonVocabularyModel>? vocabulary;
@@ -109,6 +111,7 @@ class LessonModel extends Equatable {
     required this.updatedAt,
     this.userStatus,
     this.userProgress,
+    this.currentUserStep,
     this.timeSpent,
     this.completedAt,
     this.vocabulary,
@@ -136,6 +139,7 @@ class LessonModel extends Equatable {
           : DateTime.now(),
       userStatus: json['user_status'] as String?,
       userProgress: _parseInt(json['user_progress']),
+      currentUserStep: _parseInt(json['current_step']),
       timeSpent: _parseInt(json['time_spent']),
       completedAt: json['completed_at'] != null
           ? DateTime.parse(json['completed_at'] as String)
@@ -178,6 +182,7 @@ class LessonModel extends Equatable {
       'updated_at': updatedAt.toIso8601String(),
       'user_status': userStatus,
       'user_progress': userProgress,
+      'current_step': currentUserStep,
       'time_spent': timeSpent,
       'completed_at': completedAt?.toIso8601String(),
       'vocabulary': vocabulary?.map((v) => v.toJson()).toList(),
@@ -202,6 +207,7 @@ class LessonModel extends Equatable {
     updatedAt,
     userStatus,
     userProgress,
+    currentUserStep,
     timeSpent,
     completedAt,
     vocabulary,
