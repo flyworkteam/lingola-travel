@@ -668,7 +668,7 @@ class _LibraryFolderDetailViewState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.word, // Target language word on top
+                            item.translation, // Target language word on top (French, German, etc.)
                             style: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w700,
@@ -678,7 +678,7 @@ class _LibraryFolderDetailViewState
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            item.translation, // Turkish translation below
+                            item.word, // Turkish translation below
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
@@ -699,7 +699,7 @@ class _LibraryFolderDetailViewState
                           GestureDetector(
                             onTap: () => _playAudio(
                               item.itemId,
-                              item.word, // Speak the target language word
+                              item.translation, // Speak the target language word
                               item.targetLanguage,
                             ),
                             child: Container(

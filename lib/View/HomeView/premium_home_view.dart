@@ -8,6 +8,8 @@ import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Riverpod/Controllers/home_view_controller.dart';
 import '../../Riverpod/Controllers/dictionary_controller.dart';
 import '../../Repositories/profile_repository.dart';
+import '../../Repositories/travel_phrase_repository.dart';
+import '../../Models/travel_phrase_model.dart';
 import '../NotificationsView/notifications_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../CourseView/course_view.dart';
@@ -28,7 +30,10 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       {}; // Track swipe progress for each feature card
   bool _isNavigating = false; // Prevent double navigation
   String _userName = 'Guest';
+  List<TravelPhraseModel> _phrases = [];
   final ProfileRepository _profileRepository = ProfileRepository();
+  final TravelPhraseRepository _travelPhraseRepository =
+      TravelPhraseRepository();
 
   @override
   void initState() {
@@ -87,14 +92,35 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
       final response = await _profileRepository.getProfile();
       if (response.success && response.data != null) {
         final userData = response.data['user'];
+
+        // Set user name
         if (mounted && userData['name'] != null) {
           setState(() {
             _userName = userData['name'];
           });
         }
+
+        // Load phrases for user's target language
+        await _loadPhrases();
       }
     } catch (e) {
       print('Error loading profile: $e');
+    }
+  }
+
+  /// Load travel phrases for selected language
+  Future<void> _loadPhrases() async {
+    try {
+      final response = await _travelPhraseRepository.getPhrasesByCategory(null);
+      if (response.success && response.data != null) {
+        if (mounted) {
+          setState(() {
+            _phrases = response.data!.take(2).toList();
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading phrases: $e');
     }
   }
 
@@ -770,30 +796,24 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
     );
   }
 
-  /// Questions section
+  /// Questions section - Dynamic from backend
   Widget _buildQuestions() {
-    final questions = [
-      {
-        'english': 'Where is the check-in counter for British Airways?',
-        'turkish': 'British Airways check-in kontuarı nerede?',
-      },
-      {
-        'english': 'Is this the line for security?',
-        'turkish': 'Güvenlik sırası bu mu?',
-      },
-    ];
+    // Show loading or empty state if no phrases
+    if (_phrases.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: questions
+        children: _phrases
             .map(
-              (q) => Padding(
+              (phrase) => Padding(
                 padding: EdgeInsets.only(bottom: 16.h),
                 child: _buildQuestionCard(
-                  englishText: q['english']!,
-                  turkishText: q['turkish']!,
+                  targetLanguageText: phrase.translation,
+                  turkishText: phrase.englishText,
                 ),
               ),
             )
@@ -804,7 +824,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
 
   /// Single question card
   Widget _buildQuestionCard({
-    required String englishText,
+    required String targetLanguageText,
     required String turkishText,
   }) {
     return Container(
@@ -837,9 +857,9 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // English text
+                // Target language text (bold, primary)
                 Text(
-                  englishText,
+                  targetLanguageText,
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -851,7 +871,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
 
                 SizedBox(height: 8.h),
 
-                // Turkish text
+                // Turkish text (normal, secondary)
                 Text(
                   turkishText,
                   style: TextStyle(

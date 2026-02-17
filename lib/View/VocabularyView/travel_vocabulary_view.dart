@@ -1100,7 +1100,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             children: [
               // Target language word - BOLD (on top)
               Text(
-                word.word, // Target language word
+                word.translation, // Target language word (French, German, etc.)
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -1113,7 +1113,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
               // Turkish translation (below)
               Text(
-                word.translation, // Turkish translation
+                word.word, // Turkish translation
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -1133,7 +1133,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     onTap: () => _playAudio(
                       id,
                       word.audioUrl,
-                      word.word, // Speak target language word
+                      word.translation, // Speak target language word
                       word.targetLanguage,
                     ),
                     child: Container(
@@ -1434,7 +1434,8 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             children: [
               // Target language phrase - BOLD (on top)
               Text(
-                phrase.englishText, // Target language phrase
+                phrase
+                    .translation, // Target language phrase (French, German, etc.)
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -1447,7 +1448,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
               // Turkish translation (below)
               Text(
-                phrase.translation, // Turkish translation
+                phrase.englishText, // Turkish translation
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -1467,7 +1468,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     onTap: () => _playAudio(
                       id,
                       phrase.audioUrl,
-                      phrase.englishText, // Speak target language phrase
+                      phrase.translation, // Speak target language phrase
                       phrase.targetLanguage,
                     ),
                     child: Container(
