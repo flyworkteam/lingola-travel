@@ -1100,7 +1100,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             children: [
               // Target language word - BOLD (on top)
               Text(
-                word.translation, // Target language word (French, German, etc.)
+                // For English: word is target, translation is Turkish
+                // For others: translation is target, word is Turkish
+                word.targetLanguage == 'en' ? word.word : word.translation,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -1113,7 +1115,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
               // Turkish translation (below)
               Text(
-                word.word, // Turkish translation
+                word.targetLanguage == 'en' ? word.translation : word.word,
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -1133,7 +1135,10 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     onTap: () => _playAudio(
                       id,
                       word.audioUrl,
-                      word.translation, // Speak target language word
+                      // Speak target language word
+                      word.targetLanguage == 'en'
+                          ? word.word
+                          : word.translation,
                       word.targetLanguage,
                     ),
                     child: Container(
@@ -1434,8 +1439,11 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             children: [
               // Target language phrase - BOLD (on top)
               Text(
-                phrase
-                    .translation, // Target language phrase (French, German, etc.)
+                // For English: englishText is target, translation is Turkish
+                // For others: translation is target, englishText is Turkish
+                phrase.targetLanguage == 'en'
+                    ? phrase.englishText
+                    : phrase.translation,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -1448,7 +1456,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
               // Turkish translation (below)
               Text(
-                phrase.englishText, // Turkish translation
+                phrase.targetLanguage == 'en'
+                    ? phrase.translation
+                    : phrase.englishText,
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -1468,7 +1478,10 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     onTap: () => _playAudio(
                       id,
                       phrase.audioUrl,
-                      phrase.translation, // Speak target language phrase
+                      // Speak target language phrase
+                      phrase.targetLanguage == 'en'
+                          ? phrase.englishText
+                          : phrase.translation,
                       phrase.targetLanguage,
                     ),
                     child: Container(

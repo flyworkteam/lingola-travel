@@ -812,8 +812,14 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
               (phrase) => Padding(
                 padding: EdgeInsets.only(bottom: 16.h),
                 child: _buildQuestionCard(
-                  targetLanguageText: phrase.translation,
-                  turkishText: phrase.englishText,
+                  // For English: englishText is target, translation is Turkish
+                  // For others: translation is target, englishText is Turkish
+                  targetLanguageText: phrase.targetLanguage == 'en'
+                      ? phrase.englishText
+                      : phrase.translation,
+                  turkishText: phrase.targetLanguage == 'en'
+                      ? phrase.translation
+                      : phrase.englishText,
                 ),
               ),
             )

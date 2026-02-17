@@ -84,9 +84,12 @@ class _DictionaryCategoryViewState
 
     // Convert DictionaryWordModel to Map for compatibility with existing UI
     return wordsState.words.map((word) {
+      // For English: word is target, translation is Turkish
+      // For others: translation is target, word is Turkish
+      final isEnglish = word.targetLanguage == 'en';
       return {
-        'word': word.translation, // Target language word (French, German, etc.)
-        'translation': word.word, // Turkish translation
+        'word': isEnglish ? word.word : word.translation,
+        'translation': isEnglish ? word.translation : word.word,
         'audioUrl': word.audioUrl ?? '',
         'targetLanguage': word.targetLanguage ?? 'en', // Language code
       };
