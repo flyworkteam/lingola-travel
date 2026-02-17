@@ -166,7 +166,9 @@ class _DictionaryCategoryViewState
       if (audioUrl.isNotEmpty) {
         await _audioPlayer.play(UrlSource(audioUrl));
       } else {
-        print('🔊 Using TTS for: $word');
+        print(
+          '🔊🔊🔊 DICTIONARY SPEAKER BUTTON - Using TTS for: "$word" in $targetLanguage',
+        );
         // Use TTS with target language pronunciation - don't await to prevent UI blocking
         _ttsService
             .speak(word, languageCode: targetLanguage)

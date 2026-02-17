@@ -237,6 +237,9 @@ class _LibraryFolderDetailViewState
         _progressController.forward();
 
         // Speak the target language word/phrase with correct language
+        print(
+          '🔊🔊🔊 LIBRARY SPEAKER BUTTON - Speaking: "$targetLanguageText" in $languageCode',
+        );
         _ttsService
             .speak(targetLanguageText, languageCode: languageCode)
             .then((_) {

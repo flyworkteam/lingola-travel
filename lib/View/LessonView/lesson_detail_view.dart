@@ -500,10 +500,14 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
                   try {
                     final languageCode = _lesson?.targetLanguage ?? 'en';
+                    print(
+                      '🔊 SPEAKER BUTTON PRESSED - About to speak: "$sentence" in $languageCode',
+                    );
                     await _ttsService.speak(
                       sentence,
                       languageCode: languageCode,
                     );
+                    print('🔊 SPEAKER: TTS speak() completed');
                     // Wait a bit to ensure completion
                     await Future.delayed(Duration(milliseconds: 500));
                   } catch (e) {

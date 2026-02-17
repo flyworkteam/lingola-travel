@@ -502,7 +502,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
           }
         }
       } else {
-        print('🔊 Using TTS for: $translation');
+        print(
+          '🔊🔊🔊 VOCABULARY SPEAKER BUTTON - Using TTS for: "$translation" in $targetLanguage',
+        );
         try {
           // TTS with mounted check - don't await to prevent UI blocking
           if (mounted) {
