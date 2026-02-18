@@ -114,6 +114,8 @@ class LessonRepository extends BaseRepository {
     int? currentStep,
     int? progressPercentage,
     int? timeSpentSeconds,
+    bool? completed,
+    int? score,
   }) async {
     try {
       final response = await _apiClient.post(
@@ -123,6 +125,8 @@ class LessonRepository extends BaseRepository {
           if (progressPercentage != null)
             'progress_percentage': progressPercentage,
           if (timeSpentSeconds != null) 'time_spent_seconds': timeSpentSeconds,
+          if (completed != null) 'completed': completed ? 1 : 0,
+          if (score != null) 'score': score,
         },
       );
 

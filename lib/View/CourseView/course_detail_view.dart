@@ -461,11 +461,11 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     }
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (!isLocked) {
           print('🎯 Opening lesson: ${lesson.id}');
 
-          Navigator.push(
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               fullscreenDialog: true,
@@ -475,6 +475,12 @@ class _CourseDetailViewState extends State<CourseDetailView> {
               ),
             ),
           );
+
+          // If lesson was completed, refresh course data
+          if (result == true) {
+            print('🔄 Lesson completed, refreshing course data...');
+            _loadLessons();
+          }
         }
       },
       child: Container(
@@ -573,8 +579,8 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     final lessonNumber = _lessons.indexOf(resumeLesson) + 1;
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             fullscreenDialog: true,
@@ -584,6 +590,12 @@ class _CourseDetailViewState extends State<CourseDetailView> {
             ),
           ),
         );
+
+        // If lesson was completed, refresh course data
+        if (result == true) {
+          print('🔄 Lesson completed, refreshing course data...');
+          _loadLessons();
+        }
       },
       child: Container(
         width: double.infinity,

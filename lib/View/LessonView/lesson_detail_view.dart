@@ -944,7 +944,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
         Expanded(
           flex: 3,
           child: GestureDetector(
-            onTap: () {
+            onTap: () async {
               // Check if lesson is completed successfully
               if (currentStep < totalSteps) {
                 // Move to next step within lesson
@@ -952,18 +952,36 @@ class _LessonDetailViewState extends State<LessonDetailView>
                   currentStep++;
                 });
                 print('✅ Moved to step $currentStep/$totalSteps');
+                // Save progress
+                await _saveProgressToBackend();
               } else {
-                // Lesson completed, go back to course detail
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('🎉 Lesson completed!'),
-                    duration: Duration(seconds: 2),
-                    backgroundColor: Color(0xFF4ECDC4),
-                  ),
-                );
-                Future.delayed(Duration(seconds: 2), () {
-                  Navigator.pop(context);
-                });
+                // Lesson completed
+                print('🎉 All steps completed! Saving final progress...');
+
+                // Save final completion to backend
+                await _saveProgressToBackend();
+
+                // Show completion message
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '🎉 Lesson completed! Moving to next lesson...',
+                      ),
+                      duration: Duration(seconds: 2),
+                      backgroundColor: Color(0xFF4ECDC4),
+                    ),
+                  );
+
+                  // Wait for snackbar and then navigate back
+                  await Future.delayed(Duration(seconds: 2));
+                  if (mounted) {
+                    Navigator.pop(
+                      context,
+                      true,
+                    ); // Return true to indicate completion
+                  }
+                }
               }
             },
             child: Container(
@@ -1353,14 +1371,27 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
     try {
       final progressPercentage = ((currentStep / totalSteps) * 100).round();
+      final isLessonCompleted = currentStep >= totalSteps;
+
       await _lessonRepository.updateLessonProgress(
         lessonId: _lesson!.id,
         currentStep: currentStep,
         progressPercentage: progressPercentage,
+        completed: isLessonCompleted,
+        score: isLessonCompleted
+            ? (similarityScore * 100).toInt()
+            : null, // Only send score on completion
       );
-      print(
-        '✅ Progress saved: $currentStep/$totalSteps ($progressPercentage%)',
-      );
+
+      if (isLessonCompleted) {
+        print('🎉 Lesson COMPLETED and saved to backend!');
+        print('✅ Progress: $currentStep/$totalSteps (100%)');
+        print('🏆 Score: ${(similarityScore * 100).toInt()}');
+      } else {
+        print(
+          '✅ Progress saved: $currentStep/$totalSteps ($progressPercentage%)',
+        );
+      }
     } catch (e) {
       print('❌ Failed to save progress: $e');
     }
