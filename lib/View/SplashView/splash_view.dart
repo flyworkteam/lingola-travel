@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
+import '../../Services/secure_storage_service.dart';
+import '../../Repositories/profile_repository.dart';
 
 /// Splash View - First Screen (Complete Implementation)
 /// All 4 SVGs + Gradient + Text
@@ -15,6 +17,9 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> {
+  final SecureStorageService _secureStorage = SecureStorageService();
+  final ProfileRepository _profileRepository = ProfileRepository();
+
   @override
   void initState() {
     super.initState();
@@ -23,6 +28,45 @@ class _SplashViewState extends State<SplashView> {
 
   void _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    // Check if user is logged in
+    final isLoggedIn = await _secureStorage.isLoggedIn();
+
+    if (isLoggedIn) {
+      // User has access token, check if they have onboarding data
+      try {
+        final profileResult = await _profileRepository.getProfile();
+
+        if (!mounted) return;
+
+        if (profileResult.success && profileResult.data != null) {
+          final user = profileResult.data['user'];
+
+          // Check if user completed onboarding
+          final hasOnboarding = user['target_language'] != null;
+
+          if (hasOnboarding) {
+            // User completed onboarding, go to home
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
+          } else {
+            // User registered but didn't complete onboarding
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.languageSelection,
+            );
+          }
+          return;
+        }
+      } catch (e) {
+        print('Error checking profile: $e');
+        // Token might be invalid, clear and go to onboarding
+        await _secureStorage.clearUserData();
+      }
+    }
+
+    // Not logged in or error occurred, go to splash pages
     if (mounted) {
       Navigator.pushReplacementNamed(context, AppRoutes.splashPages);
     }

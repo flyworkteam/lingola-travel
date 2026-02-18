@@ -49,5 +49,18 @@
 	<string>This app needs access to the microphone so you can practice pronunciation.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>This app needs speech recognition to check your pronunciation accuracy.</string>
+	<key>GIDClientID</key>
+	<string>1029036878125-jfifd1h29ksjqrj7itof3rprkendhfbg.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1029036878125-jfifd1h29ksjqrj7itof3rprkendhfbg</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

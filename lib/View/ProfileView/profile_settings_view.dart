@@ -19,6 +19,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
   String _selectedGender = 'Male';
   Language _selectedLanguage = AppLanguages.all.first; // English
+  String? _userPhotoUrl;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
@@ -45,6 +46,11 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         // Set email
         if (userData['email'] != null) {
           _emailController.text = userData['email'];
+        }
+
+        // Set photo URL
+        if (userData['photo_url'] != null) {
+          _userPhotoUrl = userData['photo_url'];
         }
 
         // Set age (if available in backend)
@@ -172,14 +178,16 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                                   height: 130.w,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFFFFB3C1),
-                                        Color(0xFFFF85A1),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
+                                    gradient: _userPhotoUrl != null
+                                        ? null
+                                        : LinearGradient(
+                                            colors: [
+                                              Color(0xFFFFB3C1),
+                                              Color(0xFFFF85A1),
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Color(
@@ -190,17 +198,44 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                                       ),
                                     ],
                                   ),
-                                  child: Center(
-                                    child: SvgPicture.asset(
-                                      'assets/icons/userlogo.svg',
-                                      width: 65.w,
-                                      height: 65.w,
-                                      colorFilter: const ColorFilter.mode(
-                                        Colors.white,
-                                        BlendMode.srcIn,
-                                      ),
-                                    ),
-                                  ),
+                                  child:
+                                      _userPhotoUrl != null &&
+                                          _userPhotoUrl!.isNotEmpty
+                                      ? ClipOval(
+                                          child: Image.network(
+                                            _userPhotoUrl!,
+                                            width: 130.w,
+                                            height: 130.w,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                                  // If image fails to load, show default
+                                                  return Center(
+                                                    child: SvgPicture.asset(
+                                                      'assets/icons/userlogo.svg',
+                                                      width: 65.w,
+                                                      height: 65.w,
+                                                      colorFilter:
+                                                          const ColorFilter.mode(
+                                                            Colors.white,
+                                                            BlendMode.srcIn,
+                                                          ),
+                                                    ),
+                                                  );
+                                                },
+                                          ),
+                                        )
+                                      : Center(
+                                          child: SvgPicture.asset(
+                                            'assets/icons/userlogo.svg',
+                                            width: 65.w,
+                                            height: 65.w,
+                                            colorFilter: const ColorFilter.mode(
+                                              Colors.white,
+                                              BlendMode.srcIn,
+                                            ),
+                                          ),
+                                        ),
                                 ),
                                 Transform.translate(
                                   offset: Offset(40.w, -30.h),

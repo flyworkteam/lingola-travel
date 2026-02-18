@@ -8,6 +8,7 @@ import 'dart:io';
 import '../../Core/Theme/my_colors.dart';
 import '../../Repositories/auth_repository.dart';
 import '../../Services/secure_storage_service.dart';
+import '../../Services/auth_service.dart';
 
 /// Sign In View - Onboarding First Screen
 /// Social login options: Apple, Google, Facebook, Guest
@@ -21,87 +22,178 @@ class SignInView extends ConsumerStatefulWidget {
 class _SignInViewState extends ConsumerState<SignInView> {
   final AuthRepository _authRepository = AuthRepository();
   final SecureStorageService _secureStorage = SecureStorageService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
 
-  /// Show "Coming Soon" dialog for social login
-  void _showComingSoonDialog(String provider) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon
-              Container(
-                width: 64.w,
-                height: 64.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.access_time_rounded,
-                  size: 32.w,
-                  color: MyColors.lingolaPrimaryColor,
-                ),
-              ),
-              SizedBox(height: 20.h),
+  /// Handle Google Sign In
+  Future<void> _handleGoogleSignIn() async {
+    if (_isLoading) return;
 
-              // Title
-              Text(
-                'Çok Yakında!',
-                style: GoogleFonts.montserrat(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
-                  color: MyColors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 12.h),
+    setState(() => _isLoading = true);
 
-              // Message
-              Text(
-                '$provider ile giriş özelliği çok yakında eklenecek.\n\nŞimdilik misafir kullanıcı olarak devam edebilirsiniz.',
-                style: GoogleFonts.montserrat(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: MyColors.textSecondary,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24.h),
+    try {
+      // Sign in with Google
+      final googleResult = await _authService.signInWithGoogle();
 
-              // Button
-              SizedBox(
-                width: double.infinity,
-                height: 48.h,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: MyColors.lingolaPrimaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                  ),
-                  child: Text(
-                    'Anladım',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: MyColors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      if (!mounted) return;
+
+      if (!googleResult.success) {
+        _showErrorMessage(
+          googleResult.errorMessage ?? 'Google girişi başarısız',
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Login to backend with Google ID token
+      final authResult = await _authRepository.loginWithGoogle(
+        googleResult.idToken!,
+      );
+
+      if (!mounted) return;
+
+      if (authResult.success && authResult.accessToken != null) {
+        // Save tokens and user data
+        await _secureStorage.saveAccessToken(authResult.accessToken!);
+        if (authResult.refreshToken != null) {
+          await _secureStorage.saveRefreshToken(authResult.refreshToken!);
+        }
+        if (authResult.user?.id != null) {
+          await _secureStorage.saveUserId(authResult.user!.id);
+        }
+
+        // Navigate to language selection or home based on onboarding status
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/language-selection');
+        }
+      } else {
+        _showErrorMessage(authResult.errorMessage ?? 'Giriş başarısız');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorMessage('Bir hata oluştu: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Handle Apple Sign In
+  Future<void> _handleAppleSignIn() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Sign in with Apple
+      final appleResult = await _authService.signInWithApple();
+
+      if (!mounted) return;
+
+      if (!appleResult.success) {
+        _showErrorMessage(appleResult.errorMessage ?? 'Apple girişi başarısız');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Login to backend with Apple identity token
+      final authResult = await _authRepository.loginWithApple(
+        appleResult.identityToken!,
+      );
+
+      if (!mounted) return;
+
+      if (authResult.success && authResult.accessToken != null) {
+        // Save tokens and user data
+        await _secureStorage.saveAccessToken(authResult.accessToken!);
+        if (authResult.refreshToken != null) {
+          await _secureStorage.saveRefreshToken(authResult.refreshToken!);
+        }
+        if (authResult.user?.id != null) {
+          await _secureStorage.saveUserId(authResult.user!.id);
+        }
+
+        // Navigate to language selection or home
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/language-selection');
+        }
+      } else {
+        _showErrorMessage(authResult.errorMessage ?? 'Giriş başarısız');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorMessage('Bir hata oluştu: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Handle Facebook Sign In
+  Future<void> _handleFacebookSignIn() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Sign in with Facebook
+      final facebookResult = await _authService.signInWithFacebook();
+
+      if (!mounted) return;
+
+      if (!facebookResult.success) {
+        _showErrorMessage(
+          facebookResult.errorMessage ?? 'Facebook girişi başarısız',
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Login to backend with Facebook access token
+      final authResult = await _authRepository.loginWithFacebook(
+        facebookResult.accessToken!,
+      );
+
+      if (!mounted) return;
+
+      if (authResult.success && authResult.accessToken != null) {
+        // Save tokens and user data
+        await _secureStorage.saveAccessToken(authResult.accessToken!);
+        if (authResult.refreshToken != null) {
+          await _secureStorage.saveRefreshToken(authResult.refreshToken!);
+        }
+        if (authResult.user?.id != null) {
+          await _secureStorage.saveUserId(authResult.user!.id);
+        }
+
+        // Navigate to language selection or home
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/language-selection');
+        }
+      } else {
+        _showErrorMessage(authResult.errorMessage ?? 'Giriş başarısız');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorMessage('Bir hata oluştu: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Show error message
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.montserrat(fontSize: 14.sp)),
+        backgroundColor: MyColors.error,
       ),
     );
   }
@@ -261,19 +353,21 @@ class _SignInViewState extends ConsumerState<SignInView> {
               // First Button (Apple for iOS, Google for Android)
               isIOS
                   ? _SocialButton(
-                      onPressed: () => _showComingSoonDialog('Apple'),
+                      onPressed: _isLoading ? null : _handleAppleSignIn,
                       backgroundColor: MyColors.black,
                       textColor: MyColors.white,
                       icon: 'assets/icons/applelogo.svg',
                       text: 'Continue with Apple',
+                      isLoading: _isLoading,
                     )
                   : _SocialButton(
-                      onPressed: () => _showComingSoonDialog('Google'),
+                      onPressed: _isLoading ? null : _handleGoogleSignIn,
                       backgroundColor: MyColors.white,
                       textColor: MyColors.black,
                       icon: 'assets/icons/googlelogo.svg',
                       text: 'Continue with Gmail',
                       hasBorder: true,
+                      isLoading: _isLoading,
                     ),
 
               SizedBox(height: 14.h), // ARTTIRILDI: 12h -> 14h
@@ -304,29 +398,32 @@ class _SignInViewState extends ConsumerState<SignInView> {
               // Second Button (Google for iOS, Apple for Android)
               isIOS
                   ? _SocialButton(
-                      onPressed: () => _showComingSoonDialog('Google'),
+                      onPressed: _isLoading ? null : _handleGoogleSignIn,
                       backgroundColor: MyColors.white,
                       textColor: MyColors.black,
                       icon: 'assets/icons/googlelogo.svg',
                       text: 'Continue with Gmail',
                       hasBorder: true,
+                      isLoading: _isLoading,
                     )
                   : _SocialButton(
-                      onPressed: () => _showComingSoonDialog('Apple'),
+                      onPressed: _isLoading ? null : _handleAppleSignIn,
                       backgroundColor: MyColors.black,
                       textColor: MyColors.white,
                       icon: 'assets/icons/applelogo.svg',
                       text: 'Continue with Apple',
+                      isLoading: _isLoading,
                     ),
 
               SizedBox(height: 14.h), // ARTTIRILDI: 12h -> 14h
               // Facebook Sign In Button (same for both)
               _SocialButton(
-                onPressed: () => _showComingSoonDialog('Facebook'),
+                onPressed: _isLoading ? null : _handleFacebookSignIn,
                 backgroundColor: const Color(0xFF1877F2), // Facebook blue
                 textColor: MyColors.white,
                 icon: 'assets/icons/facebooklogo.svg',
                 text: 'Continue with Facebook',
+                isLoading: _isLoading,
               ),
 
               SizedBox(height: 20.h), // ARTTIRILDI: 16h -> 20h
@@ -419,12 +516,13 @@ class _SignInViewState extends ConsumerState<SignInView> {
 
 /// Social Sign In Button Widget
 class _SocialButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color backgroundColor;
   final Color textColor;
   final String icon;
   final String text;
   final bool hasBorder;
+  final bool isLoading;
 
   const _SocialButton({
     required this.onPressed,
@@ -433,6 +531,7 @@ class _SocialButton extends StatelessWidget {
     required this.icon,
     required this.text,
     this.hasBorder = false,
+    this.isLoading = false,
   });
 
   @override
@@ -454,21 +553,30 @@ class _SocialButton extends StatelessWidget {
                 : BorderSide.none,
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(icon, width: 18.w, height: 18.h),
-            SizedBox(width: 10.w),
-            Text(
-              text,
-              style: GoogleFonts.montserrat(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-                color: textColor,
+        child: isLoading
+            ? SizedBox(
+                width: 18.w,
+                height: 18.h,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(textColor),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(icon, width: 18.w, height: 18.h),
+                  SizedBox(width: 10.w),
+                  Text(
+                    text,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

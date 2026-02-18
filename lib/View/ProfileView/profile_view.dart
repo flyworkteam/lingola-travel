@@ -5,6 +5,9 @@ import 'package:flutter_svg/flutter_svg.dart'; // Added for SVG icons
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Repositories/profile_repository.dart';
+import '../../Repositories/auth_repository.dart';
+import '../../Services/secure_storage_service.dart';
+import '../../Services/auth_service.dart';
 import 'profile_settings_view.dart';
 import 'share_friend_view.dart';
 import 'faq_view.dart';
@@ -22,7 +25,14 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   bool _notificationsEnabled = true;
   String _userName = 'Guest';
+  String? _userEmail;
+  String? _userPhotoUrl;
+  bool _isPremium = false;
   final ProfileRepository _profileRepository = ProfileRepository();
+  final AuthRepository _authRepository = AuthRepository();
+  final SecureStorageService _secureStorage = SecureStorageService();
+  final AuthService _authService = AuthService();
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -36,14 +46,67 @@ class _ProfileViewState extends State<ProfileView> {
       final response = await _profileRepository.getProfile();
       if (response.success && response.data != null) {
         final userData = response.data['user'];
-        if (mounted && userData['name'] != null) {
+        if (mounted) {
           setState(() {
-            _userName = userData['name'];
+            _userName = userData['name'] ?? 'Guest';
+            _userEmail = userData['email'];
+            _userPhotoUrl = userData['photo_url'];
+            _isPremium =
+                userData['is_premium'] == 1 || userData['is_premium'] == true;
           });
         }
       }
     } catch (e) {
       print('Error loading profile: $e');
+    }
+  }
+
+  /// Handle logout
+  Future<void> _handleLogout() async {
+    if (_isLoggingOut) return;
+
+    setState(() => _isLoggingOut = true);
+
+    try {
+      // Get refresh token
+      final refreshToken = await _secureStorage.getRefreshToken();
+
+      // Logout from backend
+      if (refreshToken != null) {
+        await _authRepository.logout(refreshToken);
+      }
+
+      // Sign out from all social providers
+      await _authService.signOutAll();
+
+      // Clear local storage
+      await _secureStorage.clearUserData();
+
+      if (!mounted) return;
+
+      // Navigate to sign in screen
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/onboarding',
+        (route) => false,
+      );
+    } catch (e) {
+      print('Logout error: $e');
+
+      // Even if there's an error, clear local storage and navigate
+      await _secureStorage.clearUserData();
+
+      if (!mounted) return;
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/onboarding',
+        (route) => false,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoggingOut = false);
+      }
     }
   }
 
@@ -254,19 +317,40 @@ class _ProfileViewState extends State<ProfileView> {
               shape: BoxShape.circle,
               border: Border.all(color: Color(0xFF4ECDC4), width: 3),
             ),
-            child: CircleAvatar(
-              radius: 48.w,
-              backgroundColor: Color(0xFF4ECDC4).withOpacity(0.1),
-              child: SvgPicture.asset(
-                'assets/icons/userlogo.svg',
-                width: 50.w,
-                height: 50.w,
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFF4ECDC4),
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
+            child: _userPhotoUrl != null && _userPhotoUrl!.isNotEmpty
+                ? CircleAvatar(
+                    radius: 48.w,
+                    backgroundColor: Color(0xFF4ECDC4).withOpacity(0.1),
+                    backgroundImage: NetworkImage(_userPhotoUrl!),
+                    onBackgroundImageError: (exception, stackTrace) {
+                      // If image fails to load, show default avatar
+                      print('Error loading profile image: $exception');
+                    },
+                    child: _userPhotoUrl!.isEmpty
+                        ? SvgPicture.asset(
+                            'assets/icons/userlogo.svg',
+                            width: 50.w,
+                            height: 50.w,
+                            colorFilter: const ColorFilter.mode(
+                              Color(0xFF4ECDC4),
+                              BlendMode.srcIn,
+                            ),
+                          )
+                        : null,
+                  )
+                : CircleAvatar(
+                    radius: 48.w,
+                    backgroundColor: Color(0xFF4ECDC4).withOpacity(0.1),
+                    child: SvgPicture.asset(
+                      'assets/icons/userlogo.svg',
+                      width: 50.w,
+                      height: 50.w,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF4ECDC4),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
           ),
 
           SizedBox(height: 16.h),
@@ -284,16 +368,55 @@ class _ProfileViewState extends State<ProfileView> {
 
           SizedBox(height: 4.h),
 
-          // Free Version Badge
-          Text(
-            'Free Version',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w400,
-              fontFamily: 'Montserrat',
-              color: MyColors.textSecondary,
+          // Email or Free Version Badge
+          _userEmail != null
+              ? Text(
+                  _userEmail!,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.textSecondary,
+                  ),
+                )
+              : Text(
+                  'Free Version',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.textSecondary,
+                  ),
+                ),
+
+          // Premium Badge if user is premium
+          if (_isPremium) ...[
+            SizedBox(height: 8.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: Color(0xFFFFB800).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: Color(0xFFFFB800), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star, color: Color(0xFFFFB800), size: 16.sp),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'Premium',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Montserrat',
+                      color: Color(0xFFFFB800),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -702,33 +825,53 @@ class _ProfileViewState extends State<ProfileView> {
                   SizedBox(height: 32.h),
                   // Log out Button
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    onTap: _isLoggingOut
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                            _handleLogout();
+                          },
                     child: Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: 16.h),
                       decoration: BoxDecoration(
-                        color: Color(0xFFE57373),
+                        color: _isLoggingOut
+                            ? Color(0xFFE57373).withOpacity(0.5)
+                            : Color(0xFFE57373),
                         borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFFE57373).withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                        boxShadow: _isLoggingOut
+                            ? []
+                            : [
+                                BoxShadow(
+                                  color: Color(0xFFE57373).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
                       ),
-                      child: Text(
-                        'Log out',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Montserrat',
-                          color: MyColors.white,
-                        ),
-                      ),
+                      child: _isLoggingOut
+                          ? Center(
+                              child: SizedBox(
+                                width: 20.w,
+                                height: 20.h,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    MyColors.white,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Text(
+                              'Log out',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Montserrat',
+                                color: MyColors.white,
+                              ),
+                            ),
                     ),
                   ),
                   SizedBox(height: 12.h),

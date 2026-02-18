@@ -8,7 +8,6 @@ import 'Core/Config/environment_config.dart';
 import 'Core/Routes/app_routes.dart';
 import 'Core/Theme/my_colors.dart';
 import 'Services/revenuecat_service.dart';
-import 'View/SplashView/splash_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
