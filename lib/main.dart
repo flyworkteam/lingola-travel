@@ -8,6 +8,7 @@ import 'Core/Config/environment_config.dart';
 import 'Core/Routes/app_routes.dart';
 import 'Core/Theme/my_colors.dart';
 import 'Services/revenuecat_service.dart';
+import 'Services/onesignal_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,9 @@ void main() async {
 
   // Initialize RevenueCat
   await RevenueCatService().init();
+
+  // Initialize OneSignal (Push Notifications)
+  await OneSignalService().initialize();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

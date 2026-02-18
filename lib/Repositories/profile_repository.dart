@@ -80,4 +80,13 @@ class ProfileRepository extends BaseRepository {
       return handleError(e);
     }
   }
+
+  /// Delete account permanently
+  Future<ApiResponse<dynamic>> deleteAccount() async {
+    try {
+      return await apiClient.delete('/profile');
+    } catch (e) {
+      return handleError(e);
+    }
+  }
 }

@@ -1,71 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Models/notification_model.dart';
+import 'package:lingola_travel/Repositories/notification_repository.dart';
 
 class NotificationsView extends StatefulWidget {
   final bool isPremiumUser;
 
-  const NotificationsView({
-    super.key,
-    this.isPremiumUser = false, // Default: free user
-  });
+  const NotificationsView({super.key, this.isPremiumUser = false});
 
   @override
   State<NotificationsView> createState() => _NotificationsViewState();
 }
 
 class _NotificationsViewState extends State<NotificationsView> {
-  // Sample notifications data (premium olmayan kullanıcılar için)
-  List<NotificationItem> notifications = [
-    NotificationItem(
-      id: '2',
-      icon: '☕',
-      title: 'Kahven bitmeden biter!',
-      message: 'Sadece 5 dakikalık bir pratik seni bekliyor.',
-      time: '17:58',
-      isPremium: false,
-    ),
-    NotificationItem(
-      id: '3',
-      icon: '😊',
-      title: 'Sensiz bunlar çok sessiz...',
-      message: '👋 Uzun zaman oldu! Plânlarımızdan hafızanı tazeliyelim mi?',
-      time: '14:20',
-      isPremium: false,
-    ),
-  ];
+  final NotificationRepository _notificationRepository =
+      NotificationRepository();
 
-  // Premium notification (always at top for free users)
-  final NotificationItem premiumNotification = NotificationItem(
-    id: 'premium_sticky',
-    icon: '✋',
-    title: 'Premium avantajlarını kaçırma!',
-    message: 'Premium aboneliği olarak fırsatları yakala',
-    time: '17:58',
-    isPremium: true,
-  );
+  List<NotificationModel> _notifications = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  void _deleteNotification(String id) {
-    // Premium notification cannot be deleted by free users
-    if (id == 'premium_sticky' && !widget.isPremiumUser) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Premium bildirimi silinemez'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      notifications.removeWhere((notification) => notification.id == id);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
   }
 
-  void _deleteAllNotifications() {
+  Future<void> _loadNotifications() async {
     setState(() {
-      notifications.clear();
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      final response = await _notificationRepository.getNotifications();
+
+      if (response.success && response.data != null) {
+        setState(() {
+          _notifications = response.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage =
+              response.error?.toString() ?? 'Failed to load notifications';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _deleteNotification(String id) async {
+    try {
+      final response = await _notificationRepository.deleteNotification(id);
+
+      if (response.success) {
+        setState(() {
+          _notifications.removeWhere((notification) => notification.id == id);
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.error?.toString() ?? 'Failed to delete'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), duration: Duration(seconds: 2)),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteAllNotifications() async {
+    try {
+      final response = await _notificationRepository.deleteAllNotifications();
+
+      if (response.success) {
+        setState(() {
+          if (widget.isPremiumUser) {
+            _notifications.clear();
+          } else {
+            // Keep premium promo notifications for free users
+            _notifications.removeWhere((n) => !n.isPremiumPromo);
+          }
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.error?.toString() ?? 'Failed to delete'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), duration: Duration(seconds: 2)),
+        );
+      }
+    }
   }
 
   void _showDeleteAllDialog() {
@@ -240,48 +287,67 @@ class _NotificationsViewState extends State<NotificationsView> {
         ),
         centerTitle: true,
         actions: [
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert,
-              color: MyColors.textPrimary,
-              size: 24.sp,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            onSelected: (value) {
-              if (value == 'delete_all') {
-                _showDeleteAllDialog();
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              PopupMenuItem<String>(
-                value: 'delete_all',
-                child: Row(
-                  children: [
-                    Image.asset(
-                      'assets/images/deleteicon.png',
-                      width: 24.w,
-                      height: 24.h,
-                    ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      'Delete All',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFFE53935),
-                      ),
-                    ),
-                  ],
-                ),
+          if (!_isLoading && _notifications.isNotEmpty)
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                color: MyColors.textPrimary,
+                size: 24.sp,
               ),
-            ],
-          ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              onSelected: (value) {
+                if (value == 'delete_all') {
+                  _showDeleteAllDialog();
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                PopupMenuItem<String>(
+                  value: 'delete_all',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: Color(0xFFE53935)),
+                      SizedBox(width: 12.w),
+                      Text(
+                        'Delete All',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Montserrat',
+                          color: Color(0xFFE53935),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
-      body: (notifications.isEmpty && widget.isPremiumUser)
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)))
+          : _errorMessage != null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+                  SizedBox(height: 16.h),
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16.sp, color: Colors.red),
+                  ),
+                  SizedBox(height: 16.h),
+                  ElevatedButton(
+                    onPressed: _loadNotifications,
+                    child: Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : _notifications.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -304,72 +370,63 @@ class _NotificationsViewState extends State<NotificationsView> {
                 ],
               ),
             )
-          : ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-              itemCount: widget.isPremiumUser
-                  ? notifications.length
-                  : notifications.length +
-                        1, // +1 for sticky premium notification
-              itemBuilder: (context, index) {
-                // For free users, show premium notification first (sticky, non-dismissible)
-                if (!widget.isPremiumUser && index == 0) {
-                  return _buildPremiumNotificationCard(premiumNotification);
-                }
+          : RefreshIndicator(
+              onRefresh: _loadNotifications,
+              color: Color(0xFF4ECDC4),
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                itemCount: _notifications.length,
+                itemBuilder: (context, index) {
+                  final notification = _notifications[index];
 
-                // Adjust index for regular notifications when premium card is shown
-                final notificationIndex = widget.isPremiumUser
-                    ? index
-                    : index - 1;
-                final notification = notifications[notificationIndex];
+                  // Premium promo notification (sticky, highlighted)
+                  if (notification.isPremiumPromo) {
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 12.h),
+                      child: _buildPremiumNotificationCard(notification),
+                    );
+                  }
 
-                return Padding(
-                  padding: EdgeInsets.only(bottom: 12.h),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16.r),
-                    child: Dismissible(
-                      key: Key(notification.id),
-                      direction: DismissDirection.endToStart,
-                      onDismissed: (direction) {
-                        _deleteNotification(notification.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Notification deleted'),
-                            duration: Duration(seconds: 2),
+                  // Regular notification (dismissible)
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: Dismissible(
+                        key: Key(notification.id),
+                        direction: DismissDirection.endToStart,
+                        onDismissed: (direction) {
+                          _deleteNotification(notification.id);
+                        },
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: EdgeInsets.only(right: 20.w),
+                          color: Color(0xFFE53935),
+                          child: Icon(
+                            Icons.delete_outline,
+                            color: Colors.white,
+                            size: 28.sp,
                           ),
-                        );
-                      },
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.only(right: 20.w),
-                        color: Color(0xFFE53935),
-                        child: Icon(
-                          Icons.delete_outline,
-                          color: Colors.white,
-                          size: 28.sp,
                         ),
+                        child: _buildNotificationCard(notification),
                       ),
-                      child: _buildNotificationCard(notification),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
     );
   }
 
-  // Premium notification card (sticky, non-dismissible)
-  Widget _buildPremiumNotificationCard(NotificationItem notification) {
+  // Premium notification card (sticky, highlighted)
+  Widget _buildPremiumNotificationCard(NotificationModel notification) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF4ECDC4), // Turquoise
-            Color(0xFF44B3AC),
-          ],
+          colors: [Color(0xFF4ECDC4), Color(0xFF44B3AC)],
         ),
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
@@ -383,12 +440,8 @@ class _NotificationsViewState extends State<NotificationsView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon
           Text(notification.icon, style: TextStyle(fontSize: 24.sp)),
-
           SizedBox(width: 12.w),
-
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,12 +468,9 @@ class _NotificationsViewState extends State<NotificationsView> {
               ],
             ),
           ),
-
           SizedBox(width: 12.w),
-
-          // Time
           Text(
-            notification.time,
+            notification.getFormattedTime(),
             style: TextStyle(
               fontSize: 12.sp,
               fontWeight: FontWeight.w400,
@@ -433,11 +483,11 @@ class _NotificationsViewState extends State<NotificationsView> {
     );
   }
 
-  Widget _buildNotificationCard(NotificationItem notification) {
+  Widget _buildNotificationCard(NotificationModel notification) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: notification.isRead ? MyColors.grey100 : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
@@ -449,12 +499,8 @@ class _NotificationsViewState extends State<NotificationsView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon
           Text(notification.icon, style: TextStyle(fontSize: 24.sp)),
-
           SizedBox(width: 12.w),
-
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -481,12 +527,9 @@ class _NotificationsViewState extends State<NotificationsView> {
               ],
             ),
           ),
-
           SizedBox(width: 12.w),
-
-          // Time
           Text(
-            notification.time,
+            notification.getFormattedTime(),
             style: TextStyle(
               fontSize: 12.sp,
               fontWeight: FontWeight.w400,
@@ -498,23 +541,4 @@ class _NotificationsViewState extends State<NotificationsView> {
       ),
     );
   }
-}
-
-// Notification model
-class NotificationItem {
-  final String id;
-  final String icon;
-  final String title;
-  final String message;
-  final String time;
-  final bool isPremium;
-
-  NotificationItem({
-    required this.id,
-    required this.icon,
-    required this.title,
-    required this.message,
-    required this.time,
-    required this.isPremium,
-  });
 }

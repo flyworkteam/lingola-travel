@@ -945,42 +945,64 @@ class _LessonDetailViewState extends State<LessonDetailView>
           flex: 3,
           child: GestureDetector(
             onTap: () async {
-              // Check if lesson is completed successfully
+              // Check if this step was completed successfully (score >= 80%)
+              final stepCompleted =
+                  recordedText.isNotEmpty && similarityScore >= 0.8;
+
               if (currentStep < totalSteps) {
-                // Move to next step within lesson
+                // Move to next step
                 setState(() {
-                  currentStep++;
+                  // Only increment progress if current step was completed successfully
+                  if (stepCompleted) {
+                    currentStep++;
+                  }
+                  // Reset for next question
+                  recordedText = '';
+                  similarityScore = 0.0;
+                  showResult = false;
                 });
-                print('✅ Moved to step $currentStep/$totalSteps');
-                // Save progress
-                await _saveProgressToBackend();
+
+                if (stepCompleted) {
+                  print('✅ Step completed! Progress: $currentStep/$totalSteps');
+                  // Save progress
+                  await _saveProgressToBackend();
+                } else {
+                  print('⏭️ Skipped to next question (no progress saved)');
+                }
               } else {
-                // Lesson completed
-                print('🎉 All steps completed! Saving final progress...');
+                // All questions viewed - check if lesson is actually completed
+                if (currentStep >= totalSteps) {
+                  print('🎉 Lesson completed! Saving final progress...');
+                  await _saveProgressToBackend();
 
-                // Save final completion to backend
-                await _saveProgressToBackend();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '🎉 Lesson completed! Moving to next lesson...',
+                        ),
+                        duration: Duration(seconds: 2),
+                        backgroundColor: Color(0xFF4ECDC4),
+                      ),
+                    );
 
-                // Show completion message
-                if (mounted) {
+                    await Future.delayed(Duration(seconds: 2));
+                    if (mounted) {
+                      Navigator.pop(context, true);
+                    }
+                  }
+                } else {
+                  // Not enough steps completed
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        '🎉 Lesson completed! Moving to next lesson...',
+                        '📚 Complete more exercises to finish the lesson (${currentStep}/${totalSteps})',
+                        style: TextStyle(fontFamily: 'Montserrat'),
                       ),
+                      backgroundColor: Color(0xFFFF9800),
                       duration: Duration(seconds: 2),
-                      backgroundColor: Color(0xFF4ECDC4),
                     ),
                   );
-
-                  // Wait for snackbar and then navigate back
-                  await Future.delayed(Duration(seconds: 2));
-                  if (mounted) {
-                    Navigator.pop(
-                      context,
-                      true,
-                    ); // Return true to indicate completion
-                  }
                 }
               }
             },
@@ -1345,12 +1367,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
     // Show result
     setState(() {
       showResult = true;
-      // Increment progress on successful attempt (>= 80%)
-      if (similarityScore >= 0.8 && currentStep < totalSteps) {
-        currentStep++;
-        // Save progress to backend
-        _saveProgressToBackend();
-      }
+      // Don't increment here - let Continue button handle it
     });
 
     // Auto-hide result after 2.5 seconds

@@ -38,9 +38,10 @@ class _SignInViewState extends ConsumerState<SignInView> {
       if (!mounted) return;
 
       if (!googleResult.success) {
-        _showErrorMessage(
-          googleResult.errorMessage ?? 'Google girişi başarısız',
-        );
+        // Only show error if there's an error message (user didn't cancel)
+        if (googleResult.errorMessage != null) {
+          _showErrorMessage(googleResult.errorMessage!);
+        }
         setState(() => _isLoading = false);
         return;
       }
@@ -93,7 +94,10 @@ class _SignInViewState extends ConsumerState<SignInView> {
       if (!mounted) return;
 
       if (!appleResult.success) {
-        _showErrorMessage(appleResult.errorMessage ?? 'Apple girişi başarısız');
+        // Only show error if there's an error message (user didn't cancel)
+        if (appleResult.errorMessage != null) {
+          _showErrorMessage(appleResult.errorMessage!);
+        }
         setState(() => _isLoading = false);
         return;
       }
@@ -146,9 +150,10 @@ class _SignInViewState extends ConsumerState<SignInView> {
       if (!mounted) return;
 
       if (!facebookResult.success) {
-        _showErrorMessage(
-          facebookResult.errorMessage ?? 'Facebook girişi başarısız',
-        );
+        // Only show error if there's an error message (user didn't cancel)
+        if (facebookResult.errorMessage != null) {
+          _showErrorMessage(facebookResult.errorMessage!);
+        }
         setState(() => _isLoading = false);
         return;
       }

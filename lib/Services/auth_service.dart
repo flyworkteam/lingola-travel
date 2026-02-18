@@ -24,11 +24,8 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-        // User cancelled the sign-in
-        return GoogleSignInResult(
-          success: false,
-          errorMessage: 'Giriş iptal edildi',
-        );
+        // User cancelled the sign-in - don't show error
+        return GoogleSignInResult(success: false, errorMessage: null);
       }
 
       // Obtain the auth details from the request
@@ -54,6 +51,16 @@ class AuthService {
       );
     } catch (error) {
       print('Google Sign In Error: $error');
+
+      // Check if user canceled the operation
+      final errorString = error.toString();
+      if (errorString.contains('sign_in_canceled') ||
+          errorString.contains('canceled') ||
+          errorString.contains('cancelled')) {
+        // User canceled - don't show error message
+        return GoogleSignInResult(success: false, errorMessage: null);
+      }
+
       return GoogleSignInResult(
         success: false,
         errorMessage: 'Google girişi başarısız: $error',
@@ -128,6 +135,15 @@ class AuthService {
       );
     } catch (error) {
       print('Apple Sign In Error: $error');
+
+      // Check if user canceled the operation
+      final errorString = error.toString();
+      if (errorString.contains('canceled') ||
+          errorString.contains('cancelled')) {
+        // User canceled - don't show error message
+        return AppleSignInResult(success: false, errorMessage: null);
+      }
+
       return AppleSignInResult(
         success: false,
         errorMessage: 'Apple girişi başarısız: $error',
@@ -150,10 +166,8 @@ class AuthService {
 
       // Check if user cancelled
       if (result.status == LoginStatus.cancelled) {
-        return FacebookSignInResult(
-          success: false,
-          errorMessage: 'Giriş iptal edildi',
-        );
+        // User cancelled - don't show error
+        return FacebookSignInResult(success: false, errorMessage: null);
       }
 
       // Check if login failed
@@ -188,6 +202,15 @@ class AuthService {
       );
     } catch (error) {
       print('Facebook Sign In Error: $error');
+
+      // Check if user canceled the operation
+      final errorString = error.toString();
+      if (errorString.contains('canceled') ||
+          errorString.contains('cancelled')) {
+        // User canceled - don't show error message
+        return FacebookSignInResult(success: false, errorMessage: null);
+      }
+
       return FacebookSignInResult(
         success: false,
         errorMessage: 'Facebook girişi başarısız: $error',

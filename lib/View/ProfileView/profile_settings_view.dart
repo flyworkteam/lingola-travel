@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../Models/language.dart';
 import '../../Repositories/profile_repository.dart';
+import '../../Services/secure_storage_service.dart';
 
 class ProfileSettingsView extends StatefulWidget {
   const ProfileSettingsView({super.key});
@@ -65,16 +66,19 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
         // Set target language from backend
         final targetLanguageCode = userData['target_language'] as String?;
+        Language? targetLanguage;
         if (targetLanguageCode != null) {
-          final language = AppLanguages.all.firstWhere(
+          targetLanguage = AppLanguages.all.firstWhere(
             (lang) => lang.code == targetLanguageCode,
             orElse: () => AppLanguages.all.first,
           );
-          _selectedLanguage = language;
         }
 
         if (mounted) {
           setState(() {
+            if (targetLanguage != null) {
+              _selectedLanguage = targetLanguage;
+            }
             _isLoading = false;
           });
         }
@@ -1104,8 +1108,8 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   }
 
   /// Show final confirmation before deleting account
-  void _showDeleteAccountConfirmation() {
-    showDialog(
+  void _showDeleteAccountConfirmation() async {
+    final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
@@ -1126,7 +1130,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.info_outline,
+                  Icons.warning_amber_rounded,
                   size: 32.w,
                   color: Color(0xFFE57373),
                 ),
@@ -1135,7 +1139,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
               // Title
               Text(
-                'Feature Not Available',
+                'Delete Account?',
                 style: TextStyle(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w700,
@@ -1148,7 +1152,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
               // Message
               Text(
-                'Account deletion feature is currently under development.\n\nIf you need to delete your account, please contact our support team.',
+                'This action cannot be undone. All your progress, courses, and saved words will be permanently deleted.',
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -1160,20 +1164,20 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
               ),
               SizedBox(height: 24.h),
 
-              // OK Button
+              // Delete Button
               SizedBox(
                 width: double.infinity,
                 height: 48.h,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(context, true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF4ECDC4),
+                    backgroundColor: Color(0xFFE57373),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                   ),
                   child: Text(
-                    'OK',
+                    'Delete Account',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
@@ -1183,10 +1187,174 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                   ),
                 ),
               ),
+              SizedBox(height: 12.h),
+
+              // Cancel Button
+              SizedBox(
+                width: double.infinity,
+                height: 48.h,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Montserrat',
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+
+    if (confirmed == true) {
+      await _deleteAccount();
+    }
+  }
+
+  /// Delete account permanently
+  Future<void> _deleteAccount() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: Container(
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4ECDC4)),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'Deleting account...',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: 'Montserrat',
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final response = await _profileRepository.deleteAccount();
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+
+      if (response.success) {
+        // Clear local storage
+        final secureStorage = SecureStorageService();
+        await secureStorage.clearUserData();
+
+        // Navigate to onboarding
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/onboarding',
+          (route) => false,
+        );
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Your account has been deleted successfully'),
+            backgroundColor: Color(0xFF4ECDC4),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        // Show error
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            title: Text(
+              'Error',
+              style: TextStyle(
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            content: Text(
+              response.error?.toString() ??
+                  'Failed to delete account. Please try again.',
+              style: TextStyle(fontFamily: 'Montserrat'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4ECDC4),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+
+      // Show error
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          title: Text(
+            'Error',
+            style: TextStyle(
+              fontFamily: 'Montserrat',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Text(
+            'An error occurred while deleting your account. Please try again.',
+            style: TextStyle(fontFamily: 'Montserrat'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF4ECDC4),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
