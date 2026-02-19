@@ -45,7 +45,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Progress Bar
               Text(
-                'STEP 2 OF 4',
+                'ADIM 2 / 4',
                 style: GoogleFonts.montserrat(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
@@ -102,7 +102,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Title
               Text(
-                'What is your\nProfession?',
+                'Mesleğiniz\nNedir?',
                 style: GoogleFonts.montserrat(
                   fontSize: 36.sp,
                   fontWeight: FontWeight.w700,
@@ -115,7 +115,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Subtitle
               Text(
-                'We\'ll tailor your language journey\nbased on your background',
+                'Geçmişinize göre dil yolculuğunuzu\nözelleştireceğiz',
                 style: GoogleFonts.montserrat(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -212,7 +212,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                               ),
                             ),
                             Text(
-                              'Back',
+                              'Geri',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -260,7 +260,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Continue',
+                              'Devam Et',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,

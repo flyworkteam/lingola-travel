@@ -14,6 +14,7 @@ class ApiClient {
 
   ApiClient._internal() {
     final baseUrl = '${AppConfig.baseUrl}/${AppConfig.apiVersion}';
+    print('🌐 API Client initialized with base URL: $baseUrl');
 
     _dio = Dio(
       BaseOptions(

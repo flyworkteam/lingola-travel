@@ -27,11 +27,11 @@ class _CreatingPlanViewState extends ConsumerState<CreatingPlanView>
   String _currentStatus = 'Analyzing your professional background...';
 
   final List<String> _statusMessages = [
-    'Analyzing your professional background...',
-    'Customizing vocabulary sets...',
-    'Preparing your learning path...',
-    'Optimizing for your goals...',
-    'Finalizing your personalized plan...',
+    'Profesyonel geçmişiniz analiz ediliyor...',
+    'Kelime setleri özelleştiriliyor...',
+    'Öğrenme yolunuz hazırlanıyor...',
+    'Hedefleriniz için optimize ediliyor...',
+    'Kişiselleştirilmiş planınız tamamlanıyor...',
   ];
 
   @override
@@ -151,210 +151,213 @@ class _CreatingPlanViewState extends ConsumerState<CreatingPlanView>
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 32.w),
-          child: Column(
-            children: [
-              SizedBox(height: 60.h),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Column(
+              children: [
+                SizedBox(height: 40.h),
 
-              // Title
-              Text(
-                'Creating Your\nPersonalized Plan',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.montserrat(
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.w700,
-                  color: MyColors.black,
-                  height: 1.2,
+                // Title
+                Text(
+                  'Kişiselleştirilmiş\nPlanınız Oluşturuluyor',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 28.sp,
+                    fontWeight: FontWeight.w700,
+                    color: MyColors.black,
+                    height: 1.2,
+                  ),
                 ),
-              ),
 
-              SizedBox(height: 16.h),
+                SizedBox(height: 12.h),
 
-              // Subtitle
-              Text(
-                'Our AI is tailoring your language\ntravel experience based on your\nunique goals.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.montserrat(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: MyColors.grey600,
-                  height: 1.4,
+                // Subtitle
+                Text(
+                  'Yapay zekamız, benzersiz hedeflerinize\ngöre dil seyahat deneyiminizi\nözelleştiriyor.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
+                    color: MyColors.grey600,
+                    height: 1.4,
+                  ),
                 ),
-              ),
 
-              SizedBox(height: 60.h),
+                SizedBox(height: 40.h),
 
-              // Animated Progress Circle with Globe
-              SizedBox(
-                width: 240.w,
-                height: 240.w,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Outer ring - rotating clockwise (stops at 100%)
-                    _currentProgress >= 100
-                        ? CustomPaint(
-                            size: Size(240.w, 240.w),
-                            painter: CircularProgressPainter(
-                              progress: 1.0, // Full circle when complete
-                              color: MyColors.lingolaPrimaryColor,
-                              strokeWidth: 3.w,
-                            ),
-                          )
-                        : AnimatedBuilder(
-                            animation: _rotationController1,
-                            builder: (context, child) {
-                              return Transform.rotate(
-                                angle: _rotationController1.value * 2 * 3.14159,
-                                child: CustomPaint(
-                                  size: Size(240.w, 240.w),
-                                  painter: CircularProgressPainter(
-                                    progress: 0.65, // Fixed 65% arc
-                                    color: MyColors.lingolaPrimaryColor,
-                                    strokeWidth: 3.w,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                    // Middle ring - rotating counter-clockwise (stops at 100%)
-                    _currentProgress >= 100
-                        ? CustomPaint(
-                            size: Size(200.w, 200.w),
-                            painter: CircularProgressPainter(
-                              progress: 1.0, // Full circle when complete
-                              color: MyColors.lingolaPrimaryColor.withOpacity(
-                                0.4,
-                              ),
-                              strokeWidth: 3.w,
-                            ),
-                          )
-                        : AnimatedBuilder(
-                            animation: _rotationController2,
-                            builder: (context, child) {
-                              return Transform.rotate(
-                                angle:
-                                    -_rotationController2.value * 2 * 3.14159,
-                                child: CustomPaint(
-                                  size: Size(200.w, 200.w),
-                                  painter: CircularProgressPainter(
-                                    progress: 0.5, // Fixed 50% arc
-                                    color: MyColors.lingolaPrimaryColor
-                                        .withOpacity(0.4),
-                                    strokeWidth: 3.w,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                    // Inner circle background
-                    Container(
-                      width: 160.w,
-                      height: 160.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: MyColors.lingolaPrimaryColor.withOpacity(0.1),
-                      ),
-                    ),
-
-                    // Globe icon
-                    Image.asset(
-                      'assets/images/dunya.png',
-                      width: 80.w,
-                      height: 80.w,
-                      fit: BoxFit.contain,
-                      color: MyColors.lingolaPrimaryColor,
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 60.h),
-
-              // Status message
-              Text(
-                _currentStatus,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.montserrat(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: MyColors.black,
-                ),
-              ),
-
-              SizedBox(height: 24.h),
-
-              // Progress bar with percentage
-              Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Animated Progress Circle with Globe
+                SizedBox(
+                  width: 240.w,
+                  height: 240.w,
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Text(
-                        'Optimization',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: MyColors.black,
+                      // Outer ring - rotating clockwise (stops at 100%)
+                      _currentProgress >= 100
+                          ? CustomPaint(
+                              size: Size(240.w, 240.w),
+                              painter: CircularProgressPainter(
+                                progress: 1.0, // Full circle when complete
+                                color: MyColors.lingolaPrimaryColor,
+                                strokeWidth: 3.w,
+                              ),
+                            )
+                          : AnimatedBuilder(
+                              animation: _rotationController1,
+                              builder: (context, child) {
+                                return Transform.rotate(
+                                  angle:
+                                      _rotationController1.value * 2 * 3.14159,
+                                  child: CustomPaint(
+                                    size: Size(240.w, 240.w),
+                                    painter: CircularProgressPainter(
+                                      progress: 0.65, // Fixed 65% arc
+                                      color: MyColors.lingolaPrimaryColor,
+                                      strokeWidth: 3.w,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+
+                      // Middle ring - rotating counter-clockwise (stops at 100%)
+                      _currentProgress >= 100
+                          ? CustomPaint(
+                              size: Size(200.w, 200.w),
+                              painter: CircularProgressPainter(
+                                progress: 1.0, // Full circle when complete
+                                color: MyColors.lingolaPrimaryColor.withOpacity(
+                                  0.4,
+                                ),
+                                strokeWidth: 3.w,
+                              ),
+                            )
+                          : AnimatedBuilder(
+                              animation: _rotationController2,
+                              builder: (context, child) {
+                                return Transform.rotate(
+                                  angle:
+                                      -_rotationController2.value * 2 * 3.14159,
+                                  child: CustomPaint(
+                                    size: Size(200.w, 200.w),
+                                    painter: CircularProgressPainter(
+                                      progress: 0.5, // Fixed 50% arc
+                                      color: MyColors.lingolaPrimaryColor
+                                          .withOpacity(0.4),
+                                      strokeWidth: 3.w,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+
+                      // Inner circle background
+                      Container(
+                        width: 160.w,
+                        height: 160.w,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: MyColors.lingolaPrimaryColor.withOpacity(0.1),
                         ),
                       ),
-                      Text(
-                        '$_currentProgress%',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w700,
-                          color: MyColors.lingolaPrimaryColor,
-                        ),
+
+                      // Globe icon
+                      Image.asset(
+                        'assets/images/dunya.png',
+                        width: 80.w,
+                        height: 80.w,
+                        fit: BoxFit.contain,
+                        color: MyColors.lingolaPrimaryColor,
                       ),
                     ],
                   ),
-                  SizedBox(height: 12.h),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: LinearProgressIndicator(
-                      value: _currentProgress / 100,
-                      minHeight: 8.h,
-                      backgroundColor: MyColors.grey200,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        MyColors.lingolaPrimaryColor,
+                ),
+
+                SizedBox(height: 40.h),
+
+                // Status message
+                Text(
+                  _currentStatus,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: MyColors.black,
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+
+                // Progress bar with percentage
+                Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Optimizasyon',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: MyColors.black,
+                          ),
+                        ),
+                        Text(
+                          '$_currentProgress%',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w700,
+                            color: MyColors.lingolaPrimaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        value: _currentProgress / 100,
+                        minHeight: 8.h,
+                        backgroundColor: MyColors.grey200,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          MyColors.lingolaPrimaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 40.h),
+
+                // Get Started Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56.h,
+                  child: ElevatedButton(
+                    onPressed: _currentProgress >= 100 ? _onGetStarted : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: MyColors.lingolaPrimaryColor,
+                      disabledBackgroundColor: MyColors.grey300,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Başla',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: MyColors.white,
                       ),
                     ),
                   ),
-                ],
-              ),
-
-              const Spacer(),
-
-              // Get Started Button
-              SizedBox(
-                width: double.infinity,
-                height: 56.h,
-                child: ElevatedButton(
-                  onPressed: _currentProgress >= 100 ? _onGetStarted : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: MyColors.lingolaPrimaryColor,
-                    disabledBackgroundColor: MyColors.grey300,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Get Started',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: MyColors.white,
-                    ),
-                  ),
                 ),
-              ),
 
-              SizedBox(height: 32.h),
-            ],
+                SizedBox(height: 24.h),
+              ],
+            ),
           ),
         ),
       ),

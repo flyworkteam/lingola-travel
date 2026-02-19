@@ -48,7 +48,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                 children: [
                   // Step indicator
                   Text(
-                    'STEP 1 OF 4',
+                    'ADIM 1 / 4',
                     style: GoogleFonts.montserrat(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
@@ -120,7 +120,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
 
                     // Title
                     Text(
-                      'Select the language\nyou want to learn',
+                      'Öğrenmek istediğiniz\ndili seçin',
                       style: GoogleFonts.montserrat(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.w700,
@@ -133,7 +133,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
 
                     // Subtitle
                     Text(
-                      'Please select the language you\nwant to learn',
+                      'Lütfen öğrenmek istediğiniz\ndili seçin',
                       style: GoogleFonts.montserrat(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w400,
@@ -238,7 +238,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                           elevation: 0,
                         ),
                         child: Text(
-                          'Continue',
+                          'Devam Et',
                           style: GoogleFonts.montserrat(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,

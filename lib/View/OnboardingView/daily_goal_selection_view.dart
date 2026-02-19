@@ -24,20 +24,20 @@ class _DailyGoalSelectionViewState
   final List<Map<String, String>> _goals = [
     {
       'id': 'casual',
-      'title': 'Casual',
-      'duration': '5 mins/day',
+      'title': 'Hafif',
+      'duration': '5 dk/gün',
       'icon': 'assets/images/casual.png',
     },
     {
       'id': 'regular',
-      'title': 'Regular',
-      'duration': '15 mins/day',
+      'title': 'Normal',
+      'duration': '15 dk/gün',
       'icon': 'assets/images/regular.svg',
     },
     {
       'id': 'serious',
-      'title': 'Serious',
-      'duration': '30 mins/day',
+      'title': 'Ciddi',
+      'duration': '30 dk/gün',
       'icon': 'assets/images/serious.png',
     },
   ];
@@ -96,7 +96,7 @@ class _DailyGoalSelectionViewState
 
               // Title
               Text(
-                'What is your\ndaily goal?',
+                'Günlük hedefiniz\nnedir?',
                 style: GoogleFonts.montserrat(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
@@ -109,7 +109,7 @@ class _DailyGoalSelectionViewState
 
               // Subtitle
               Text(
-                'Choose how much time you want to spend\nlearning. You can always change this later.',
+                'Öğrenmeye ne kadar zaman ayırmak istediğinizi\nseçin. Bunu daha sonra değiştirebilirsiniz.',
                 style: GoogleFonts.montserrat(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -177,7 +177,7 @@ class _DailyGoalSelectionViewState
                               ),
                             ),
                             Text(
-                              'Back',
+                              'Geri',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -212,7 +212,7 @@ class _DailyGoalSelectionViewState
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Continue',
+                              'Devam Et',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -255,7 +255,7 @@ class _DailyGoalSelectionViewState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'STEP 4 OF 4',
+          'ADIM 4 / 4',
           style: GoogleFonts.montserrat(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,

@@ -133,7 +133,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
 
               // Title
               Text(
-                'What is your\nProfession?',
+                'Mesleğiniz\nNedir?',
                 style: GoogleFonts.montserrat(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
@@ -146,7 +146,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
 
               // Subtitle
               Text(
-                'We\'ll tailor your language journey\nbased on your background',
+                'Geçmişinize göre dil yolculuğunuzu\nözelleştireceğiz',
                 style: GoogleFonts.montserrat(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -311,7 +311,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                               ),
                             ),
                             Text(
-                              'Back',
+                              'Geri',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -358,7 +358,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Continue',
+                              'Devam Et',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,

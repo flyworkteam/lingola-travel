@@ -57,6 +57,9 @@ dependencies:
   animations: ^2.0.11
   smooth_page_indicator: ^1.2.0+3
   
+  # Markdown Rendering
+  flutter_markdown: ^0.7.4+1
+  
   # Push Notifications
   onesignal_flutter: ^5.2.7
   
@@ -89,6 +92,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  
+  # App Icon Generator
+  flutter_launcher_icons: ^0.14.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -142,3 +148,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Flutter Launcher Icons Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+  image_path: "assets/icons/app_icon.png"
+  # Android adaptive icon
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
+  # Remove alpha channel for better quality
+  remove_alpha_ios: true

@@ -23,27 +23,27 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
   final List<Map<String, String>> _levels = [
     {
       'id': 'beginner',
-      'title': 'Beginner',
-      'description': 'Can understand and use familiar every day expressions.',
+      'title': 'Başlangıç',
+      'description': 'Günlük ifadeleri anlayabilir ve kullanabilir.',
       'icon': 'assets/images/beginner.svg',
     },
     {
       'id': 'elementary',
-      'title': 'Elementary',
-      'description': 'Can communicate in simple and routine tasks',
+      'title': 'Temel',
+      'description': 'Basit ve rutin görevlerde iletişim kurabilir',
       'icon': 'assets/images/elementary.svg',
     },
     {
       'id': 'intermediate',
-      'title': 'Intermediate',
+      'title': 'Orta',
       'description':
-          'Can deal with most situations likely to arise whilst traveling.',
+          'Seyahat ederken karşılaşılabilecek durumlarla başa çıkabilir.',
       'icon': 'assets/images/intermediate.svg',
     },
     {
       'id': 'upper-intermediate',
-      'title': 'Upper-Intermediate',
-      'description': 'Can lead business meetings comfortably',
+      'title': 'İleri Orta',
+      'description': 'İş toplantılarını rahatça yönetebilir',
       'icon': 'assets/images/upperintermediate.svg',
     },
   ];
@@ -82,7 +82,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
 
               // Title
               Text(
-                'What is your ${widget.selectedLanguage ?? 'English'}\nlevel?',
+                '${widget.selectedLanguage ?? 'İngilizce'}\nseviyen nedir?',
                 style: GoogleFonts.montserrat(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
@@ -95,7 +95,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
 
               // Subtitle
               Text(
-                'We\'ll tailor your language journey\nbased on your background',
+                'Geçmişinize göre dil yolculuğunuzu\nözelleştireceğiz',
                 style: GoogleFonts.montserrat(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -163,7 +163,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                               ),
                             ),
                             Text(
-                              'Back',
+                              'Geri',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -198,7 +198,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Continue',
+                              'Devam Et',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -241,7 +241,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'STEP 3 OF 4',
+          'ADIM 3 / 4',
           style: GoogleFonts.montserrat(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,

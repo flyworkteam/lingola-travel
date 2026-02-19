@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,6 +12,7 @@ import '../../Repositories/notification_repository.dart';
 import '../../Services/secure_storage_service.dart';
 import '../../Services/auth_service.dart';
 import '../../Services/onesignal_service.dart';
+import '../PolicyView/policy_detail_view.dart';
 
 /// Sign In View - Onboarding First Screen
 /// Social login options: Apple, Google, Facebook, Guest
@@ -27,7 +29,46 @@ class _SignInViewState extends ConsumerState<SignInView> {
   final AuthService _authService = AuthService();
   final NotificationRepository _notificationRepository =
       NotificationRepository();
-  bool _isLoading = false;
+
+  // Separate loading states for each button
+  bool _isGoogleLoading = false;
+  bool _isAppleLoading = false;
+  bool _isFacebookLoading = false;
+  bool _isGuestLoading = false;
+
+  // Gesture recognizers for policy links
+  late TapGestureRecognizer _termsRecognizer;
+  late TapGestureRecognizer _privacyRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PolicyDetailView(policyType: 'terms'),
+          ),
+        );
+      };
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PolicyDetailView(policyType: 'privacy'),
+          ),
+        );
+      };
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
+    super.dispose();
+  }
 
   /// Register user device for push notifications
   Future<void> _registerUserDevice(String userId) async {
@@ -53,9 +94,9 @@ class _SignInViewState extends ConsumerState<SignInView> {
 
   /// Handle Google Sign In
   Future<void> _handleGoogleSignIn() async {
-    if (_isLoading) return;
+    if (_isGoogleLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isGoogleLoading = true);
 
     try {
       // Sign in with Google
@@ -68,7 +109,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
         if (googleResult.errorMessage != null) {
           _showErrorMessage(googleResult.errorMessage!);
         }
-        setState(() => _isLoading = false);
+        setState(() => _isGoogleLoading = false);
         return;
       }
 
@@ -104,16 +145,16 @@ class _SignInViewState extends ConsumerState<SignInView> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isGoogleLoading = false);
       }
     }
   }
 
   /// Handle Apple Sign In
   Future<void> _handleAppleSignIn() async {
-    if (_isLoading) return;
+    if (_isAppleLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isAppleLoading = true);
 
     try {
       // Sign in with Apple
@@ -126,7 +167,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
         if (appleResult.errorMessage != null) {
           _showErrorMessage(appleResult.errorMessage!);
         }
-        setState(() => _isLoading = false);
+        setState(() => _isAppleLoading = false);
         return;
       }
 
@@ -162,16 +203,16 @@ class _SignInViewState extends ConsumerState<SignInView> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isAppleLoading = false);
       }
     }
   }
 
   /// Handle Facebook Sign In
   Future<void> _handleFacebookSignIn() async {
-    if (_isLoading) return;
+    if (_isFacebookLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isFacebookLoading = true);
 
     try {
       // Sign in with Facebook
@@ -184,7 +225,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
         if (facebookResult.errorMessage != null) {
           _showErrorMessage(facebookResult.errorMessage!);
         }
-        setState(() => _isLoading = false);
+        setState(() => _isFacebookLoading = false);
         return;
       }
 
@@ -216,11 +257,12 @@ class _SignInViewState extends ConsumerState<SignInView> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Bir hata oluştu: $e');
+        _showErrorMessage('Facebook ile giriş şu anda kullanılamıyor');
+        print('❌ Facebook auth error: $e');
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isFacebookLoading = false);
       }
     }
   }
@@ -237,9 +279,9 @@ class _SignInViewState extends ConsumerState<SignInView> {
 
   /// Handle guest login
   Future<void> _handleGuestLogin() async {
-    if (_isLoading) return;
+    if (_isGuestLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isGuestLoading = true);
 
     try {
       // Get device ID
@@ -313,7 +355,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
       );
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isGuestLoading = false);
       }
     }
   }
@@ -403,21 +445,21 @@ class _SignInViewState extends ConsumerState<SignInView> {
               // First Button (Apple for iOS, Google for Android)
               isIOS
                   ? _SocialButton(
-                      onPressed: _isLoading ? null : _handleAppleSignIn,
+                      onPressed: _isAppleLoading ? null : _handleAppleSignIn,
                       backgroundColor: MyColors.black,
                       textColor: MyColors.white,
                       icon: 'assets/icons/applelogo.svg',
                       text: 'Continue with Apple',
-                      isLoading: _isLoading,
+                      isLoading: _isAppleLoading,
                     )
                   : _SocialButton(
-                      onPressed: _isLoading ? null : _handleGoogleSignIn,
+                      onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
                       backgroundColor: MyColors.white,
                       textColor: MyColors.black,
                       icon: 'assets/icons/googlelogo.svg',
                       text: 'Continue with Gmail',
                       hasBorder: true,
-                      isLoading: _isLoading,
+                      isLoading: _isGoogleLoading,
                     ),
 
               SizedBox(height: 14.h), // ARTTIRILDI: 12h -> 14h
@@ -448,42 +490,42 @@ class _SignInViewState extends ConsumerState<SignInView> {
               // Second Button (Google for iOS, Apple for Android)
               isIOS
                   ? _SocialButton(
-                      onPressed: _isLoading ? null : _handleGoogleSignIn,
+                      onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
                       backgroundColor: MyColors.white,
                       textColor: MyColors.black,
                       icon: 'assets/icons/googlelogo.svg',
                       text: 'Continue with Gmail',
                       hasBorder: true,
-                      isLoading: _isLoading,
+                      isLoading: _isGoogleLoading,
                     )
                   : _SocialButton(
-                      onPressed: _isLoading ? null : _handleAppleSignIn,
+                      onPressed: _isAppleLoading ? null : _handleAppleSignIn,
                       backgroundColor: MyColors.black,
                       textColor: MyColors.white,
                       icon: 'assets/icons/applelogo.svg',
                       text: 'Continue with Apple',
-                      isLoading: _isLoading,
+                      isLoading: _isAppleLoading,
                     ),
 
               SizedBox(height: 14.h), // ARTTIRILDI: 12h -> 14h
               // Facebook Sign In Button (same for both)
               _SocialButton(
-                onPressed: _isLoading ? null : _handleFacebookSignIn,
+                onPressed: _isFacebookLoading ? null : _handleFacebookSignIn,
                 backgroundColor: const Color(0xFF1877F2), // Facebook blue
                 textColor: MyColors.white,
                 icon: 'assets/icons/facebooklogo.svg',
                 text: 'Continue with Facebook',
-                isLoading: _isLoading,
+                isLoading: _isFacebookLoading,
               ),
 
               SizedBox(height: 20.h), // ARTTIRILDI: 16h -> 20h
               // Continue as Guest
               GestureDetector(
-                onTap: _isLoading ? null : _handleGuestLogin,
+                onTap: _isGuestLoading ? null : _handleGuestLogin,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (_isLoading)
+                    if (_isGuestLoading)
                       SizedBox(
                         width: 18.w,
                         height: 18.h,
@@ -538,9 +580,10 @@ class _SignInViewState extends ConsumerState<SignInView> {
                         style: GoogleFonts.montserrat(
                           fontSize: 11.sp,
                           fontWeight: FontWeight.w600,
-                          color: MyColors.black,
+                          color: MyColors.primary,
                           decoration: TextDecoration.underline,
                         ),
+                        recognizer: _termsRecognizer,
                       ),
                       const TextSpan(text: '\nand '),
                       TextSpan(
@@ -548,9 +591,10 @@ class _SignInViewState extends ConsumerState<SignInView> {
                         style: GoogleFonts.montserrat(
                           fontSize: 11.sp,
                           fontWeight: FontWeight.w600,
-                          color: MyColors.black,
+                          color: MyColors.primary,
                           decoration: TextDecoration.underline,
                         ),
+                        recognizer: _privacyRecognizer,
                       ),
                     ],
                   ),
