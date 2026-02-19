@@ -19,8 +19,8 @@ class AppConfig {
   static const double designHeight = 852;
 
   // OneSignal Configuration
-  // TODO: Add OneSignal App ID after setup
-  static const String oneSignalAppId = 'YOUR_ONESIGNAL_APP_ID';
+  static const String oneSignalAppId =
+      'os_v2_app_md3igryoz5eafffspayjs3g6g656yuqjafeusv56fnnfuldca3vknyeldhcjvfqfj34gfwgttpp2thv7gra22mmmlhcd2wzpjjmjzpi';
 
   // Social Auth Configuration
   // TODO: Add credentials after obtaining from respective platforms

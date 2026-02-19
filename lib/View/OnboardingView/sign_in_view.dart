@@ -7,8 +7,10 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import '../../Core/Theme/my_colors.dart';
 import '../../Repositories/auth_repository.dart';
+import '../../Repositories/notification_repository.dart';
 import '../../Services/secure_storage_service.dart';
 import '../../Services/auth_service.dart';
+import '../../Services/onesignal_service.dart';
 
 /// Sign In View - Onboarding First Screen
 /// Social login options: Apple, Google, Facebook, Guest
@@ -23,7 +25,31 @@ class _SignInViewState extends ConsumerState<SignInView> {
   final AuthRepository _authRepository = AuthRepository();
   final SecureStorageService _secureStorage = SecureStorageService();
   final AuthService _authService = AuthService();
+  final NotificationRepository _notificationRepository =
+      NotificationRepository();
   bool _isLoading = false;
+
+  /// Register user device for push notifications
+  Future<void> _registerUserDevice(String userId) async {
+    try {
+      // Set OneSignal external user ID
+      await OneSignalService().setExternalUserId(userId);
+
+      // Get OneSignal player ID
+      final playerId = await OneSignalService().getPlayerId();
+
+      if (playerId != null && playerId.isNotEmpty) {
+        // Register device to backend
+        await _notificationRepository.registerDevice(
+          playerId: playerId,
+          platform: Platform.isIOS ? 'ios' : 'android',
+        );
+        print('✅ Device registered for push notifications');
+      }
+    } catch (e) {
+      print('⚠️ Device registration error: $e');
+    }
+  }
 
   /// Handle Google Sign In
   Future<void> _handleGoogleSignIn() async {
@@ -61,6 +87,8 @@ class _SignInViewState extends ConsumerState<SignInView> {
         }
         if (authResult.user?.id != null) {
           await _secureStorage.saveUserId(authResult.user!.id);
+          // Register device for push notifications
+          await _registerUserDevice(authResult.user!.id);
         }
 
         // Navigate to language selection or home based on onboarding status
@@ -117,6 +145,8 @@ class _SignInViewState extends ConsumerState<SignInView> {
         }
         if (authResult.user?.id != null) {
           await _secureStorage.saveUserId(authResult.user!.id);
+          // Register device for push notifications
+          await _registerUserDevice(authResult.user!.id);
         }
 
         // Navigate to language selection or home
@@ -173,6 +203,8 @@ class _SignInViewState extends ConsumerState<SignInView> {
         }
         if (authResult.user?.id != null) {
           await _secureStorage.saveUserId(authResult.user!.id);
+          // Register device for push notifications
+          await _registerUserDevice(authResult.user!.id);
         }
 
         // Navigate to language selection or home
@@ -237,6 +269,8 @@ class _SignInViewState extends ConsumerState<SignInView> {
         }
         if (result.user?.id != null) {
           await _secureStorage.saveUserId(result.user!.id);
+          // Register device for push notifications
+          await _registerUserDevice(result.user!.id);
         }
 
         // Navigate to language selection

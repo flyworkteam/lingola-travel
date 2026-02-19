@@ -4,7 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../Models/language.dart';
 import '../../Repositories/profile_repository.dart';
+import '../../Repositories/notification_repository.dart';
 import '../../Services/secure_storage_service.dart';
+import '../../Services/onesignal_service.dart';
 
 class ProfileSettingsView extends StatefulWidget {
   const ProfileSettingsView({super.key});
@@ -1257,6 +1259,13 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
     );
 
     try {
+      // Unregister device from push notifications before deletion
+      final playerId = await OneSignalService().getPlayerId();
+      if (playerId != null && playerId.isNotEmpty) {
+        await NotificationRepository().unregisterDevice(playerId);
+      }
+      await OneSignalService().removeExternalUserId();
+
       final response = await _profileRepository.deleteAccount();
 
       if (!mounted) return;

@@ -6,8 +6,10 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Repositories/profile_repository.dart';
 import '../../Repositories/auth_repository.dart';
+import '../../Repositories/notification_repository.dart';
 import '../../Services/secure_storage_service.dart';
 import '../../Services/auth_service.dart';
+import '../../Services/onesignal_service.dart';
 import 'profile_settings_view.dart';
 import 'share_friend_view.dart';
 import 'faq_view.dart';
@@ -68,6 +70,15 @@ class _ProfileViewState extends State<ProfileView> {
     setState(() => _isLoggingOut = true);
 
     try {
+      // Unregister device from push notifications
+      final playerId = await OneSignalService().getPlayerId();
+      if (playerId != null && playerId.isNotEmpty) {
+        await NotificationRepository().unregisterDevice(playerId);
+      }
+
+      // Remove OneSignal external user ID
+      await OneSignalService().removeExternalUserId();
+
       // Get refresh token
       final refreshToken = await _secureStorage.getRefreshToken();
 
