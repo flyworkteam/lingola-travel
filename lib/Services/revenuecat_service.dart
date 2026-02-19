@@ -31,6 +31,34 @@ class RevenueCatService {
     await Purchases.configure(configuration);
   }
 
+  /// Get available offerings/packages
+  Future<Offerings?> getOfferings() async {
+    try {
+      final offerings = await Purchases.getOfferings();
+      return offerings;
+    } on PlatformException catch (e) {
+      print('❌ Error getting offerings: $e');
+      return null;
+    }
+  }
+
+  /// Purchase a specific package
+  Future<CustomerInfo?> purchasePackage(Package package) async {
+    try {
+      final purchaseResult = await Purchases.purchasePackage(package);
+      print('✅ Purchase successful: ${purchaseResult.customerInfo}');
+      return purchaseResult.customerInfo;
+    } on PlatformException catch (e) {
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
+      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
+        print('⚠️ User cancelled the purchase');
+      } else {
+        print('❌ Error making purchase: $e');
+      }
+      return null;
+    }
+  }
+
   /// Displays the RevenueCat Paywall using RevenueCat UI
   Future<void> showPaywall() async {
     try {
@@ -52,12 +80,14 @@ class RevenueCatService {
   }
 
   /// Restore purchases for the user
-  Future<void> restorePurchases() async {
+  Future<CustomerInfo?> restorePurchases() async {
     try {
       CustomerInfo customerInfo = await Purchases.restorePurchases();
-      print('Restored customer info: $customerInfo');
+      print('✅ Restored customer info: $customerInfo');
+      return customerInfo;
     } on PlatformException catch (e) {
-      print('Error restoring purchases: $e');
+      print('❌ Error restoring purchases: $e');
+      return null;
     }
   }
 
@@ -68,8 +98,18 @@ class RevenueCatService {
       // Replace 'premium' with your entitlement ID configured in RevenueCat dashboard
       return customerInfo.entitlements.active.containsKey('premium');
     } on PlatformException catch (e) {
-      print('Error checking premium status: $e');
+      print('❌ Error checking premium status: $e');
       return false;
+    }
+  }
+
+  /// Get customer info
+  Future<CustomerInfo?> getCustomerInfo() async {
+    try {
+      return await Purchases.getCustomerInfo();
+    } on PlatformException catch (e) {
+      print('❌ Error getting customer info: $e');
+      return null;
     }
   }
 }

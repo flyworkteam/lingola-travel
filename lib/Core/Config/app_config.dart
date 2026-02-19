@@ -23,22 +23,26 @@ class AppConfig {
       'os_v2_app_md3igryoz5eafffspayjs3g6g656yuqjafeusv56fnnfuldca3vknyeldhcjvfqfj34gfwgttpp2thv7gra22mmmlhcd2wzpjjmjzpi';
 
   // Social Auth Configuration
-  // TODO: Add credentials after obtaining from respective platforms
-  static const String googleClientIdIOS = 'YOUR_GOOGLE_CLIENT_ID_IOS';
-  static const String googleClientIdAndroid = 'YOUR_GOOGLE_CLIENT_ID_ANDROID';
-  static const String googleClientIdWeb = 'YOUR_GOOGLE_CLIENT_ID_WEB';
+  // ✅ Keys from backend .env
+  static const String googleClientIdIOS =
+      '1029036878125-jfifd1h29ksjqrj7itof3rprkendhfbg.apps.googleusercontent.com';
+  static const String googleClientIdAndroid =
+      '1029036878125-4tk01breq1fk6773de1q33sb3od28oqa.apps.googleusercontent.com';
+  static const String googleClientIdWeb =
+      '1029036878125-ve1subf0p13cg2tfnktpqqo1ij7gvlfj.apps.googleusercontent.com';
 
-  static const String appleTeamId = 'YOUR_APPLE_TEAM_ID';
-  static const String appleClientId = 'YOUR_APPLE_CLIENT_ID';
-  static const String appleRedirectUri = 'YOUR_APPLE_REDIRECT_URI';
+  static const String appleTeamId = 'JK42R39DT5';
+  static const String appleClientId = 'com.flywork.lingolatravel';
+  static const String appleRedirectUri =
+      'https://lingola-travel-api.com/auth/apple/callback';
 
   static const String facebookAppId = 'YOUR_FACEBOOK_APP_ID';
   static const String facebookClientToken = 'YOUR_FACEBOOK_CLIENT_TOKEN';
 
-  // RevenueCat Configuration (for future use)
-  // TODO: Add RevenueCat API keys after store approval
-  static const String revenueCatApiKeyIOS = 'YOUR_REVENUECAT_IOS_KEY';
-  static const String revenueCatApiKeyAndroid = 'YOUR_REVENUECAT_ANDROID_KEY';
+  // RevenueCat Configuration
+  static const String revenueCatApiKeyIOS = 'appl_kNUfZQftWCZOoUHTEUfeLNjZgBH';
+  static const String revenueCatApiKeyAndroid =
+      'goog_FilzbVoUQKqbEJvgOlGAaBZIShS';
 
   // Premium Trial Configuration
   static const int premiumTrialDays = 1;
@@ -56,7 +60,7 @@ class AppConfig {
 
   // Feature Flags
   static const bool enableFacebookLogin = false; // Enable after store approval
-  static const bool enableRevenueCat = false; // Enable after store approval
+  static const bool enableRevenueCat = true; // ✅ RevenueCat entegrasyonu aktif
   static const bool enableAnalytics = true;
   static const bool enableCrashReporting = true;
 
