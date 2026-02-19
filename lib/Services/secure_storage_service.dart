@@ -9,7 +9,10 @@ class SecureStorageService {
   factory SecureStorageService() => _instance;
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
@@ -17,11 +20,35 @@ class SecureStorageService {
 
   // Token Management
   Future<void> saveAccessToken(String token) async {
-    await _storage.write(key: AppConfig.keyAccessToken, value: token);
+    try {
+      await _storage.write(key: AppConfig.keyAccessToken, value: token);
+      print('💾 Token saved to secure storage');
+
+      // Verify it was saved
+      final verified = await _storage.read(key: AppConfig.keyAccessToken);
+      if (verified == token) {
+        print('✅ Token save verified successfully');
+      } else {
+        print('⚠️ Token verification failed!');
+      }
+    } catch (e) {
+      print('❌ Error saving token: $e');
+    }
   }
 
   Future<String?> getAccessToken() async {
-    return await _storage.read(key: AppConfig.keyAccessToken);
+    try {
+      final token = await _storage.read(key: AppConfig.keyAccessToken);
+      if (token != null) {
+        print('✅ Token retrieved from storage: ${token.substring(0, 20)}...');
+      } else {
+        print('⚠️ No token found in secure storage');
+      }
+      return token;
+    } catch (e) {
+      print('❌ Error reading token: $e');
+      return null;
+    }
   }
 
   Future<void> saveRefreshToken(String token) async {

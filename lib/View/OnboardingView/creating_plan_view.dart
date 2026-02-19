@@ -113,24 +113,24 @@ class _CreatingPlanViewState extends ConsumerState<CreatingPlanView>
 
         print('🔵 Save onboarding result: $success');
 
-        if (success) {
-          // Navigate to home screen
-          if (mounted) {
+        if (mounted) {
+          if (success) {
+            // Navigate to home screen on success
             print('🔵 Navigating to home...');
             Navigator.pushReplacementNamed(context, AppRoutes.home);
-          }
-        } else {
-          // Show error but still navigate (graceful degradation)
-          if (mounted) {
-            print('⚠️ Save failed, navigating anyway...');
+          } else {
+            // Show error message only on failure
+            print('⚠️ Save failed, showing error...');
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
                   'Tercihler kaydedilirken bir hata oluştu, ancak devam edebilirsiniz',
                 ),
                 duration: Duration(seconds: 2),
+                backgroundColor: Colors.orange,
               ),
             );
+            // Still navigate for graceful degradation
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           }
         }

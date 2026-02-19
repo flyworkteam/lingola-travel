@@ -36,10 +36,13 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   /// Load user profile from backend
   Future<void> _loadProfile() async {
     try {
+      print('📥 Loading profile from backend...');
       final response = await _profileRepository.getProfile();
 
       if (response.success && response.data != null) {
         final userData = response.data['user'];
+        print('✅ Profile loaded successfully');
+        print('👤 User data: $userData');
 
         // Set name
         if (userData['name'] != null) {
@@ -68,12 +71,17 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
         // Set target language from backend
         final targetLanguageCode = userData['target_language'] as String?;
+        print('🌐 Target language code from backend: $targetLanguageCode');
+
         Language? targetLanguage;
         if (targetLanguageCode != null) {
           targetLanguage = AppLanguages.all.firstWhere(
             (lang) => lang.code == targetLanguageCode,
             orElse: () => AppLanguages.all.first,
           );
+          print('✅ Language found: ${targetLanguage.name}');
+        } else {
+          print('⚠️ No target language in backend, using default: English');
         }
 
         if (mounted) {
@@ -85,6 +93,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
           });
         }
       } else {
+        print('❌ Profile load failed: ${response.error?.message}');
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -92,7 +101,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         }
       }
     } catch (e) {
-      print('Error loading profile: $e');
+      print('❌ Error loading profile: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;

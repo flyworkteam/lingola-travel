@@ -263,15 +263,26 @@ class _SignInViewState extends ConsumerState<SignInView> {
 
       if (result.success && result.accessToken != null) {
         // Save tokens
+        print('✅ Guest login successful!');
+        print('🔑 Access token: ${result.accessToken!.substring(0, 20)}...');
+        print('🔑 Refresh token: ${result.refreshToken?.substring(0, 20)}...');
+
         await _secureStorage.saveAccessToken(result.accessToken!);
         if (result.refreshToken != null) {
           await _secureStorage.saveRefreshToken(result.refreshToken!);
         }
         if (result.user?.id != null) {
           await _secureStorage.saveUserId(result.user!.id);
+          print('👤 User ID saved: ${result.user!.id}');
           // Register device for push notifications
           await _registerUserDevice(result.user!.id);
         }
+
+        // Verify token was saved
+        final savedToken = await _secureStorage.getAccessToken();
+        print(
+          '✅ Token verification: ${savedToken != null ? "Token saved successfully" : "⚠️ Token not saved!"}',
+        );
 
         // Navigate to language selection
         if (mounted) {

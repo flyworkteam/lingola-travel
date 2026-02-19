@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../Core/Config/app_config.dart';
 import '../Models/api_response.dart';
+import 'secure_storage_service.dart';
 
 /// API Client using Dio
 /// Handles all HTTP requests with interceptors for auth, logging, and error handling
@@ -10,7 +10,7 @@ class ApiClient {
   factory ApiClient() => _instance;
 
   late Dio _dio;
-  final _secureStorage = const FlutterSecureStorage();
+  final SecureStorageService _secureStorage = SecureStorageService();
 
   ApiClient._internal() {
     final baseUrl = '${AppConfig.baseUrl}/${AppConfig.apiVersion}';
@@ -35,13 +35,14 @@ class ApiClient {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           // Add auth token to requests
-          final token = await _secureStorage.read(
-            key: AppConfig.keyAccessToken,
-          );
+          final token = await _secureStorage.getAccessToken();
 
-          // TEST MODE: Use demo token if no real token exists
-          final authToken = token ?? 'demo-token-user-demo-001';
-          options.headers['Authorization'] = 'Bearer $authToken';
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+            print('🔑 Token added to request: ${token.substring(0, 20)}...');
+          } else {
+            print('⚠️ No access token found!');
+          }
 
           return handler.next(options);
         },
@@ -53,24 +54,22 @@ class ApiClient {
           if (error.response?.statusCode == 401) {
             try {
               // Try to refresh token
-              final refreshToken = await _secureStorage.read(
-                key: AppConfig.keyRefreshToken,
-              );
+              final refreshToken = await _secureStorage.getRefreshToken();
 
               if (refreshToken != null) {
                 final refreshed = await _refreshAccessToken(refreshToken);
 
                 if (refreshed) {
                   // Retry original request with new token
-                  final newToken = await _secureStorage.read(
-                    key: AppConfig.keyAccessToken,
-                  );
+                  final newToken = await _secureStorage.getAccessToken();
 
-                  error.requestOptions.headers['Authorization'] =
-                      'Bearer $newToken';
+                  if (newToken != null) {
+                    error.requestOptions.headers['Authorization'] =
+                        'Bearer $newToken';
 
-                  final response = await _dio.fetch(error.requestOptions);
-                  return handler.resolve(response);
+                    final response = await _dio.fetch(error.requestOptions);
+                    return handler.resolve(response);
+                  }
                 } else {
                   // Refresh failed, logout user
                   await _clearTokens();
@@ -114,14 +113,8 @@ class ApiClient {
         final newRefreshToken = response.data['data']['refreshToken'];
 
         // Save new tokens
-        await _secureStorage.write(
-          key: AppConfig.keyAccessToken,
-          value: newAccessToken,
-        );
-        await _secureStorage.write(
-          key: AppConfig.keyRefreshToken,
-          value: newRefreshToken,
-        );
+        await _secureStorage.saveAccessToken(newAccessToken);
+        await _secureStorage.saveRefreshToken(newRefreshToken);
 
         print('Token refreshed successfully');
         return true;
@@ -136,8 +129,7 @@ class ApiClient {
 
   /// Clear all tokens (logout)
   Future<void> _clearTokens() async {
-    await _secureStorage.delete(key: AppConfig.keyAccessToken);
-    await _secureStorage.delete(key: AppConfig.keyRefreshToken);
+    await _secureStorage.deleteTokens();
     print('Tokens cleared - User logged out');
   }
 

@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
+import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
 
 /// Step 4 of 4 - Daily Goal Selection View
 /// Pixel-perfect implementation from Figma
-class DailyGoalSelectionView extends StatefulWidget {
+class DailyGoalSelectionView extends ConsumerStatefulWidget {
   const DailyGoalSelectionView({super.key});
 
   @override
-  State<DailyGoalSelectionView> createState() => _DailyGoalSelectionViewState();
+  ConsumerState<DailyGoalSelectionView> createState() =>
+      _DailyGoalSelectionViewState();
 }
 
-class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
+class _DailyGoalSelectionViewState
+    extends ConsumerState<DailyGoalSelectionView> {
   String? _selectedGoal;
 
   final List<Map<String, String>> _goals = [
@@ -46,7 +50,27 @@ class _DailyGoalSelectionViewState extends State<DailyGoalSelectionView> {
 
   void _onContinue() {
     if (_selectedGoal != null) {
+      // Convert goal to minutes and save to state
+      int dailyGoalMinutes = _getGoalMinutes(_selectedGoal!);
+      ref
+          .read(onboardingControllerProvider.notifier)
+          .setDailyGoal(_selectedGoal!, dailyGoalMinutes);
+
       Navigator.pushNamed(context, AppRoutes.creatingPlan);
+    }
+  }
+
+  /// Convert goal ID to minutes
+  int _getGoalMinutes(String goalId) {
+    switch (goalId) {
+      case 'casual':
+        return 5;
+      case 'regular':
+        return 15;
+      case 'serious':
+        return 30;
+      default:
+        return 15;
     }
   }
 
