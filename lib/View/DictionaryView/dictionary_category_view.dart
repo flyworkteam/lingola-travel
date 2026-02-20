@@ -113,17 +113,23 @@ class _DictionaryCategoryViewState
 
   void _toggleBookmark(String id) async {
     try {
-      if (_bookmarkedItems.contains(id)) {
-        // TODO: Implement remove from library API
+      final isCurrentlyBookmarked = _bookmarkedItems.contains(id);
+
+      if (isCurrentlyBookmarked) {
+        // Remove from library
+        await LibraryRepository().removeBookmarkByItem(
+          itemType: 'dictionary_word',
+          itemId: id,
+        );
         setState(() {
           _bookmarkedItems.remove(id);
         });
       } else {
-        // Save to library - folder-002 is Visual Dictionary folder
-        await LibraryRepository().addItemToFolder(
-          folderId: 'folder-002',
+        // Save to library with category
+        await LibraryRepository().addBookmark(
           itemType: 'dictionary_word',
           itemId: id,
+          category: widget.categoryName,
         );
         setState(() {
           _bookmarkedItems.add(id);
@@ -449,7 +455,7 @@ class _DictionaryCategoryViewState
                   height: 40.h,
                   decoration: BoxDecoration(
                     color: isBookmarked
-                        ? Color(0xFF4ECDC4).withOpacity(0.2)
+                        ? Color(0xFF2989E9).withOpacity(0.2)
                         : Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
@@ -459,7 +465,7 @@ class _DictionaryCategoryViewState
                       width: 11.w,
                       height: 13.h,
                       colorFilter: ColorFilter.mode(
-                        isBookmarked ? Color(0xFF4ECDC4) : Color(0xFFCBD5E1),
+                        isBookmarked ? Color(0xFF2989E9) : Color(0xFFCBD5E1),
                         BlendMode.srcIn,
                       ),
                     ),

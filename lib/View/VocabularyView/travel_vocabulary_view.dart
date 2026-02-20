@@ -351,14 +351,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       }
     } on TimeoutException catch (e) {
       print('⏱️ Category selection timeout: $e');
-      if (mounted && requestId == _categoryRequestId) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Loading timeout. Please try again.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
     } catch (e) {
       print('❌ Category selection error: $e');
     } finally {
@@ -547,49 +539,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     }
   }
 
-  // Map category to folder ID
-  String _getCategoryFolderId(String categoryName) {
-    final categoryLower = categoryName.toLowerCase();
-
-    // Simple mapping based on category keywords
-    if (categoryLower.contains('airport') ||
-        categoryLower.contains('havaalani')) {
-      return 'folder-001'; // My Airport Essentials
-    } else if (categoryLower.contains('hotel') ||
-        categoryLower.contains('accommodation') ||
-        categoryLower.contains('konaklama')) {
-      return 'folder-002'; // My Hotel Essentials
-    } else if (categoryLower.contains('transport') ||
-        categoryLower.contains('ulaşım')) {
-      return 'folder-003'; // Transport Essentials
-    } else if (categoryLower.contains('food') ||
-        categoryLower.contains('drink') ||
-        categoryLower.contains('yemek')) {
-      return 'folder-004'; // My Food Essentials
-    } else if (categoryLower.contains('shopping') ||
-        categoryLower.contains('alışveriş')) {
-      return 'folder-005'; // My Shopping Essentials
-    } else if (categoryLower.contains('culture') ||
-        categoryLower.contains('kültür')) {
-      return 'folder-006'; // Culture Essentials
-    } else if (categoryLower.contains('meeting') ||
-        categoryLower.contains('görüşme')) {
-      return 'folder-007'; // Meeting Essentials
-    } else if (categoryLower.contains('sport') ||
-        categoryLower.contains('spor')) {
-      return 'folder-008'; // Sport Essentials
-    } else if (categoryLower.contains('health') ||
-        categoryLower.contains('sağlık')) {
-      return 'folder-009'; // Health Essentials
-    } else if (categoryLower.contains('business') ||
-        categoryLower.contains('iş')) {
-      return 'folder-010'; // Business Essentials
-    }
-
-    // Default to Airport folder
-    return 'folder-001';
-  }
-
   void _toggleBookmark(
     String itemId, {
     String? itemType,
@@ -605,29 +554,53 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       }
     });
 
-    // Save to backend library
-    if (!isCurrentlyBookmarked) {
-      try {
-        final folderId = _getCategoryFolderId(category ?? _selectedCategory);
-        final type =
-            itemType ?? 'dictionary_word'; // Default to dictionary_word
+    final repository = LibraryRepository();
 
-        print('🔖 Saving to library:');
+    if (isCurrentlyBookmarked) {
+      // REMOVE from library
+      try {
+        final type = itemType ?? 'travel_phrase';
+
+        print('🗑️ Removing from library:');
         print('   itemId: $itemId');
         print('   itemType: $type');
-        print('   category: ${category ?? _selectedCategory}');
-        print('   folderId: $folderId');
 
-        final repository = LibraryRepository();
-        final response = await repository.addItemToFolder(
-          folderId: folderId,
+        final response = await repository.removeBookmarkByItem(
           itemType: type,
           itemId: itemId,
         );
 
-        print(
-          '✅ Response: success=${response.success}, error=${response.error}',
+        print('✅ Remove response: success=${response.success}');
+
+        if (response.success) {
+          // Refresh library to update counts
+          ref.read(libraryControllerProvider.notifier).loadFolders();
+        }
+      } catch (e) {
+        print('❌ Error removing from library: $e');
+        // Revert local state on error
+        setState(() {
+          _bookmarkedItems.add(itemId);
+        });
+      }
+    } else {
+      // ADD to library
+      try {
+        final type = itemType ?? 'travel_phrase';
+        final cat = category ?? _selectedCategory;
+
+        print('🔖 Saving to library:');
+        print('   itemId: $itemId');
+        print('   itemType: $type');
+        print('   category: $cat');
+
+        final response = await repository.addBookmark(
+          itemType: type,
+          itemId: itemId,
+          category: cat,
         );
+
+        print('✅ Response: success=${response.success}');
 
         if (response.success) {
           // Refresh library to update counts
@@ -639,17 +612,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
         setState(() {
           _bookmarkedItems.remove(itemId);
         });
-
-        // Show error message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Hata: $e'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
       }
     }
   }
@@ -1056,7 +1018,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
           return _buildCategoryGroup(
             categoryName: category.name,
-            iconPath: category.iconPath,
             words: categoryWords,
             isWords: true,
           );
@@ -1085,76 +1046,63 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       children: [
         Container(
           margin: EdgeInsets.only(bottom: 0),
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           decoration: BoxDecoration(
             color: MyColors.white,
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(12.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: Offset(0, 4),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Target language word - BOLD (on top)
-              Text(
-                // For English: word is target, translation is Turkish
-                // For others: translation is target, word is Turkish
-                word.targetLanguage == 'en' ? word.word : word.translation,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textPrimary,
-                ),
-              ),
-
-              SizedBox(height: 8.h),
-
-              // Turkish translation (below)
-              Text(
-                word.targetLanguage == 'en' ? word.translation : word.word,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
-                ),
-              ),
-
-              SizedBox(height: 12.h),
-
-              // Action buttons
+              // First row: Word + Buttons
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // Play button with container
+                  // Word text
+                  Expanded(
+                    child: Text(
+                      word.targetLanguage == 'en'
+                          ? word.word
+                          : word.translation,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textPrimary,
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 8.w),
+
+                  // Play button
                   GestureDetector(
                     onTap: () => _playAudio(
                       id,
                       word.audioUrl,
-                      // Speak target language word
                       word.targetLanguage == 'en'
                           ? word.word
                           : word.translation,
                       word.targetLanguage,
                     ),
                     child: Container(
-                      width: 48.w,
-                      height: 48.h,
+                      width: 36.w,
+                      height: 36.h,
                       decoration: BoxDecoration(
                         color: Color(0xFFE0F7F4),
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: SvgPicture.asset(
                           'assets/icons/travelvocabularyseslendirme.svg',
-                          width: 24.w,
-                          height: 24.h,
+                          width: 18.w,
+                          height: 18.h,
                           colorFilter: ColorFilter.mode(
                             Color(0xFF4ECDC4),
                             BlendMode.srcIn,
@@ -1164,7 +1112,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     ),
                   ),
 
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 6.w),
 
                   // Bookmark button
                   GestureDetector(
@@ -1176,19 +1124,19 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                           : _selectedCategory,
                     ),
                     child: Container(
-                      width: 48.w,
-                      height: 48.h,
+                      width: 36.w,
+                      height: 36.h,
                       decoration: BoxDecoration(
                         color: isBookmarked
                             ? Color(0x3D2989E9)
                             : Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: SvgPicture.asset(
                           'assets/icons/travelvocabularykaydet.svg',
-                          width: 24.w,
-                          height: 24.h,
+                          width: 18.w,
+                          height: 18.h,
                           colorFilter: ColorFilter.mode(
                             isBookmarked
                                 ? const Color(0xFF2989E9)
@@ -1201,6 +1149,19 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                   ),
                 ],
               ),
+
+              SizedBox(height: 4.h),
+
+              // Translation on second line
+              Text(
+                word.targetLanguage == 'en' ? word.translation : word.word,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -1208,7 +1169,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
         AnimatedContainer(
           duration: Duration(milliseconds: 300),
           height: 3.h,
-          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 12.h),
+          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 16.h),
           decoration: BoxDecoration(
             color: _playingItemId == id
                 ? Color(0xFF4ECDC4)
@@ -1223,7 +1184,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   /// Category group widget - Kategorilere göre gruplandırılmış kelime/cümle gösterimi
   Widget _buildCategoryGroup({
     required String categoryName,
-    required String iconPath,
     required List<dynamic> words,
     required bool isWords,
   }) {
@@ -1239,17 +1199,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
           padding: EdgeInsets.only(top: 16.h, bottom: 12.h),
           child: Row(
             children: [
-              // Icon
-              Image.asset(
-                iconPath,
-                width: 24.w,
-                height: 24.h,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.category, size: 24.w);
-                },
-              ),
-              SizedBox(width: 12.w),
               // Category name
               Text(
                 categoryName,
@@ -1395,7 +1344,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
           return _buildCategoryGroup(
             categoryName: category.name,
-            iconPath: category.iconPath,
             words: categoryPhrases,
             isWords: false,
           );
@@ -1424,80 +1372,63 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       children: [
         Container(
           margin: EdgeInsets.only(bottom: 0),
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           decoration: BoxDecoration(
             color: MyColors.white,
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(12.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: Offset(0, 4),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Target language phrase - BOLD (on top)
-              Text(
-                // For English: englishText is target, translation is Turkish
-                // For others: translation is target, englishText is Turkish
-                phrase.targetLanguage == 'en'
-                    ? phrase.englishText
-                    : phrase.translation,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textPrimary,
-                ),
-              ),
-
-              SizedBox(height: 8.h),
-
-              // Turkish translation (below)
-              Text(
-                phrase.targetLanguage == 'en'
-                    ? phrase.translation
-                    : phrase.englishText,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
-                ),
-              ),
-
-              SizedBox(height: 12.h),
-
-              // Action buttons
+              // First row: Phrase + Buttons
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // Play button with container
+                  // Phrase text
+                  Expanded(
+                    child: Text(
+                      phrase.targetLanguage == 'en'
+                          ? phrase.englishText
+                          : phrase.translation,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textPrimary,
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 8.w),
+
+                  // Play button
                   GestureDetector(
                     onTap: () => _playAudio(
                       id,
                       phrase.audioUrl,
-                      // Speak target language phrase
                       phrase.targetLanguage == 'en'
                           ? phrase.englishText
                           : phrase.translation,
                       phrase.targetLanguage,
                     ),
                     child: Container(
-                      width: 48.w,
-                      height: 48.h,
+                      width: 36.w,
+                      height: 36.h,
                       decoration: BoxDecoration(
                         color: Color(0xFFE0F7F4),
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: SvgPicture.asset(
                           'assets/icons/travelvocabularyseslendirme.svg',
-                          width: 24.w,
-                          height: 24.h,
+                          width: 18.w,
+                          height: 18.h,
                           colorFilter: ColorFilter.mode(
                             Color(0xFF4ECDC4),
                             BlendMode.srcIn,
@@ -1507,7 +1438,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                     ),
                   ),
 
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 6.w),
 
                   // Bookmark button
                   GestureDetector(
@@ -1517,19 +1448,19 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                       category: phrase.category,
                     ),
                     child: Container(
-                      width: 48.w,
-                      height: 48.h,
+                      width: 36.w,
+                      height: 36.h,
                       decoration: BoxDecoration(
                         color: isBookmarked
                             ? Color(0x3D2989E9)
                             : Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: SvgPicture.asset(
                           'assets/icons/travelvocabularykaydet.svg',
-                          width: 24.w,
-                          height: 24.h,
+                          width: 18.w,
+                          height: 18.h,
                           colorFilter: ColorFilter.mode(
                             isBookmarked
                                 ? const Color(0xFF2989E9)
@@ -1542,6 +1473,21 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                   ),
                 ],
               ),
+
+              SizedBox(height: 4.h),
+
+              // Translation on second line
+              Text(
+                phrase.targetLanguage == 'en'
+                    ? phrase.translation
+                    : phrase.englishText,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -1549,7 +1495,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
         AnimatedContainer(
           duration: Duration(milliseconds: 300),
           height: 3.h,
-          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 12.h),
+          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 16.h),
           decoration: BoxDecoration(
             color: _playingItemId == id
                 ? Color(0xFF4ECDC4)

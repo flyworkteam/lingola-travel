@@ -100,26 +100,8 @@ class _LibraryFolderDetailViewState
         libraryFolderItemsControllerProvider(widget.folderId).notifier,
       );
       await controller.removeItem(libraryItemId);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✓ Silindi'),
-            backgroundColor: Color(0xFF4ECDC4),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Silinemedi'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      print('❌ Error deleting item: $e');
     }
   }
 

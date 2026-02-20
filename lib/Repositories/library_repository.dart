@@ -84,11 +84,16 @@ class LibraryRepository extends BaseRepository {
     required String
     itemType, // 'dictionary_word', 'travel_phrase', 'lesson_vocabulary'
     required String itemId,
+    String? category,
   }) async {
     try {
       final response = await apiClient.post(
         '/library/bookmarks',
-        data: {'item_type': itemType, 'item_id': itemId},
+        data: {
+          'item_type': itemType,
+          'item_id': itemId,
+          if (category != null) 'category': category,
+        },
       );
 
       return ApiResponse(
@@ -96,6 +101,42 @@ class LibraryRepository extends BaseRepository {
         data: response.success,
         error: response.error,
       );
+    } catch (e) {
+      return handleError(e);
+    }
+  }
+
+  /// Remove bookmark by item details
+  Future<ApiResponse<bool>> removeBookmarkByItem({
+    required String itemType,
+    required String itemId,
+  }) async {
+    try {
+      // Get bookmarks first to find the ID
+      final response = await apiClient.get('/library/bookmarks');
+
+      if (response.success && response.data != null) {
+        final bookmarks = response.data['bookmarks'] as List<dynamic>;
+        final bookmark = bookmarks.firstWhere(
+          (b) => b['item_type'] == itemType && b['item_id'] == itemId,
+          orElse: () => null,
+        );
+
+        if (bookmark != null) {
+          final bookmarkId = bookmark['bookmark_id'];
+          final deleteResponse = await apiClient.delete(
+            '/library/bookmarks/$bookmarkId',
+          );
+
+          return ApiResponse(
+            success: deleteResponse.success,
+            data: deleteResponse.success,
+            error: deleteResponse.error,
+          );
+        }
+      }
+
+      return ApiResponse(success: false, data: false);
     } catch (e) {
       return handleError(e);
     }
