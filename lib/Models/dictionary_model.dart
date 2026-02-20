@@ -63,6 +63,7 @@ class DictionaryWordModel extends Equatable {
   final bool isBookmarked;
   final String? sourceLanguage; // tr
   final String? targetLanguage; // de, en, fr, etc.
+  final String? categoryName; // Category name from search results
 
   const DictionaryWordModel({
     required this.id,
@@ -75,6 +76,7 @@ class DictionaryWordModel extends Equatable {
     this.isBookmarked = false,
     this.sourceLanguage,
     this.targetLanguage,
+    this.categoryName,
   });
 
   factory DictionaryWordModel.fromJson(Map<String, dynamic> json) {
@@ -89,6 +91,7 @@ class DictionaryWordModel extends Equatable {
       isBookmarked: json['is_bookmarked'] == 1 || json['is_bookmarked'] == true,
       sourceLanguage: json['source_language'] as String?,
       targetLanguage: json['target_language'] as String?,
+      categoryName: json['category_name'] as String?,
     );
   }
 
@@ -104,6 +107,7 @@ class DictionaryWordModel extends Equatable {
       'is_bookmarked': isBookmarked,
       'source_language': sourceLanguage,
       'target_language': targetLanguage,
+      'category_name': categoryName,
     };
   }
 
@@ -119,5 +123,6 @@ class DictionaryWordModel extends Equatable {
     isBookmarked,
     sourceLanguage,
     targetLanguage,
+    categoryName,
   ];
 }

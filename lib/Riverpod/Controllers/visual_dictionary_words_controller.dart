@@ -59,7 +59,7 @@ class VisualDictionaryWordsController
     try {
       final response = await _dictionaryRepository.getWordsByCategory(
         categoryId: categoryId,
-        limit: 100,
+        limit: 200,
       );
 
       if (response.success && response.data != null) {

@@ -32,6 +32,7 @@ class _DictionaryCategoryViewState
     extends ConsumerState<DictionaryCategoryView> {
   final TextEditingController _searchController = TextEditingController();
   Set<String> _bookmarkedItems = {};
+  String _searchQuery = '';
 
   // Audio player
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -96,11 +97,22 @@ class _DictionaryCategoryViewState
     }).toList();
   }
 
+  // Filter words based on search query
+  List<Map<String, String>> get _filteredWords {
+    if (_searchQuery.isEmpty) {
+      return _words;
+    }
+
+    final query = _searchQuery.toLowerCase();
+    return _words.where((word) {
+      final wordText = word['word']?.toLowerCase() ?? '';
+      final translation = word['translation']?.toLowerCase() ?? '';
+      return wordText.contains(query) || translation.contains(query);
+    }).toList();
+  }
+
   int get _itemCount {
-    final wordsState = ref.watch(
-      visualDictionaryWordsControllerProvider(widget.categoryId),
-    );
-    return wordsState.words.length;
+    return _filteredWords.length;
   }
 
   @override
@@ -338,11 +350,28 @@ class _DictionaryCategoryViewState
               color: MyColors.textSecondary,
               size: 20.sp,
             ),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: MyColors.textSecondary,
+                      size: 20.sp,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                      });
+                    },
+                  )
+                : null,
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 12.h),
           ),
           onChanged: (value) {
-            setState(() {});
+            setState(() {
+              _searchQuery = value;
+            });
           },
         ),
       ),
@@ -370,11 +399,50 @@ class _DictionaryCategoryViewState
 
   /// Word list
   Widget _buildWordList() {
+    final words = _filteredWords;
+
+    if (words.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 60.h),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.search_off,
+                size: 64.sp,
+                color: MyColors.textSecondary.withOpacity(0.5),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'No words found',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Try searching with different keywords',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
-      itemCount: _words.length,
+      itemCount: words.length,
       itemBuilder: (context, index) {
-        final word = _words[index];
+        final word = words[index];
         final wordId = '${widget.categoryName}-$index';
         return _buildWordCard(word, wordId);
       },

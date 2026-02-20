@@ -3,6 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
+import '../../Services/tts_service.dart';
+import '../../Repositories/library_repository.dart';
+import '../../Repositories/dictionary_repository.dart';
+import '../../Riverpod/Controllers/library_controller.dart';
+import '../../Models/dictionary_model.dart';
 import 'dictionary_category_view.dart';
 
 class VisualDictionaryView extends ConsumerStatefulWidget {
@@ -17,6 +24,21 @@ class VisualDictionaryView extends ConsumerStatefulWidget {
 class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _recentSearches = ['Accommodation', 'Airport'];
+  Set<String> _bookmarkedCategories = {};
+  Set<String> _bookmarkedWords = {};
+  String _searchQuery = '';
+  List<DictionaryWordModel> _searchResults = [];
+  bool _isSearching = false;
+  Timer? _debounceTimer;
+
+  // Audio player
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _playingCategory;
+  String? _playingWordId;
+  StreamSubscription? _audioCompletionSubscription;
+
+  // TTS Service
+  late final TtsService _ttsService;
 
   // STATIC categories - matching database content
   final List<Map<String, dynamic>> _staticCategories = [
@@ -25,83 +47,335 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
       'name': 'Airport', // NEW: Airport-specific category
       'icon': 'assets/icons/airport.png',
       'color': '#B8A7FF',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-002',
       'name': 'Accommodation',
       'icon': 'assets/icons/accommodation.png',
       'color': '#FF9F6A',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-003',
       'name': 'Transportation',
       'icon': 'assets/icons/transportation.png',
       'color': '#F9D26B',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-004',
       'name': 'Food & Drink',
       'icon': 'assets/icons/food_drink.png',
       'color': '#FF8FA5',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-005',
       'name': 'Shopping',
       'icon': 'assets/icons/shopping.png',
       'color': '#8BDDCD',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-006',
       'name': 'Culture',
       'icon': 'assets/icons/culture.png',
       'color': '#B8D9FF',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-007',
       'name': 'Meeting',
       'icon': 'assets/icons/meeting.png',
       'color': '#FFB8B8',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-008',
       'name': 'Sport',
       'icon': 'assets/icons/sport.png',
       'color': '#E4B3FF',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-009',
       'name': 'Health',
       'icon': 'assets/icons/health.png',
       'color': '#B8FFC9',
-      'count': 10,
+      'count': 20,
     },
     {
       'id': 'dict-cat-010',
       'name': 'Business',
       'icon': 'assets/icons/business.png',
       'color': '#A4C8E1',
-      'count': 10,
+      'count': 20,
     },
   ];
 
   @override
   void initState() {
     super.initState();
-    // NO backend loading - fully static
+
+    // Initialize TTS service
+    _ttsService = TtsService();
+    _ttsService
+        .init()
+        .then((_) {
+          print('✅ TTS initialized in visual_dictionary_view');
+        })
+        .catchError((e) {
+          print('⚠️ Error initializing TTS: $e');
+        });
+
+    // Setup audio completion listener
+    _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
+      event,
+    ) {
+      if (mounted) {
+        setState(() {
+          _playingCategory = null;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _debounceTimer?.cancel();
+    _audioCompletionSubscription?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  // Perform word search with debounce
+  Future<void> _performSearch(String query) async {
+    if (query.trim().length < 2) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      final response = await DictionaryRepository().searchWords(
+        query: query.trim(),
+        limit: 50,
+      );
+
+      if (response.success && response.data != null) {
+        setState(() {
+          _searchResults = response.data!;
+          _isSearching = false;
+        });
+      } else {
+        setState(() {
+          _searchResults = [];
+          _isSearching = false;
+        });
+      }
+    } catch (e) {
+      print('Search error: $e');
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+    }
+  }
+
+  // Filter categories based on search query
+  List<Map<String, dynamic>> get _filteredCategories {
+    if (_searchQuery.isEmpty) {
+      return _staticCategories;
+    }
+
+    final query = _searchQuery.toLowerCase();
+    return _staticCategories.where((category) {
+      final name = category['name'].toString().toLowerCase();
+      return name.contains(query);
+    }).toList();
+  }
+
+  void _toggleBookmark(String categoryName) async {
+    try {
+      final isCurrentlyBookmarked = _bookmarkedCategories.contains(
+        categoryName,
+      );
+
+      if (isCurrentlyBookmarked) {
+        // Remove from library
+        await LibraryRepository().removeBookmarkByItem(
+          itemType: 'dictionary_category',
+          itemId: categoryName,
+        );
+        setState(() {
+          _bookmarkedCategories.remove(categoryName);
+        });
+      } else {
+        // Save to library
+        await LibraryRepository().addBookmark(
+          itemType: 'dictionary_category',
+          itemId: categoryName,
+          category: 'Dictionary',
+        );
+        setState(() {
+          _bookmarkedCategories.add(categoryName);
+        });
+        // Refresh library folders
+        ref.read(libraryControllerProvider.notifier).loadFolders();
+      }
+    } catch (e) {
+      print('Error toggling bookmark: $e');
+    }
+  }
+
+  Future<void> _playAudio(String categoryName) async {
+    try {
+      // If same category is playing, stop it
+      if (_playingCategory == categoryName) {
+        await _audioPlayer.stop();
+        await _ttsService.stop();
+        setState(() {
+          _playingCategory = null;
+        });
+        return;
+      }
+
+      // Stop any current playback
+      await _audioPlayer.stop();
+      await _ttsService.stop();
+
+      // Play new audio using TTS
+      setState(() {
+        _playingCategory = categoryName;
+      });
+
+      print('🔊 Playing category name: "$categoryName"');
+      _ttsService
+          .speak(categoryName, languageCode: 'en')
+          .then((_) {
+            print('✅ TTS completed for: $categoryName');
+          })
+          .catchError((e) {
+            print('❌ TTS error: $e');
+          });
+
+      // Reset playing state after estimated TTS duration
+      Future.delayed(Duration(seconds: 2), () {
+        if (mounted && _playingCategory == categoryName) {
+          setState(() {
+            _playingCategory = null;
+          });
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _playingCategory = null;
+      });
+      print('Error playing audio: $e');
+    }
+  }
+
+  Future<void> _playWordAudio(DictionaryWordModel word) async {
+    try {
+      final wordId = word.id.toString();
+
+      // If same word is playing, stop it
+      if (_playingWordId == wordId) {
+        await _audioPlayer.stop();
+        await _ttsService.stop();
+        setState(() {
+          _playingWordId = null;
+        });
+        return;
+      }
+
+      // Stop any current playback
+      await _audioPlayer.stop();
+      await _ttsService.stop();
+
+      setState(() {
+        _playingWordId = wordId;
+        _playingCategory = null;
+      });
+
+      final targetWord = word.targetLanguage == 'en'
+          ? word.word
+          : word.translation;
+      final languageCode = word.targetLanguage ?? 'en';
+
+      print('🔊 Playing word: "$targetWord" ($languageCode)');
+
+      // Try audio URL first, fallback to TTS
+      if (word.audioUrl != null && word.audioUrl!.isNotEmpty) {
+        try {
+          await _audioPlayer.play(UrlSource(word.audioUrl!));
+          return;
+        } catch (e) {
+          print('Audio URL failed, using TTS: $e');
+        }
+      }
+
+      // Use TTS
+      _ttsService
+          .speak(targetWord, languageCode: languageCode)
+          .then((_) {
+            print('✅ TTS completed for: $targetWord');
+          })
+          .catchError((e) {
+            print('❌ TTS error: $e');
+          });
+
+      // Reset playing state
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted && _playingWordId == wordId) {
+          setState(() {
+            _playingWordId = null;
+          });
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _playingWordId = null;
+      });
+      print('Error playing word audio: $e');
+    }
+  }
+
+  void _toggleWordBookmark(DictionaryWordModel word) async {
+    try {
+      final wordId = word.id.toString();
+      final isCurrentlyBookmarked = _bookmarkedWords.contains(wordId);
+
+      if (isCurrentlyBookmarked) {
+        await LibraryRepository().removeBookmarkByItem(
+          itemType: 'dictionary_word',
+          itemId: wordId,
+        );
+        setState(() {
+          _bookmarkedWords.remove(wordId);
+        });
+      } else {
+        await LibraryRepository().addBookmark(
+          itemType: 'dictionary_word',
+          itemId: wordId,
+          category: 'Dictionary',
+        );
+        setState(() {
+          _bookmarkedWords.add(wordId);
+        });
+        ref.read(libraryControllerProvider.notifier).loadFolders();
+      }
+    } catch (e) {
+      print('Error toggling word bookmark: $e');
+    }
   }
 
   void _clearRecentSearches() {
@@ -152,23 +426,26 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
 
               // Content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Category grid - STATIC categories
-                      _buildCategoryGrid(),
+                child: _searchQuery.trim().length >= 2
+                    ? _buildSearchResults()
+                    : SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Category grid - STATIC categories
+                            _buildCategoryGrid(),
 
-                      SizedBox(height: 16.h),
+                            SizedBox(height: 16.h),
 
-                      // Recent Search
-                      if (_recentSearches.isNotEmpty) _buildRecentSearch(),
+                            // Recent Search (only show when not searching)
+                            if (_recentSearches.isNotEmpty)
+                              _buildRecentSearch(),
 
-                      SizedBox(height: 100.h), // Space for bottom nav
-                    ],
-                  ),
-                ),
+                            SizedBox(height: 100.h), // Space for bottom nav
+                          ],
+                        ),
+                      ),
               ),
             ],
           ),
@@ -221,6 +498,24 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         ),
         child: TextField(
           controller: _searchController,
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value;
+            });
+
+            // Debounce search
+            _debounceTimer?.cancel();
+            if (value.trim().length >= 2) {
+              _debounceTimer = Timer(Duration(milliseconds: 500), () {
+                _performSearch(value);
+              });
+            } else {
+              setState(() {
+                _searchResults = [];
+                _isSearching = false;
+              });
+            }
+          },
           style: TextStyle(
             fontSize: 14.sp,
             fontFamily: 'Montserrat',
@@ -238,6 +533,24 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               color: MyColors.textSecondary,
               size: 20.sp,
             ),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: MyColors.textSecondary,
+                      size: 20.sp,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                        _searchResults = [];
+                        _isSearching = false;
+                      });
+                      _debounceTimer?.cancel();
+                    },
+                  )
+                : null,
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 12.h),
           ),
@@ -246,8 +559,46 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     );
   }
 
-  /// Category grid - STATIC
+  /// Category grid - STATIC with search filtering
   Widget _buildCategoryGrid() {
+    final categories = _filteredCategories;
+
+    if (categories.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40.h),
+          child: Column(
+            children: [
+              Icon(
+                Icons.search_off,
+                size: 64.sp,
+                color: MyColors.textSecondary.withOpacity(0.5),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'No categories found',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Try searching with different keywords',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
@@ -257,9 +608,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         mainAxisSpacing: 16.h,
         childAspectRatio: 1.1,
       ),
-      itemCount: _staticCategories.length,
+      itemCount: categories.length,
       itemBuilder: (context, index) {
-        final category = _staticCategories[index];
+        final category = categories[index];
         return _buildCategoryCard(category);
       },
     );
@@ -410,6 +761,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
 
   /// Recent search item
   Widget _buildRecentSearchItem(String categoryName) {
+    final isBookmarked = _bookmarkedCategories.contains(categoryName);
+    final isPlaying = _playingCategory == categoryName;
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
@@ -460,19 +814,19 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
 
           // Audio button
           GestureDetector(
-            onTap: () {
-              print('Play audio: $categoryName');
-            },
+            onTap: () => _playAudio(categoryName),
             child: Container(
               width: 40.w,
               height: 40.h,
               decoration: BoxDecoration(
-                color: Color(0xFF4ECDC4).withOpacity(0.2),
+                color: isPlaying
+                    ? Color(0xFF4ECDC4)
+                    : Color(0xFF4ECDC4).withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.volume_up,
-                color: Color(0xFF4ECDC4),
+                color: isPlaying ? Colors.white : Color(0xFF4ECDC4),
                 size: 20.sp,
               ),
             ),
@@ -481,10 +835,196 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           SizedBox(width: 8.w),
 
           // Bookmark button
-          Icon(
-            Icons.bookmark_border,
-            color: MyColors.textSecondary,
-            size: 24.sp,
+          GestureDetector(
+            onTap: () => _toggleBookmark(categoryName),
+            child: Icon(
+              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.textSecondary,
+              size: 24.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Search results list
+  Widget _buildSearchResults() {
+    if (_isSearching) {
+      return Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)));
+    }
+
+    if (_searchResults.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 60.h),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.search_off,
+                size: 64.sp,
+                color: MyColors.textSecondary.withOpacity(0.5),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'No words found',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Try searching with different keywords',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Result count
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+          child: Text(
+            '${_searchResults.length} results found',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Montserrat',
+              color: MyColors.textSecondary,
+            ),
+          ),
+        ),
+
+        // Word list
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(
+              horizontal: 20.w,
+            ).copyWith(bottom: 100.h),
+            itemCount: _searchResults.length,
+            itemBuilder: (context, index) {
+              final word = _searchResults[index];
+              return _buildSearchWordCard(word);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Search word card
+  Widget _buildSearchWordCard(DictionaryWordModel word) {
+    final wordId = word.id.toString();
+    final isBookmarked = _bookmarkedWords.contains(wordId);
+    final isPlaying = _playingWordId == wordId;
+
+    final displayWord = word.targetLanguage == 'en'
+        ? word.word
+        : word.translation;
+    final translation = word.targetLanguage == 'en'
+        ? word.translation
+        : word.word;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: MyColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayWord,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  translation,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.textSecondary,
+                  ),
+                ),
+                if (word.categoryName != null) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    word.categoryName!,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Montserrat',
+                      color: Color(0xFF4ECDC4),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          SizedBox(width: 12.w),
+
+          // Audio button
+          GestureDetector(
+            onTap: () => _playWordAudio(word),
+            child: Container(
+              width: 40.w,
+              height: 40.h,
+              decoration: BoxDecoration(
+                color: isPlaying
+                    ? Color(0xFF4ECDC4)
+                    : Color(0xFF4ECDC4).withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.volume_up,
+                color: isPlaying ? Colors.white : Color(0xFF4ECDC4),
+                size: 20.sp,
+              ),
+            ),
+          ),
+
+          SizedBox(width: 8.w),
+
+          // Bookmark button
+          GestureDetector(
+            onTap: () => _toggleWordBookmark(word),
+            child: Icon(
+              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: isBookmarked ? Color(0xFF4ECDC4) : MyColors.textSecondary,
+              size: 24.sp,
+            ),
           ),
         ],
       ),
