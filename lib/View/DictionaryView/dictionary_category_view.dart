@@ -223,175 +223,184 @@ class _DictionaryCategoryViewState
 
     return Scaffold(
       backgroundColor: MyColors.background,
-      appBar: _buildAppBar(),
-      body: Stack(
-        key: ValueKey(
-          'dictionary_category_stack_${widget.categoryId}',
-        ), // Unique key to force rebuild
-        children: [
-          // Main content
-          wordsState.isLoading
-              ? Center(
-                  child: CircularProgressIndicator(color: Color(0xFF4ECDC4)),
-                )
-              : wordsState.errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
-                      SizedBox(height: 16.h),
-                      Text(
-                        wordsState.errorMessage!,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          color: MyColors.textSecondary,
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          key: ValueKey('dictionary_category_stack_${widget.categoryId}'),
+          children: [
+            // Main scrollable content
+            wordsState.isLoading
+                ? Center(
+                    child: CircularProgressIndicator(color: Color(0xFF4ECDC4)),
+                  )
+                : wordsState.errorMessage != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48.sp,
+                          color: Colors.red,
                         ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          wordsState.errorMessage!,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: MyColors.textSecondary,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        ElevatedButton(
+                          onPressed: () {
+                            ref
+                                .read(
+                                  visualDictionaryWordsControllerProvider(
+                                    widget.categoryId,
+                                  ).notifier,
+                                )
+                                .refresh();
+                          },
+                          child: Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 16.h),
+
+                          // Header with back button and title
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.arrow_back,
+                                  color: MyColors.textPrimary,
+                                  size: 24.sp,
+                                ),
+                                onPressed: () => Navigator.pop(context),
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(),
+                              ),
+                              SizedBox(width: 12.w),
+                              Text(
+                                widget.categoryName,
+                                style: TextStyle(
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'Montserrat',
+                                  color: MyColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 20.h),
+
+                          // Search bar
+                          _buildSearchBar(),
+
+                          SizedBox(height: 16.h),
+
+                          // Item count
+                          _buildItemCount(),
+
+                          SizedBox(height: 16.h),
+
+                          // Word list (non-scrollable, inside outer scroll)
+                          _buildWordList(),
+
+                          SizedBox(height: 100.h), // Space for bottom nav
+                        ],
                       ),
-                      SizedBox(height: 16.h),
-                      ElevatedButton(
-                        onPressed: () {
-                          ref
-                              .read(
-                                visualDictionaryWordsControllerProvider(
-                                  widget.categoryId,
-                                ).notifier,
-                              )
-                              .refresh();
-                        },
-                        child: Text('Retry'),
-                      ),
-                    ],
+                    ),
                   ),
-                )
-              : Column(
-                  children: [
-                    SizedBox(height: 16.h),
 
-                    // Search bar
-                    _buildSearchBar(),
-
-                    SizedBox(height: 16.h),
-
-                    // Item count
-                    _buildItemCount(),
-
-                    SizedBox(height: 16.h),
-
-                    // Word list
-                    Expanded(child: _buildWordList()),
-
-                    SizedBox(height: 100.h), // Space for bottom nav
-                  ],
-                ),
-
-          // Floating bottom navigation
-          CustomBottomNavBar(
-            key: ValueKey('bottom_nav_dictionary_category'), // Unique key
-            currentIndex: 2,
-            isPremium: widget.isPremium,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// AppBar
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: MyColors.white,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: MyColors.textPrimary, size: 24.sp),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: Text(
-        widget.categoryName,
-        style: TextStyle(
-          fontSize: 20.sp,
-          fontWeight: FontWeight.w700,
-          fontFamily: 'Montserrat',
-          color: MyColors.textPrimary,
+            // Floating bottom navigation
+            CustomBottomNavBar(
+              key: ValueKey('bottom_nav_dictionary_category'),
+              currentIndex: 2,
+              isPremium: widget.isPremium,
+            ),
+          ],
         ),
       ),
-      centerTitle: true,
     );
   }
 
   /// Search bar
   Widget _buildSearchBar() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Container(
-        height: 48.h,
-        decoration: BoxDecoration(
-          color: MyColors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: MyColors.border, width: 1),
+    return Container(
+      height: 48.h,
+      decoration: BoxDecoration(
+        color: MyColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: MyColors.border, width: 1),
+      ),
+      child: TextField(
+        controller: _searchController,
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontFamily: 'Montserrat',
+          color: MyColors.textPrimary,
         ),
-        child: TextField(
-          controller: _searchController,
-          style: TextStyle(
+        decoration: InputDecoration(
+          hintText: 'Search words or phrases...',
+          hintStyle: TextStyle(
             fontSize: 14.sp,
             fontFamily: 'Montserrat',
-            color: MyColors.textPrimary,
+            color: MyColors.textSecondary,
           ),
-          decoration: InputDecoration(
-            hintText: 'Search words or phrases...',
-            hintStyle: TextStyle(
-              fontSize: 14.sp,
-              fontFamily: 'Montserrat',
-              color: MyColors.textSecondary,
-            ),
-            prefixIcon: Icon(
-              Icons.search,
-              color: MyColors.textSecondary,
-              size: 20.sp,
-            ),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: Icon(
-                      Icons.clear,
-                      color: MyColors.textSecondary,
-                      size: 20.sp,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _searchController.clear();
-                        _searchQuery = '';
-                      });
-                    },
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+          prefixIcon: Icon(
+            Icons.search,
+            color: MyColors.textSecondary,
+            size: 20.sp,
           ),
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
-          },
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: MyColors.textSecondary,
+                    size: 20.sp,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _searchController.clear();
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(vertical: 12.h),
         ),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
       ),
     );
   }
 
   /// Item count
   Widget _buildItemCount() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          '$_itemCount items',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w400,
-            fontFamily: 'Montserrat',
-            color: MyColors.textSecondary,
-          ),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        '$_itemCount items',
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w400,
+          fontFamily: 'Montserrat',
+          color: MyColors.textSecondary,
         ),
       ),
     );
@@ -402,44 +411,44 @@ class _DictionaryCategoryViewState
     final words = _filteredWords;
 
     if (words.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 60.h),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.search_off,
-                size: 64.sp,
-                color: MyColors.textSecondary.withOpacity(0.5),
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 60.h),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64.sp,
+              color: MyColors.textSecondary.withOpacity(0.5),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'No words found',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Montserrat',
+                color: MyColors.textSecondary,
               ),
-              SizedBox(height: 16.h),
-              Text(
-                'No words found',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
-                ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Try searching with different keywords',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontFamily: 'Montserrat',
+                color: MyColors.textSecondary.withOpacity(0.7),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                'Try searching with different keywords',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary.withOpacity(0.7),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       itemCount: words.length,
       itemBuilder: (context, index) {
         final word = words[index];

@@ -31,7 +31,7 @@ class EnvironmentConfig {
     // Fallback based on environment
     switch (_currentEnvironment) {
       case Environment.development:
-        return 'http://localhost:3000/api';
+        return 'http://10.0.2.2:3000/api'; // Android emulator uses 10.0.2.2 for localhost
       case Environment.staging:
         return 'https://staging-api.lingolatravel.com/api';
       case Environment.production:

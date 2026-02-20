@@ -12,6 +12,7 @@ class AuthService {
   AuthService._internal();
 
   // Google Sign In instance
+  // Note: Android OAuth Client ID is automatically detected from Google Cloud Console
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   /// Sign in with Google
@@ -99,12 +100,15 @@ class AuthService {
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
-        webAuthenticationOptions: WebAuthenticationOptions(
-          clientId: 'com.lingola.travel.service',
-          redirectUri: Uri.parse(
-            'https://lingola-travel-api.com/auth/apple/callback',
-          ),
-        ),
+        // For Android, use webAuthenticationOptions
+        webAuthenticationOptions: Platform.isAndroid
+            ? WebAuthenticationOptions(
+                clientId: 'com.flywork.lingolatravel',
+                redirectUri: Uri.parse(
+                  'https://your-backend-domain.com/auth/apple/callback',
+                ),
+              )
+            : null,
       );
 
       // Get identity token

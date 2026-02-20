@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lingola Travel</string>
+    <!-- Google Sign-In Server Client ID -->
+    <string name="default_web_client_id">1029036878125-ve1subf0p13cg2tfnktpqqo1ij7gvlfj.apps.googleusercontent.com</string>
+</resources>
