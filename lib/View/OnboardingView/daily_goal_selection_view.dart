@@ -26,19 +26,19 @@ class _DailyGoalSelectionViewState
       'id': 'casual',
       'title': 'Hafif',
       'duration': '5 dk/gün',
-      'icon': 'assets/images/casual.png',
+      'icon': 'assets/icons/hafif.svg',
     },
     {
       'id': 'regular',
       'title': 'Normal',
       'duration': '15 dk/gün',
-      'icon': 'assets/images/regular.svg',
+      'icon': 'assets/icons/normal.svg',
     },
     {
       'id': 'serious',
       'title': 'Ciddi',
       'duration': '30 dk/gün',
-      'icon': 'assets/images/serious.png',
+      'icon': 'assets/icons/ciddili.svg',
     },
   ];
 
@@ -348,33 +348,30 @@ class _DailyGoalSelectionViewState
             Container(
               width: 48.w,
               height: 48.w,
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? MyColors.lingolaPrimaryColor
-                    : MyColors.grey200,
+                    ? const Color(0xFF2EC4B6)
+                    : const Color(0xFF2EC4B6).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: goal['icon']!.endsWith('.svg')
                   ? SvgPicture.asset(
                       goal['icon']!,
-                      width: 24.w,
-                      height: 24.w,
-                      colorFilter: ColorFilter.mode(
-                        isSelected
-                            ? MyColors.white
-                            : MyColors.lingolaPrimaryColor,
-                        BlendMode.srcIn,
-                      ),
+                      width: 28.w,
+                      height: 28.w,
+                      fit: BoxFit.contain,
+                      colorFilter: isSelected
+                          ? ColorFilter.mode(MyColors.white, BlendMode.srcIn)
+                          : null,
                     )
                   : Image.asset(
                       goal['icon']!,
-                      width: 24.w,
-                      height: 24.w,
+                      width: 28.w,
+                      height: 28.w,
                       fit: BoxFit.contain,
-                      color: isSelected
-                          ? MyColors.white
-                          : MyColors.lingolaPrimaryColor,
+                      filterQuality: FilterQuality.high,
+                      color: isSelected ? MyColors.white : null,
                     ),
             ),
 

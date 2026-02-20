@@ -399,11 +399,15 @@ class _SignInViewState extends ConsumerState<SignInView> {
               SizedBox(height: 20.h),
 
               // Main Image - KÜÇÜLTÜLDÜ
-              SvgPicture.asset(
-                'assets/icons/loginphotohd.svg',
-                width: 280.w,
-                height: 180.h,
-                fit: BoxFit.cover,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20.r),
+                child: Image.asset(
+                  'assets/images/loginperson.png',
+                  width: 280.w,
+                  height: 180.h,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
 
               SizedBox(height: 28.h), // ARTTIRILDI: 20h -> 28h

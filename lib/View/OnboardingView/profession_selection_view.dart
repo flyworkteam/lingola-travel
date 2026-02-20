@@ -21,38 +21,38 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
 
   final List<Map<String, String>> professions = [
     {
-      'name': 'Student',
-      'subtitle': 'University or high\nschool',
+      'name': 'Öğrenci',
+      'subtitle': 'Üniversite veya\nlise',
       'icon': 'assets/images/student.png',
       'background': 'assets/images/littlecard.png',
     },
     {
-      'name': 'Professional',
-      'subtitle': 'Corporate or\nfreelance',
+      'name': 'Profesyonel',
+      'subtitle': 'Kurumsal veya\nserbest',
       'icon': 'assets/images/professional.png',
-      'background': 'assets/images/littlecard.png', // Same as others
+      'background': 'assets/images/littlecard.png',
     },
     {
-      'name': 'Technology',
-      'subtitle': 'IT, software, or\ndata',
+      'name': 'Teknoloji',
+      'subtitle': 'BT, yazılım\nveya veri',
       'icon': 'assets/images/technology.png',
       'background': 'assets/images/littlecard.png',
     },
     {
-      'name': 'Healthcare',
-      'subtitle': 'Medicine or\nnursing',
+      'name': 'Sağlık',
+      'subtitle': 'Tıp veya\nhemşirelik',
       'icon': 'assets/images/healtcare.png',
       'background': 'assets/images/littlecard.png',
     },
     {
-      'name': 'Arts & Media',
-      'subtitle': 'Design, film, or\nwriting',
+      'name': 'Sanat & Medya',
+      'subtitle': 'Tasarım, film\nveya yazarlık',
       'icon': 'assets/images/artsmedia.png',
       'background': 'assets/images/littlecard.png',
     },
     {
-      'name': 'Other',
-      'subtitle': 'None of the\nabove',
+      'name': 'Diğer',
+      'subtitle': 'Yukarıdakilerin\nhiçbiri',
       'icon': 'assets/images/other.png',
       'background': 'assets/images/littlecard.png',
     },
@@ -129,7 +129,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                 ],
               ),
 
-              SizedBox(height: 28.h),
+              SizedBox(height: 16.h),
 
               // Title
               Text(
@@ -142,7 +142,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                 ),
               ),
 
-              SizedBox(height: 10.h),
+              SizedBox(height: 6.h),
 
               // Subtitle
               Text(
@@ -155,7 +155,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                 ),
               ),
 
-              SizedBox(height: 24.h),
+              SizedBox(height: 28.h),
 
               // Profession Cards Grid - Fixed height, no scroll
               Expanded(
@@ -163,9 +163,9 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 12.w,
+                    crossAxisSpacing: 10.w,
                     mainAxisSpacing: 8.h,
-                    childAspectRatio: 1.0,
+                    childAspectRatio: 1.25,
                   ),
                   itemCount: professions.length,
                   itemBuilder: (context, index) {
@@ -213,28 +213,29 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                                 children: [
                                   // Background card - dark when selected, light when not
                                   Container(
-                                    width: 70.w,
-                                    height: 70.h,
+                                    width: 52.w,
+                                    height: 52.h,
                                     decoration: BoxDecoration(
                                       color: isSelected
                                           ? MyColors.lingolaPrimaryColor
                                           : const Color(0xFFE0F7F5),
-                                      borderRadius: BorderRadius.circular(16.r),
+                                      borderRadius: BorderRadius.circular(14.r),
                                     ),
                                   ),
                                   // Icon logo - white when selected, turquoise when not
                                   Image.asset(
                                     profession['icon']!,
-                                    width: 36.w,
-                                    height: 36.h,
+                                    width: 32.w,
+                                    height: 32.h,
                                     fit: BoxFit.contain,
+                                    filterQuality: FilterQuality.high,
                                     color: isSelected
                                         ? MyColors.white
                                         : const Color(0xFF2EC4B6),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 6.h),
+                              SizedBox(height: 4.h),
                               // Title (centered)
                               Text(
                                 profession['name']!,
@@ -270,7 +271,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                 ),
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: 10.h),
 
               // Bottom Buttons
               Row(
@@ -388,7 +389,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                 ],
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: 12.h),
             ],
           ),
         ),

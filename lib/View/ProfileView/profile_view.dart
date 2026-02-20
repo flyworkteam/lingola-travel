@@ -36,10 +36,17 @@ class _ProfileViewState extends State<ProfileView> {
   final AuthService _authService = AuthService();
   bool _isLoggingOut = false;
 
+  // Stats data
+  int _dayStreak = 0;
+  int _wordsLearned = 0;
+  int _progressPercentage = 0;
+  bool _isLoadingStats = true;
+
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadUserStats();
   }
 
   /// Load user profile from backend
@@ -60,6 +67,45 @@ class _ProfileViewState extends State<ProfileView> {
       }
     } catch (e) {
       print('Error loading profile: $e');
+    }
+  }
+
+  /// Load user statistics from backend
+  Future<void> _loadUserStats() async {
+    try {
+      final response = await _profileRepository.getStats();
+      if (response.success && response.data != null) {
+        final stats = response.data['stats'];
+        if (mounted) {
+          setState(() {
+            // Map backend fields to frontend fields
+            _dayStreak = stats['current_streak'] ?? 0;
+            _wordsLearned = stats['saved_words_count'] ?? 0;
+
+            // Calculate progress percentage based on lessons completed
+            // Assuming 100 lessons is 100% progress (adjust as needed)
+            int lessonsCompleted = stats['total_lessons_completed'] ?? 0;
+            _progressPercentage = (lessonsCompleted > 100)
+                ? 100
+                : lessonsCompleted;
+
+            _isLoadingStats = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingStats = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading stats: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingStats = false;
+        });
+      }
     }
   }
 
@@ -175,13 +221,18 @@ class _ProfileViewState extends State<ProfileView> {
                       iconColor: Color(0xFF4A90E2),
                       iconBgColor: Color(0xFFE3F2FD),
                       title: 'Profile Settings',
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const ProfileSettingsView(),
                           ),
                         );
+
+                        // If profile was updated, refresh data
+                        if (result == true) {
+                          _loadUserProfile();
+                        }
                       },
                     ),
                     _buildDivider(),
@@ -259,7 +310,7 @@ class _ProfileViewState extends State<ProfileView> {
                       iconBgColor: Color(0xFFFFEBEE),
                       title: 'Rate Us',
                       onTap: () {
-                        // TODO: Rate app
+                        _showRateUsDialog();
                       },
                     ),
                     _buildDivider(),
@@ -436,14 +487,36 @@ class _ProfileViewState extends State<ProfileView> {
 
   /// Stats Cards Row
   Widget _buildStatsCards() {
+    if (_isLoadingStats) {
+      return Row(
+        children: [
+          Expanded(child: _buildStatCard('...', 'DAY STREAK')),
+          SizedBox(width: 12.w),
+          Expanded(child: _buildStatCard('...', 'WORDS\nLEARNED')),
+          SizedBox(width: 12.w),
+          Expanded(child: _buildStatCard('...', 'PROGRESS')),
+        ],
+      );
+    }
+
     return Row(
       children: [
-        Expanded(child: _buildStatCard('12', 'DAY STREAK')),
+        Expanded(child: _buildStatCard(_dayStreak.toString(), 'DAY STREAK')),
         SizedBox(width: 12.w),
-        Expanded(child: _buildStatCard('1,240', 'WORDS\nLEARNED')),
+        Expanded(
+          child: _buildStatCard(_formatNumber(_wordsLearned), 'WORDS\nLEARNED'),
+        ),
         SizedBox(width: 12.w),
-        Expanded(child: _buildStatCard('84%', 'PROGRESS')),
+        Expanded(child: _buildStatCard('$_progressPercentage%', 'PROGRESS')),
       ],
+    );
+  }
+
+  /// Format number with comma separator (e.g., 1240 -> 1,240)
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
     );
   }
 
@@ -910,6 +983,139 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Rate Us Dialog
+  void _showRateUsDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24.r),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: BoxDecoration(
+                  color: MyColors.white.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(24.r),
+                  border: Border.all(
+                    color: MyColors.white.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon
+                    Container(
+                      width: 64.w,
+                      height: 64.h,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFFEBEE),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.star_rounded,
+                          size: 36.sp,
+                          color: Color(0xFFFF6B6B),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    // Title
+                    Text(
+                      'Uygulamamızı Değerlendirin',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Montserrat',
+                        color: Color(0xFF2D3142),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    // Message
+                    Text(
+                      'Mağaza sayfamıza yönlendirileceksiniz. Deneyiminizi paylaşarak bize destek olabilirsiniz!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontFamily: 'Montserrat',
+                        color: Color(0xFF6B7280),
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    // Rate Button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: Open store page
+                        // For iOS: App Store link
+                        // For Android: Play Store link
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFFF6B6B),
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFFF6B6B).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Mağazaya Git',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Montserrat',
+                            color: MyColors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    // Cancel Button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        child: Text(
+                          'İptal',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Montserrat',
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

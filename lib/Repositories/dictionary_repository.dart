@@ -1,7 +1,6 @@
 import '../Models/api_response.dart';
 import '../Models/dictionary_model.dart';
 import '../Models/travel_phrase_model.dart';
-import '../Services/api_client.dart';
 import 'base_repository.dart';
 
 /// Dictionary Repository - Handles all dictionary-related API calls

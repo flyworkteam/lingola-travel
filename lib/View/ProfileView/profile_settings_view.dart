@@ -206,11 +206,10 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                                             'assets/icons/userlogo.svg',
                                             width: 65.w,
                                             height: 65.w,
-                                            colorFilter:
-                                                const ColorFilter.mode(
-                                                  Colors.white,
-                                                  BlendMode.srcIn,
-                                                ),
+                                            colorFilter: const ColorFilter.mode(
+                                              Colors.white,
+                                              BlendMode.srcIn,
+                                            ),
                                           ),
                                         );
                                       },
@@ -290,141 +289,141 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
                         // Full Name
                         _buildLabel('Full Name'),
-                      SizedBox(height: 10.h),
-                      _buildInputField(
-                        controller: _nameController,
-                        iconPath: 'assets/icons/fullname.svg',
-                        hint: 'Enter your name',
-                        enabled: true,
-                      ),
-
-                      SizedBox(height: 20.h),
-
-                      // E-mail
-                      _buildLabel('E-mail'),
-                      SizedBox(height: 10.h),
-                      _buildInputField(
-                        controller: _emailController,
-                        iconPath: 'assets/icons/email.svg',
-                        hint: 'Enter your email',
-                        enabled: false,
-                        showLock: true,
-                      ),
-
-                      SizedBox(height: 20.h),
-
-                      // Age
-                      _buildLabel('Age'),
-                      SizedBox(height: 10.h),
-                      _buildInputField(
-                        controller: _ageController,
-                        iconPath: 'assets/icons/age.svg',
-                        hint: 'Enter your age',
-                        enabled: false,
-                        showLock: true,
-                      ),
-
-                      SizedBox(height: 24.h),
-
-                      // Gender
-                      _buildLabel('Gender'),
-                      SizedBox(height: 12.h),
-                      _buildGenderSelector(),
-
-                      SizedBox(height: 24.h),
-
-                      // Language
-                      _buildLabel('Select Learn Language'),
-                      SizedBox(height: 10.h),
-                      _buildLanguageDropdown(),
-
-                      SizedBox(height: 40.h),
-
-                      // Save Button
-                      Container(
-                        width: double.infinity,
-                        height: 56.h,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFF4ECDC4).withOpacity(0.4),
-                              blurRadius: 16,
-                              offset: Offset(0, 8),
-                            ),
-                          ],
+                        SizedBox(height: 10.h),
+                        _buildInputField(
+                          controller: _nameController,
+                          iconPath: 'assets/icons/fullname.svg',
+                          hint: 'Enter your name',
+                          enabled: true,
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _isSaving ? null : _saveProfile,
+
+                        SizedBox(height: 20.h),
+
+                        // E-mail
+                        _buildLabel('E-mail'),
+                        SizedBox(height: 10.h),
+                        _buildInputField(
+                          controller: _emailController,
+                          iconPath: 'assets/icons/email.svg',
+                          hint: 'Enter your email',
+                          enabled: false,
+                          showLock: true,
+                        ),
+
+                        SizedBox(height: 20.h),
+
+                        // Age
+                        _buildLabel('Age'),
+                        SizedBox(height: 10.h),
+                        _buildInputField(
+                          controller: _ageController,
+                          iconPath: 'assets/icons/age.svg',
+                          hint: 'Enter your age',
+                          enabled: false,
+                          showLock: true,
+                        ),
+
+                        SizedBox(height: 24.h),
+
+                        // Gender
+                        _buildLabel('Gender'),
+                        SizedBox(height: 12.h),
+                        _buildGenderSelector(),
+
+                        SizedBox(height: 24.h),
+
+                        // Language
+                        _buildLabel('Select Learn Language'),
+                        SizedBox(height: 10.h),
+                        _buildLanguageDropdown(),
+
+                        SizedBox(height: 40.h),
+
+                        // Save Button
+                        Container(
+                          width: double.infinity,
+                          height: 56.h,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
                             borderRadius: BorderRadius.circular(16.r),
-                            child: Center(
-                              child: _isSaving
-                                  ? SizedBox(
-                                      width: 24.w,
-                                      height: 24.h,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF4ECDC4).withOpacity(0.4),
+                                blurRadius: 16,
+                                offset: Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _isSaving ? null : _saveProfile,
+                              borderRadius: BorderRadius.circular(16.r),
+                              child: Center(
+                                child: _isSaving
+                                    ? SizedBox(
+                                        width: 24.w,
+                                        height: 24.h,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : Text(
+                                        'Save',
+                                        style: TextStyle(
+                                          fontSize: 17.sp,
+                                          fontWeight: FontWeight.w700,
+                                          fontFamily: 'Montserrat',
+                                          color: Colors.white,
+                                          letterSpacing: 0.5,
+                                        ),
                                       ),
-                                    )
-                                  : Text(
-                                      'Save',
-                                      style: TextStyle(
-                                        fontSize: 17.sp,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'Montserrat',
-                                        color: Colors.white,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
 
-                      // Delete Account
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            _showDeleteAccountDialog();
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20.w,
-                              vertical: 12.h,
+                        // Delete Account
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              _showDeleteAccountDialog();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20.w,
+                                vertical: 12.h,
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            'Delete Account',
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Montserrat',
-                              color: Color(0xFFE57373),
+                            child: Text(
+                              'Delete Account',
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Montserrat',
+                                color: Color(0xFFE57373),
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      SizedBox(height: 30.h),
-                    ],
+                        SizedBox(height: 30.h),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
     );
   }
 
@@ -851,37 +850,12 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
       if (!mounted) return;
 
       if (result.success) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white, size: 20.sp),
-                SizedBox(width: 8.w),
-                Text(
-                  'Profile updated successfully!',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Color(0xFF4ECDC4),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            margin: EdgeInsets.all(16.w),
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        // Close the page after a brief delay
-        await Future.delayed(Duration(milliseconds: 500));
+        // Close the page and notify parent
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.pop(
+            context,
+            true,
+          ); // Return true to indicate profile was updated
         }
       } else {
         // Show error

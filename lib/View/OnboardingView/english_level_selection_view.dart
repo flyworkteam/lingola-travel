@@ -44,7 +44,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
       'id': 'upper-intermediate',
       'title': 'İleri Orta',
       'description': 'İş toplantılarını rahatça yönetebilir',
-      'icon': 'assets/images/upperintermediate.svg',
+      'icon': 'assets/icons/briefcase.svg',
     },
   ];
 
@@ -331,26 +331,27 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
         child: Row(
           children: [
             // Icon
-            Container(
-              width: 40.w,
-              height: 40.w,
-              padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? MyColors.lingolaPrimaryColor
-                    : MyColors.grey200,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: SvgPicture.asset(
-                level['icon']!,
-                width: 20.w,
-                height: 20.w,
-                colorFilter: ColorFilter.mode(
-                  isSelected ? MyColors.white : MyColors.grey600,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
+            level['icon']!.endsWith('.svg')
+                ? SvgPicture.asset(
+                    level['icon']!,
+                    width: 40.w,
+                    height: 40.w,
+                    fit: BoxFit.contain,
+                    colorFilter: isSelected
+                        ? ColorFilter.mode(
+                            MyColors.lingolaPrimaryColor,
+                            BlendMode.srcIn,
+                          )
+                        : null,
+                  )
+                : Image.asset(
+                    level['icon']!,
+                    width: 40.w,
+                    height: 40.w,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    color: isSelected ? MyColors.lingolaPrimaryColor : null,
+                  ),
 
             SizedBox(width: 12.w),
 

@@ -14,6 +14,7 @@ import '../NotificationsView/notifications_view.dart';
 import '../VocabularyView/travel_vocabulary_view.dart';
 import '../DictionaryView/visual_dictionary_view.dart';
 import '../CourseView/course_view.dart';
+import '../CourseView/course_detail_view.dart';
 import '../ProfileView/premium_view.dart';
 import '../ProfileView/profile_view.dart';
 
@@ -32,6 +33,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   bool _isNavigating = false; // Prevent double navigation
   String _userName = 'Guest';
   List<TravelPhraseModel> _phrases = [];
+  Set<String> _bookmarkedPhrases = {}; // Track bookmarked phrase IDs
   final ProfileRepository _profileRepository = ProfileRepository();
   final TravelPhraseRepository _travelPhraseRepository =
       TravelPhraseRepository();
@@ -773,6 +775,16 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   turkishText: phrase.targetLanguage == 'en'
                       ? phrase.translation
                       : phrase.englishText,
+                  isBookmarked: _bookmarkedPhrases.contains(phrase.id),
+                  onBookmarkToggle: () {
+                    setState(() {
+                      if (_bookmarkedPhrases.contains(phrase.id)) {
+                        _bookmarkedPhrases.remove(phrase.id);
+                      } else {
+                        _bookmarkedPhrases.add(phrase.id);
+                      }
+                    });
+                  },
                 ),
               ),
             )
@@ -785,6 +797,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Widget _buildQuestionCard({
     required String targetLanguageText,
     required String turkishText,
+    required bool isBookmarked,
+    required VoidCallback onBookmarkToggle,
   }) {
     return Container(
       width: double.infinity,
@@ -794,9 +808,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -849,10 +863,27 @@ class _HomeViewState extends ConsumerState<HomeView> {
           Positioned(
             top: 0,
             right: 0,
-            child: Image.asset(
-              'assets/images/kaydet.png',
-              width: 32.w,
-              height: 32.h,
+            child: GestureDetector(
+              onTap: onBookmarkToggle,
+              child: Container(
+                width: 44.w,
+                height: 44.h,
+                decoration: BoxDecoration(
+                  color: isBookmarked
+                      ? const Color(0xFFE3F2FD)
+                      : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.bookmark,
+                    color: isBookmarked
+                        ? const Color(0xFF2196F3)
+                        : const Color(0xFF9CA3AF),
+                    size: 26.sp,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -867,16 +898,15 @@ class _HomeViewState extends ConsumerState<HomeView> {
         'title': 'Learn New\nSentence',
         'subtitle': 'Daily Conversation',
         'gradient': [Color(0xFF7B68EE), Color(0xFF9D8FFF)], // Purple gradient
+        'icon': 'assets/images/messagebox.png',
+        'isIconSvg': false,
       },
       {
         'title': 'Learn New\nWords',
         'subtitle': 'Quick Learn',
         'gradient': [Color(0xFF4A90E2), Color(0xFF5BA3F5)], // Blue gradient
-      },
-      {
-        'title': 'Practice\nSpeaking',
-        'subtitle': 'Improve Fluency',
-        'gradient': [Color(0xFF50C878), Color(0xFF6FD99A)], // Green gradient
+        'icon': 'assets/icons/learnnewword.svg',
+        'isIconSvg': true,
       },
     ];
 
@@ -936,6 +966,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   subtitle: feature['subtitle'] as String,
                   gradientColors: feature['gradient'] as List<Color>,
                   cardIndex: index,
+                  iconPath: feature['icon'] as String,
+                  isIconSvg: feature['isIconSvg'] as bool,
                 ),
               );
             },
@@ -951,6 +983,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
     required String subtitle,
     required List<Color> gradientColors,
     required int cardIndex,
+    required String iconPath,
+    required bool isIconSvg,
   }) {
     return Container(
       width: 240.w,
@@ -1012,19 +1046,29 @@ class _HomeViewState extends ConsumerState<HomeView> {
               children: [
                 // Icon
                 Container(
-                  width: 60.w,
-                  height: 60.h,
+                  width: 55.w,
+                  height: 55.h,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(20.r),
+                    borderRadius: BorderRadius.circular(18.r),
                   ),
                   child: Center(
-                    child: Image.asset(
-                      'assets/images/messagebox.png',
-                      width: 32.w,
-                      height: 32.h,
-                      color: Colors.white,
-                    ),
+                    child: isIconSvg
+                        ? SvgPicture.asset(
+                            iconPath,
+                            width: 36.w,
+                            height: 36.h,
+                            colorFilter: ColorFilter.mode(
+                              Colors.white,
+                              BlendMode.srcIn,
+                            ),
+                          )
+                        : Image.asset(
+                            iconPath,
+                            width: 48.w,
+                            height: 48.h,
+                            color: Colors.white,
+                          ),
                   ),
                 ),
 
@@ -1263,7 +1307,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const CourseView(isPremium: false),
+            builder: (context) => CourseDetailView(
+              courseData: currentCourse.toJson(),
+              isPremium: false,
+            ),
           ),
         );
       },
@@ -1463,6 +1510,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             if (courses.isNotEmpty)
               Expanded(
                 child: _buildCourseCard(
+                  courseData: courses[0].toJson(),
                   title: courses[0].title,
                   subtitle: '${courses[0].totalLessons} lessons',
                   iconPath: 'assets/icons/englishfortravel.svg',
@@ -1474,6 +1522,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               SizedBox(width: 12.w),
               Expanded(
                 child: _buildCourseCard(
+                  courseData: courses[1].toJson(),
                   title: courses[1].title,
                   subtitle: '${courses[1].totalLessons} lessons',
                   iconPath: 'assets/icons/englishforhealth.svg',
@@ -1490,6 +1539,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Single course card
   Widget _buildCourseCard({
+    required Map<String, dynamic> courseData,
     required String title,
     required String subtitle,
     required String iconPath,
@@ -1501,7 +1551,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const CourseView(isPremium: false),
+            builder: (context) =>
+                CourseDetailView(courseData: courseData, isPremium: false),
           ),
         );
       },

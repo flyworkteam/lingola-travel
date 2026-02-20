@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Theme/my_colors.dart';
-import '../../Core/Routes/app_routes.dart';
 import 'english_level_selection_view.dart';
 
 /// Profession Detail Input View - Step 2 of 4 (Part 2)

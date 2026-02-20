@@ -27,7 +27,7 @@ class _FaqViewState extends State<FaqView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 12.h),
-              
+
               // Header
               Row(
                 children: [
@@ -52,113 +52,113 @@ class _FaqViewState extends State<FaqView> {
                   ),
                 ],
               ),
-              
+
               SizedBox(height: 24.h),
 
-                  // Genel Section
-                  _buildSectionTitle('Genel'),
-                  SizedBox(height: 16.h),
+              // Genel Section
+              _buildSectionTitle('Genel'),
+              SizedBox(height: 16.h),
 
-                  _buildFaqItem(
-                    index: 0,
-                    question: 'Lingola Travel nedir?',
-                    answer:
-                        'Lingola Travel, seyahat sırasında ihtiyaç duyulan İngilizce kelime ve ifadeleri pratik şekilde öğreten bir dil öğrenme uygulamasıdır.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 1,
-                    question: 'Lingola Travel kimler için uygundur?',
-                    answer:
-                        'Yurt dışına çıkan, tatil yapan veya seyahat sırasında İngilizceyi daha rahat kullanmak isteyen herkes için uygundur.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 2,
-                    question: 'Lingola Travel genel İngilizce mi öğretir?',
-                    answer:
-                        'Hayır. Lingola Travel, seyahatte en sık karşılaşılan durumlara özel kelime ve ifadelere odaklanır.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 3,
-                    question: 'Hangi konular yer alıyor?',
-                    answer:
-                        'Havaalanı, otel, restoran, ulaşım, alışveriş ve acil durumlar gibi temel seyahat konuları yer alır.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 4,
-                    question: 'Yeni başlayanlar için uygun mu?',
-                    answer:
-                        'Evet. Lingola Travel, İngilizceye yeni başlayanlar için bile kolay anlaşılır içerikler sunar.',
-                  ),
-
-                  SizedBox(height: 32.h),
-
-                  // Kullanım Section
-                  _buildSectionTitle('Kullanım'),
-                  SizedBox(height: 16.h),
-
-                  _buildFaqItem(
-                    index: 5,
-                    question: 'Günlük ne kadar zaman ayırmam gerekir?',
-                    answer:
-                        'Günde sadece birkaç dakika ayırarak kelime ve ifadeleri hızlıca öğrenebilirsin.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 6,
-                    question: 'Kelimeler nasıl öğretiliyor?',
-                    answer:
-                        'Kelimeler kısa açıklamalar ve gerçek seyahat senaryolarına uygun örneklerle sunulur.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 7,
-                    question: 'İnternet bağlantısı olmadan kullanılabilir mi?',
-                    answer:
-                        'Bazı içerikler çevrimdışı kullanılabilir; tam deneyim için internet bağlantısı önerilir.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 8,
-                    question:
-                        'Öğrendiklerimi seyahatte gerçekten kullanabilir miyim?',
-                    answer:
-                        'Evet. İçerikler, seyahat sırasında birebir ihtiyaç duyulan gerçek kullanım durumlarına göre hazırlanmıştır.',
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  _buildFaqItem(
-                    index: 9,
-                    question: 'Lingola Travel ücretsiz mi?',
-                    answer:
-                        'Uygulama ücretsiz olarak kullanılabilir, ek özellikler ve içerikler için premium seçenekler sunulabilir.',
-                  ),
-
-                  SizedBox(height: 40.h),
-                ],
+              _buildFaqItem(
+                index: 0,
+                question: 'Lingola Travel nedir?',
+                answer:
+                    'Lingola Travel, seyahat sırasında ihtiyaç duyulan İngilizce kelime ve ifadeleri pratik şekilde öğreten bir dil öğrenme uygulamasıdır.',
               ),
-            ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 1,
+                question: 'Lingola Travel kimler için uygundur?',
+                answer:
+                    'Yurt dışına çıkan, tatil yapan veya seyahat sırasında İngilizceyi daha rahat kullanmak isteyen herkes için uygundur.',
+              ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 2,
+                question: 'Lingola Travel genel İngilizce mi öğretir?',
+                answer:
+                    'Hayır. Lingola Travel, seyahatte en sık karşılaşılan durumlara özel kelime ve ifadelere odaklanır.',
+              ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 3,
+                question: 'Hangi konular yer alıyor?',
+                answer:
+                    'Havaalanı, otel, restoran, ulaşım, alışveriş ve acil durumlar gibi temel seyahat konuları yer alır.',
+              ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 4,
+                question: 'Yeni başlayanlar için uygun mu?',
+                answer:
+                    'Evet. Lingola Travel, İngilizceye yeni başlayanlar için bile kolay anlaşılır içerikler sunar.',
+              ),
+
+              SizedBox(height: 32.h),
+
+              // Kullanım Section
+              _buildSectionTitle('Kullanım'),
+              SizedBox(height: 16.h),
+
+              _buildFaqItem(
+                index: 5,
+                question: 'Günlük ne kadar zaman ayırmam gerekir?',
+                answer:
+                    'Günde sadece birkaç dakika ayırarak kelime ve ifadeleri hızlıca öğrenebilirsin.',
+              ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 6,
+                question: 'Kelimeler nasıl öğretiliyor?',
+                answer:
+                    'Kelimeler kısa açıklamalar ve gerçek seyahat senaryolarına uygun örneklerle sunulur.',
+              ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 7,
+                question: 'İnternet bağlantısı olmadan kullanılabilir mi?',
+                answer:
+                    'Bazı içerikler çevrimdışı kullanılabilir; tam deneyim için internet bağlantısı önerilir.',
+              ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 8,
+                question:
+                    'Öğrendiklerimi seyahatte gerçekten kullanabilir miyim?',
+                answer:
+                    'Evet. İçerikler, seyahat sırasında birebir ihtiyaç duyulan gerçek kullanım durumlarına göre hazırlanmıştır.',
+              ),
+
+              SizedBox(height: 12.h),
+
+              _buildFaqItem(
+                index: 9,
+                question: 'Lingola Travel ücretsiz mi?',
+                answer:
+                    'Uygulama ücretsiz olarak kullanılabilir, ek özellikler ve içerikler için premium seçenekler sunulabilir.',
+              ),
+
+              SizedBox(height: 40.h),
+            ],
           ),
-        );
-      }
+        ),
+      ),
+    );
+  }
 
   Widget _buildSectionTitle(String title) {
     return Row(
