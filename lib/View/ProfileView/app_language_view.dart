@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Models/language.dart';
 
 class AppLanguageView extends StatefulWidget {
@@ -16,150 +17,129 @@ class _AppLanguageViewState extends State<AppLanguageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Custom AppBar
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: Row(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24.w,
+            right: 24.w,
+            top: MediaQuery.of(context).padding.top + 8.h,
+          ),
+          child: Column(
+            children: [
+              SizedBox(height: 12.h),
+              
+              // Header
+              Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 18.sp,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                    child: SvgPicture.asset(
+                      'assets/icons/gerigelmeiconu.svg',
+                      width: 13.w,
+                      height: 13.w,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      'App Language',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
-                      ),
+                  SizedBox(width: 12.w),
+                  Text(
+                    'App Language',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
-                  SizedBox(width: 40.w),
                 ],
               ),
-            ),
+              
+              SizedBox(height: 24.h),
 
-            // Scrollable Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  children: [
-                    SizedBox(height: 20.h),
-
-                    // Title
-                    Text(
-                      'Select the application\nlanguage',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
-                        height: 1.3,
-                      ),
-                    ),
-
-                    SizedBox(height: 32.h),
-
-                    // Language List
-                    ...List.generate(AppLanguages.all.length, (index) {
-                      final language = AppLanguages.all[index];
-                      final isSelected =
-                          _selectedLanguage.code == language.code;
-                      final isLast = index == AppLanguages.all.length - 1;
-
-                      return Column(
-                        children: [
-                          _buildLanguageItem(
-                            flagAsset: language.flagAsset,
-                            name: language.getLocalizedName(
-                              _selectedLanguage.code,
-                            ), // Use localized name
-                            language: language,
-                            isSelected: isSelected,
-                          ),
-                          if (!isLast) SizedBox(height: 12.h),
-                        ],
-                      );
-                    }),
-
-                    SizedBox(height: 40.h),
-
-                    // Save Button
-                    Container(
-                      width: double.infinity,
-                      height: 56.h,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFF4ECDC4).withOpacity(0.4),
-                            blurRadius: 16,
-                            offset: Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            // TODO: Save language preference
-                            Navigator.pop(context);
-                          },
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: Center(
-                            child: Text(
-                              'Save',
-                              style: TextStyle(
-                                fontSize: 17.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Montserrat',
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 40.h),
-                  ],
+              // Title
+              Text(
+                'Select the application\nlanguage',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Montserrat',
+                  color: Color(0xFF1A1A1A),
+                  height: 1.3,
                 ),
               ),
-            ),
-          ],
+
+              SizedBox(height: 32.h),
+
+              // Language List
+              ...List.generate(AppLanguages.all.length, (index) {
+                final language = AppLanguages.all[index];
+                final isSelected =
+                    _selectedLanguage.code == language.code;
+                final isLast = index == AppLanguages.all.length - 1;
+
+                return Column(
+                  children: [
+                    _buildLanguageItem(
+                      flagAsset: language.flagAsset,
+                      name: language.getLocalizedName(
+                        _selectedLanguage.code,
+                      ), // Use localized name
+                      language: language,
+                      isSelected: isSelected,
+                    ),
+                    if (!isLast) SizedBox(height: 12.h),
+                  ],
+                );
+              }),
+
+              SizedBox(height: 24.h),
+
+              // Save Button
+              Container(
+                width: double.infinity,
+                height: 56.h,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF4ECDC4).withOpacity(0.4),
+                      blurRadius: 16,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      // TODO: Save language preference
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(16.r),
+                    child: Center(
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          fontSize: 17.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Montserrat',
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 24.h),
+            ],
+          ),
         ),
       ),
     );

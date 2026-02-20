@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class FaqView extends StatefulWidget {
   const FaqView({super.key});
@@ -25,40 +26,23 @@ class _FaqViewState extends State<FaqView> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 18.sp,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                    child: SvgPicture.asset(
+                      'assets/icons/gerigelmeiconu.svg',
+                      width: 13.w,
+                      height: 13.w,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      'F.A.Q.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
-                      ),
+                  SizedBox(width: 12.w),
+                  Text(
+                    'F.A.Q.',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
-                  SizedBox(width: 40.w),
                 ],
               ),
             ),
@@ -72,55 +56,102 @@ class _FaqViewState extends State<FaqView> {
                   children: [
                     SizedBox(height: 8.h),
 
-                    // Uygulama Hakkında Section
-                    _buildSectionTitle('Uygulama Hakkında'),
+                    // Genel Section
+                    _buildSectionTitle('Genel'),
                     SizedBox(height: 16.h),
 
                     _buildFaqItem(
                       index: 0,
-                      question: 'Lingola Travel nasıl çalışır?',
+                      question: 'Lingola Travel nedir?',
                       answer:
-                          'Lingola Travel, interaktif dersler ve pratik alıştırmalarla yabancı dil öğrenmenizi kolaylaştırır. Günlük hedefler belirleyerek, sesli telaffuz çalışmaları yaparak ve kelime dağarcığınızı geliştirerek ilerleme kaydedebilirsiniz.',
+                          'Lingola Travel, seyahat sırasında ihtiyaç duyulan İngilizce kelime ve ifadeleri pratik şekilde öğreten bir dil öğrenme uygulamasıdır.',
                     ),
 
                     SizedBox(height: 12.h),
 
                     _buildFaqItem(
                       index: 1,
-                      question: 'Verilerim güvende mi?',
+                      question: 'Lingola Travel kimler için uygundur?',
                       answer:
-                          'Evet, tüm verileriniz şifreli olarak saklanır ve gizlilik politikamıza uygun şekilde korunur. Kişisel bilgileriniz hiçbir şekilde üçüncü şahıslarla paylaşılmaz.',
+                          'Yurt dışına çıkan, tatil yapan veya seyahat sırasında İngilizceyi daha rahat kullanmak isteyen herkes için uygundur.',
                     ),
 
                     SizedBox(height: 12.h),
 
                     _buildFaqItem(
                       index: 2,
-                      question: 'Çevrimdışı kullanabilir miyim?',
+                      question: 'Lingola Travel genel İngilizce mi öğretir?',
                       answer:
-                          'Evet, daha önce indirdiğiniz derslere internet bağlantısı olmadan da erişebilirsiniz. Ancak bazı özellikler için internet bağlantısı gereklidir.',
+                          'Hayır. Lingola Travel, seyahatte en sık karşılaşılan durumlara özel kelime ve ifadelere odaklanır.',
                     ),
 
-                    SizedBox(height: 32.h),
-
-                    // Hesap ve Abonelik Section
-                    _buildSectionTitle('Hesap ve Abonelik'),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
 
                     _buildFaqItem(
                       index: 3,
-                      question: 'Aboneliğimi nasıl iptal ederim?',
+                      question: 'Hangi konular yer alıyor?',
                       answer:
-                          'Aboneliğinizi Profile > Premium bölümünden veya uygulama mağazası ayarlarınızdan iptal edebilirsiniz. İptal işlemi sonrası mevcut dönem sonuna kadar premium özelliklerden yararlanmaya devam edebilirsiniz.',
+                          'Havaalanı, otel, restoran, ulaşım, alışveriş ve acil durumlar gibi temel seyahat konuları yer alır.',
                     ),
 
                     SizedBox(height: 12.h),
 
                     _buildFaqItem(
                       index: 4,
-                      question: 'Aile paylaşımı var mı?',
+                      question: 'Yeni başlayanlar için uygun mu?',
                       answer:
-                          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to',
+                          'Evet. Lingola Travel, İngilizceye yeni başlayanlar için bile kolay anlaşılır içerikler sunar.',
+                    ),
+
+                    SizedBox(height: 32.h),
+
+                    // Kullanım Section
+                    _buildSectionTitle('Kullanım'),
+                    SizedBox(height: 16.h),
+
+                    _buildFaqItem(
+                      index: 5,
+                      question: 'Günlük ne kadar zaman ayırmam gerekir?',
+                      answer:
+                          'Günde sadece birkaç dakika ayırarak kelime ve ifadeleri hızlıca öğrenebilirsin.',
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    _buildFaqItem(
+                      index: 6,
+                      question: 'Kelimeler nasıl öğretiliyor?',
+                      answer:
+                          'Kelimeler kısa açıklamalar ve gerçek seyahat senaryolarına uygun örneklerle sunulur.',
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    _buildFaqItem(
+                      index: 7,
+                      question:
+                          'İnternet bağlantısı olmadan kullanılabilir mi?',
+                      answer:
+                          'Bazı içerikler çevrimdışı kullanılabilir; tam deneyim için internet bağlantısı önerilir.',
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    _buildFaqItem(
+                      index: 8,
+                      question:
+                          'Öğrendiklerimi seyahatte gerçekten kullanabilir miyim?',
+                      answer:
+                          'Evet. İçerikler, seyahat sırasında birebir ihtiyaç duyulan gerçek kullanım durumlarına göre hazırlanmıştır.',
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    _buildFaqItem(
+                      index: 9,
+                      question: 'Lingola Travel ücretsiz mi?',
+                      answer:
+                          'Uygulama ücretsiz olarak kullanılabilir, ek özellikler ve içerikler için premium seçenekler sunulabilir.',
                     ),
 
                     SizedBox(height: 40.h),
@@ -138,10 +169,10 @@ class _FaqViewState extends State<FaqView> {
     return Row(
       children: [
         Container(
-          width: 4.w,
+          width: 6.w,
           height: 24.h,
           decoration: BoxDecoration(
-            color: Color(0xFF4ECDC4),
+            color: Color(0xFF1B8A6B),
             borderRadius: BorderRadius.circular(2.r),
           ),
         ),

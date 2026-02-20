@@ -20,40 +20,23 @@ class ShareFriendView extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 18.sp,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                    child: SvgPicture.asset(
+                      'assets/icons/gerigelmeiconu.svg',
+                      width: 13.w,
+                      height: 13.w,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      'Share with Friend',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
-                      ),
+                  SizedBox(width: 12.w),
+                  Text(
+                    'Share with Friend',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
-                  SizedBox(width: 40.w),
                 ],
               ),
             ),

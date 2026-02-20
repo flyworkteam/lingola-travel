@@ -122,327 +122,309 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: _isLoading
-            ? Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)))
-            : Column(
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)))
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Custom AppBar
+                  // AppBar with back button
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 16.h,
+                    padding: EdgeInsets.only(
+                      left: 20.w,
+                      right: 20.w,
+                      top: MediaQuery.of(context).padding.top + 8.h,
+                      bottom: 8.h,
                     ),
                     child: Row(
                       children: [
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40.w,
-                            height: 40.w,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.06),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_ios_new,
-                              size: 18.sp,
-                              color: Color(0xFF1A1A1A),
-                            ),
+                          child: SvgPicture.asset(
+                            'assets/icons/gerigelmeiconu.svg',
+                            width: 13.w,
+                            height: 13.w,
+                            fit: BoxFit.contain,
                           ),
                         ),
-                        Expanded(
-                          child: Text(
-                            'Profile Settings',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Montserrat',
-                              color: Color(0xFF1A1A1A),
-                            ),
+                        SizedBox(width: 12.w),
+                        Text(
+                          'Profile Settings',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Montserrat',
+                            color: Color(0xFF1A1A1A),
                           ),
                         ),
-                        SizedBox(width: 40.w),
                       ],
                     ),
                   ),
 
-                  // Scrollable Content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  // Profile Photo
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Center(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 8.h),
-
-                          // Profile Photo
-                          Center(
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 130.w,
-                                  height: 130.w,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: _userPhotoUrl != null
-                                        ? null
-                                        : LinearGradient(
-                                            colors: [
-                                              Color(0xFFFFB3C1),
-                                              Color(0xFFFF85A1),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Color(
-                                          0xFFFFB3C1,
-                                        ).withOpacity(0.4),
-                                        blurRadius: 20,
-                                        offset: Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child:
-                                      _userPhotoUrl != null &&
-                                          _userPhotoUrl!.isNotEmpty
-                                      ? ClipOval(
-                                          child: Image.network(
-                                            _userPhotoUrl!,
-                                            width: 130.w,
-                                            height: 130.w,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                                  // If image fails to load, show default
-                                                  return Center(
-                                                    child: SvgPicture.asset(
-                                                      'assets/icons/userlogo.svg',
-                                                      width: 65.w,
-                                                      height: 65.w,
-                                                      colorFilter:
-                                                          const ColorFilter.mode(
-                                                            Colors.white,
-                                                            BlendMode.srcIn,
-                                                          ),
-                                                    ),
-                                                  );
-                                                },
-                                          ),
-                                        )
-                                      : Center(
-                                          child: SvgPicture.asset(
-                                            'assets/icons/userlogo.svg',
-                                            width: 65.w,
-                                            height: 65.w,
-                                            colorFilter: const ColorFilter.mode(
-                                              Colors.white,
-                                              BlendMode.srcIn,
-                                            ),
-                                          ),
-                                        ),
-                                ),
-                                Transform.translate(
-                                  offset: Offset(40.w, -30.h),
-                                  child: Container(
-                                    width: 44.w,
-                                    height: 44.w,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.15),
-                                          blurRadius: 10,
-                                          offset: Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Center(
-                                      child: SvgPicture.asset(
-                                        'assets/icons/changephoto.svg',
-                                        width: 22.w,
-                                        height: 22.w,
-                                        colorFilter: const ColorFilter.mode(
-                                          Color(0xFF4ECDC4),
-                                          BlendMode.srcIn,
-                                        ),
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Transform.translate(
-                                  offset: Offset(0, -20.h),
-                                  child: Text(
-                                    'Change Photo',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: 'Montserrat',
-                                      color: Color(0xFF4ECDC4),
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: 12.h),
-
-                          // Full Name
-                          _buildLabel('Full Name'),
-                          SizedBox(height: 10.h),
-                          _buildInputField(
-                            controller: _nameController,
-                            iconPath: 'assets/icons/fullname.svg',
-                            hint: 'Enter your name',
-                            enabled: true,
-                          ),
-
-                          SizedBox(height: 20.h),
-
-                          // E-mail
-                          _buildLabel('E-mail'),
-                          SizedBox(height: 10.h),
-                          _buildInputField(
-                            controller: _emailController,
-                            iconPath: 'assets/icons/email.svg',
-                            hint: 'Enter your email',
-                            enabled: false,
-                            showLock: true,
-                          ),
-
-                          SizedBox(height: 20.h),
-
-                          // Age
-                          _buildLabel('Age'),
-                          SizedBox(height: 10.h),
-                          _buildInputField(
-                            controller: _ageController,
-                            iconPath: 'assets/icons/age.svg',
-                            hint: 'Enter your age',
-                            enabled: false,
-                            showLock: true,
-                          ),
-
-                          SizedBox(height: 24.h),
-
-                          // Gender
-                          _buildLabel('Gender'),
-                          SizedBox(height: 12.h),
-                          _buildGenderSelector(),
-
-                          SizedBox(height: 24.h),
-
-                          // Language
-                          _buildLabel('Select Learn Language'),
-                          SizedBox(height: 10.h),
-                          _buildLanguageDropdown(),
-
-                          SizedBox(height: 40.h),
-
-                          // Save Button
                           Container(
-                            width: double.infinity,
-                            height: 56.h,
+                            width: 130.w,
+                            height: 130.w,
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16.r),
+                              shape: BoxShape.circle,
+                              gradient: _userPhotoUrl != null
+                                  ? null
+                                  : LinearGradient(
+                                      colors: [
+                                        Color(0xFFFFB3C1),
+                                        Color(0xFFFF85A1),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0xFF4ECDC4).withOpacity(0.4),
-                                  blurRadius: 16,
+                                  color: Color(0xFFFFB3C1).withOpacity(0.4),
+                                  blurRadius: 20,
                                   offset: Offset(0, 8),
                                 ),
                               ],
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: _isSaving ? null : _saveProfile,
-                                borderRadius: BorderRadius.circular(16.r),
-                                child: Center(
-                                  child: _isSaving
-                                      ? SizedBox(
-                                          width: 24.w,
-                                          height: 24.h,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
+                            child:
+                                _userPhotoUrl != null &&
+                                    _userPhotoUrl!.isNotEmpty
+                                ? ClipOval(
+                                    child: Image.network(
+                                      _userPhotoUrl!,
+                                      width: 130.w,
+                                      height: 130.w,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        // If image fails to load, show default
+                                        return Center(
+                                          child: SvgPicture.asset(
+                                            'assets/icons/userlogo.svg',
+                                            width: 65.w,
+                                            height: 65.w,
+                                            colorFilter:
+                                                const ColorFilter.mode(
                                                   Colors.white,
+                                                  BlendMode.srcIn,
                                                 ),
                                           ),
-                                        )
-                                      : Text(
-                                          'Save',
-                                          style: TextStyle(
-                                            fontSize: 17.sp,
-                                            fontWeight: FontWeight.w700,
-                                            fontFamily: 'Montserrat',
-                                            color: Colors.white,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : Center(
+                                    child: SvgPicture.asset(
+                                      'assets/icons/userlogo.svg',
+                                      width: 65.w,
+                                      height: 65.w,
+                                      colorFilter: const ColorFilter.mode(
+                                        Colors.white,
+                                        BlendMode.srcIn,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                          Transform.translate(
+                            offset: Offset(40.w, -30.h),
+                            child: Container(
+                              width: 44.w,
+                              height: 44.w,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 10,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: SvgPicture.asset(
+                                  'assets/icons/changephoto.svg',
+                                  width: 22.w,
+                                  height: 22.w,
+                                  colorFilter: const ColorFilter.mode(
+                                    Color(0xFF4ECDC4),
+                                    BlendMode.srcIn,
+                                  ),
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                             ),
                           ),
-
-                          SizedBox(height: 20.h),
-
-                          // Delete Account
-                          Center(
-                            child: TextButton(
-                              onPressed: () {
-                                _showDeleteAccountDialog();
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 20.w,
-                                  vertical: 12.h,
-                                ),
-                              ),
-                              child: Text(
-                                'Delete Account',
-                                style: TextStyle(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'Montserrat',
-                                  color: Color(0xFFE57373),
-                                ),
+                          Transform.translate(
+                            offset: Offset(0, -20.h),
+                            child: Text(
+                              'Change Photo',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Montserrat',
+                                color: Color(0xFF4ECDC4),
+                                letterSpacing: 0.3,
                               ),
                             ),
                           ),
-
-                          SizedBox(height: 30.h),
                         ],
                       ),
                     ),
                   ),
-                ],
-              ),
-      ),
+
+                  // Form Fields
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 12.h),
+
+                        // Full Name
+                        _buildLabel('Full Name'),
+                      SizedBox(height: 10.h),
+                      _buildInputField(
+                        controller: _nameController,
+                        iconPath: 'assets/icons/fullname.svg',
+                        hint: 'Enter your name',
+                        enabled: true,
+                      ),
+
+                      SizedBox(height: 20.h),
+
+                      // E-mail
+                      _buildLabel('E-mail'),
+                      SizedBox(height: 10.h),
+                      _buildInputField(
+                        controller: _emailController,
+                        iconPath: 'assets/icons/email.svg',
+                        hint: 'Enter your email',
+                        enabled: false,
+                        showLock: true,
+                      ),
+
+                      SizedBox(height: 20.h),
+
+                      // Age
+                      _buildLabel('Age'),
+                      SizedBox(height: 10.h),
+                      _buildInputField(
+                        controller: _ageController,
+                        iconPath: 'assets/icons/age.svg',
+                        hint: 'Enter your age',
+                        enabled: false,
+                        showLock: true,
+                      ),
+
+                      SizedBox(height: 24.h),
+
+                      // Gender
+                      _buildLabel('Gender'),
+                      SizedBox(height: 12.h),
+                      _buildGenderSelector(),
+
+                      SizedBox(height: 24.h),
+
+                      // Language
+                      _buildLabel('Select Learn Language'),
+                      SizedBox(height: 10.h),
+                      _buildLanguageDropdown(),
+
+                      SizedBox(height: 40.h),
+
+                      // Save Button
+                      Container(
+                        width: double.infinity,
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF4ECDC4).withOpacity(0.4),
+                              blurRadius: 16,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _isSaving ? null : _saveProfile,
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: Center(
+                              child: _isSaving
+                                  ? SizedBox(
+                                      width: 24.w,
+                                      height: 24.h,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : Text(
+                                      'Save',
+                                      style: TextStyle(
+                                        fontSize: 17.sp,
+                                        fontWeight: FontWeight.w700,
+                                        fontFamily: 'Montserrat',
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 20.h),
+
+                      // Delete Account
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            _showDeleteAccountDialog();
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
+                          ),
+                          child: Text(
+                            'Delete Account',
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Montserrat',
+                              color: Color(0xFFE57373),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 30.h),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
     );
   }
 

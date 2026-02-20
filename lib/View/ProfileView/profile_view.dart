@@ -125,192 +125,193 @@ class _ProfileViewState extends State<ProfileView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: MyColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          key: ValueKey('profile_stack'), // Unique key to force rebuild
-          children: [
-            // Main content
-            SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 20.h),
+      body: Stack(
+        key: ValueKey('profile_stack'), // Unique key to force rebuild
+        children: [
+          // Main content
+          SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 24.w,
+                right: 24.w,
+                top: MediaQuery.of(context).padding.top + 8.h,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 12.h),
 
-                    // Profile Title
-                    Text(
-                      'Profile',
+                  // Profile Title
+                  Text(
+                    'Profile',
+                    style: TextStyle(
+                      fontSize: 32.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                      color: MyColors.textPrimary,
+                    ),
+                  ),
+
+                  SizedBox(height: 32.h),
+
+                  // Profile Avatar and Info
+                  _buildProfileHeader(),
+
+                  SizedBox(height: 32.h),
+
+                  // Stats Cards
+                  _buildStatsCards(),
+
+                  SizedBox(height: 40.h),
+
+                  // Account Settings Section
+                  _buildSectionTitle('ACCOUNT SETTINGS'),
+
+                  SizedBox(height: 16.h),
+
+                  _buildSettingsCard([
+                    _buildMenuItem(
+                      iconPath: 'assets/icons/profilesetting.svg',
+                      iconColor: Color(0xFF4A90E2),
+                      iconBgColor: Color(0xFFE3F2FD),
+                      title: 'Profile Settings',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileSettingsView(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildMenuItemWithToggle(
+                      iconPath: 'assets/icons/notification.svg',
+                      iconColor: Color(0xFF9C27B0),
+                      iconBgColor: Color(0xFFF3E5F5),
+                      title: 'Notifications',
+                      value: _notificationsEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _notificationsEnabled = value;
+                        });
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildMenuItemWithBadge(
+                      iconPath: 'assets/icons/profilepremium.svg',
+                      iconColor: Color(0xFFFFB800),
+                      iconBgColor: Color(0xFFFFF9E6),
+                      title: 'Premium',
+                      badge: 'Passive',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PremiumView(),
+                          ),
+                        );
+                      },
+                    ),
+                  ]),
+
+                  SizedBox(height: 32.h),
+
+                  // General Section
+                  _buildSectionTitle('GENERAL'),
+
+                  SizedBox(height: 16.h),
+
+                  _buildSettingsCard([
+                    _buildMenuItem(
+                      iconPath: 'assets/icons/applanguage.svg',
+                      iconColor: Color(0xFF4ECDC4),
+                      iconBgColor: Color(0xFFE0F7F4),
+                      title: 'App Language',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AppLanguageView(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildMenuItem(
+                      iconPath: 'assets/icons/sharefriends.svg',
+                      iconColor: Color(0xFF5C6BC0),
+                      iconBgColor: Color(0xFFE8EAF6),
+                      title: 'Share Friend',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ShareFriendView(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildMenuItem(
+                      iconPath: 'assets/icons/rateus.svg',
+                      iconColor: Color(0xFFFF6B6B),
+                      iconBgColor: Color(0xFFFFEBEE),
+                      title: 'Rate Us',
+                      onTap: () {
+                        // TODO: Rate app
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildMenuItem(
+                      iconPath: 'assets/icons/faq.svg',
+                      iconColor: Color(0xFF757575),
+                      iconBgColor: Color(0xFFF5F5F5),
+                      title: 'F.A.Q.',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FaqView(),
+                          ),
+                        );
+                      },
+                    ),
+                  ]),
+
+                  SizedBox(height: 32.h),
+
+                  // Logout Button
+                  _buildLogoutButton(),
+
+                  SizedBox(height: 24.h),
+
+                  // Version
+                  Center(
+                    child: Text(
+                      'version 1.0.0',
                       style: TextStyle(
-                        fontSize: 32.sp,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w400,
                         fontFamily: 'Montserrat',
-                        color: MyColors.textPrimary,
+                        color: MyColors.textSecondary,
                       ),
                     ),
+                  ),
 
-                    SizedBox(height: 32.h),
-
-                    // Profile Avatar and Info
-                    _buildProfileHeader(),
-
-                    SizedBox(height: 32.h),
-
-                    // Stats Cards
-                    _buildStatsCards(),
-
-                    SizedBox(height: 40.h),
-
-                    // Account Settings Section
-                    _buildSectionTitle('ACCOUNT SETTINGS'),
-
-                    SizedBox(height: 16.h),
-
-                    _buildSettingsCard([
-                      _buildMenuItem(
-                        iconPath: 'assets/icons/profilesetting.svg',
-                        iconColor: Color(0xFF4A90E2),
-                        iconBgColor: Color(0xFFE3F2FD),
-                        title: 'Profile Settings',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ProfileSettingsView(),
-                            ),
-                          );
-                        },
-                      ),
-                      _buildDivider(),
-                      _buildMenuItemWithToggle(
-                        iconPath: 'assets/icons/notification.svg',
-                        iconColor: Color(0xFF9C27B0),
-                        iconBgColor: Color(0xFFF3E5F5),
-                        title: 'Notifications',
-                        value: _notificationsEnabled,
-                        onChanged: (value) {
-                          setState(() {
-                            _notificationsEnabled = value;
-                          });
-                        },
-                      ),
-                      _buildDivider(),
-                      _buildMenuItemWithBadge(
-                        iconPath: 'assets/icons/profilepremium.svg',
-                        iconColor: Color(0xFFFFB800),
-                        iconBgColor: Color(0xFFFFF9E6),
-                        title: 'Premium',
-                        badge: 'Passive',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PremiumView(),
-                            ),
-                          );
-                        },
-                      ),
-                    ]),
-
-                    SizedBox(height: 32.h),
-
-                    // General Section
-                    _buildSectionTitle('GENERAL'),
-
-                    SizedBox(height: 16.h),
-
-                    _buildSettingsCard([
-                      _buildMenuItem(
-                        iconPath: 'assets/icons/applanguage.svg',
-                        iconColor: Color(0xFF4ECDC4),
-                        iconBgColor: Color(0xFFE0F7F4),
-                        title: 'App Language',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AppLanguageView(),
-                            ),
-                          );
-                        },
-                      ),
-                      _buildDivider(),
-                      _buildMenuItem(
-                        iconPath: 'assets/icons/sharefriends.svg',
-                        iconColor: Color(0xFF5C6BC0),
-                        iconBgColor: Color(0xFFE8EAF6),
-                        title: 'Share Friend',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ShareFriendView(),
-                            ),
-                          );
-                        },
-                      ),
-                      _buildDivider(),
-                      _buildMenuItem(
-                        iconPath: 'assets/icons/rateus.svg',
-                        iconColor: Color(0xFFFF6B6B),
-                        iconBgColor: Color(0xFFFFEBEE),
-                        title: 'Rate Us',
-                        onTap: () {
-                          // TODO: Rate app
-                        },
-                      ),
-                      _buildDivider(),
-                      _buildMenuItem(
-                        iconPath: 'assets/icons/faq.svg',
-                        iconColor: Color(0xFF757575),
-                        iconBgColor: Color(0xFFF5F5F5),
-                        title: 'F.A.Q.',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const FaqView(),
-                            ),
-                          );
-                        },
-                      ),
-                    ]),
-
-                    SizedBox(height: 32.h),
-
-                    // Logout Button
-                    _buildLogoutButton(),
-
-                    SizedBox(height: 24.h),
-
-                    // Version
-                    Center(
-                      child: Text(
-                        'version 2.1.0',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: 'Montserrat',
-                          color: MyColors.textSecondary,
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 110.h), // Space for bottom nav
-                  ],
-                ),
+                  SizedBox(height: 110.h), // Space for bottom nav
+                ],
               ),
             ),
+          ),
 
-            // Floating bottom navigation
-            CustomBottomNavBar(
-              key: ValueKey('bottom_nav_profile'), // Unique key
-              currentIndex: 3,
-              isPremium: widget.isPremium,
-            ),
-          ],
-        ),
+          // Floating bottom navigation
+          CustomBottomNavBar(
+            key: ValueKey('bottom_nav_profile'), // Unique key
+            currentIndex: 3,
+            isPremium: widget.isPremium,
+          ),
+        ],
       ),
     );
   }
@@ -732,13 +733,13 @@ class _ProfileViewState extends State<ProfileView> {
         _showLogoutDialog();
       },
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16.h),
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
         decoration: BoxDecoration(
           color: Color(0xFFFFEBEE),
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SvgPicture.asset(
               'assets/icons/cikisyap.svg',
@@ -796,15 +797,18 @@ class _ProfileViewState extends State<ProfileView> {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: SvgPicture.asset(
-                        'assets/icons/cikisyap.svg',
-                        width: 32.w,
-                        height: 32.w,
-                        colorFilter: const ColorFilter.mode(
-                          Color(0xFFE57373),
-                          BlendMode.srcIn,
+                      child: Transform.translate(
+                        offset: Offset(-3.5.w, 0),
+                        child: SvgPicture.asset(
+                          'assets/icons/cikisyap.svg',
+                          width: 32.w,
+                          height: 32.w,
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFFE57373),
+                            BlendMode.srcIn,
+                          ),
+                          fit: BoxFit.contain,
                         ),
-                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
