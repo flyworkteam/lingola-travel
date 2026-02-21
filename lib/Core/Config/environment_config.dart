@@ -43,7 +43,7 @@ class EnvironmentConfig {
   static String get apiVersion => dotenv.env['API_VERSION'] ?? 'v1';
 
   /// Get API timeout
-  static String get apiTimeout => dotenv.env['API_TIMEOUT'] ?? '30';
+  static String get apiTimeout => dotenv.env['API_TIMEOUT'] ?? '60';
 
   /// Check if we're in production
   static bool get isProduction => _currentEnvironment == Environment.production;

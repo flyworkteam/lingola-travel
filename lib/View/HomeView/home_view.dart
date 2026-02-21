@@ -1307,8 +1307,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CourseDetailView(
-              courseData: currentCourse.toJson(),
+            builder: (context) => CourseView(
               isPremium: false,
             ),
           ),

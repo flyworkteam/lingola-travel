@@ -197,7 +197,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                       Row(
                         children: [
                           _buildStatChip(
-                            iconPath: 'assets/icons/12lesson.svg',
+                            iconPath: 'assets/icons/lesson12.svg',
                             text:
                                 '${widget.courseData['total_lessons'] ?? 12} Lessons',
                           ),
@@ -370,7 +370,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: Color(0xFFF5F5F5),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
@@ -413,49 +413,54 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     Widget iconWidget;
 
     if (isCompleted) {
-      // Completed - Checkmark with green background
-      bgColor = Color(0xFFF0F9FF);
+      // Completed - Checkmark with turquoise background
+      bgColor = Colors.white;
       iconWidget = Container(
-        width: 48.w,
-        height: 48.w,
+        width: 44.w,
+        height: 44.w,
         decoration: BoxDecoration(
-          color: Color(0xFFE0F7F4),
+          color: Color(0xFFB8EDE8),
           shape: BoxShape.circle,
         ),
         child: Center(
           child: Icon(
             Icons.check_circle,
             color: Color(0xFF4ECDC4),
-            size: 28.sp,
+            size: 24.sp,
           ),
         ),
       );
     } else if (isInProgress || (!isLocked && !isCompleted)) {
       // In Progress or Available - Play button with turquoise background
-      bgColor = Color(0xFFE8F9F7);
+      bgColor = Colors.white;
       iconWidget = Container(
-        width: 48.w,
-        height: 48.w,
+        width: 44.w,
+        height: 44.w,
         decoration: BoxDecoration(
           color: Color(0xFF4ECDC4),
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(12.r),
         ),
         child: Center(
-          child: Icon(Icons.play_arrow, color: Colors.white, size: 28.sp),
+          child: Icon(Icons.play_arrow, color: Colors.white, size: 24.sp),
         ),
       );
     } else {
       // Locked - Lock icon with gray background
-      bgColor = Color(0xFFF9F9F9);
+      bgColor = Colors.white;
       iconWidget = Container(
-        width: 48.w,
-        height: 48.w,
+        width: 44.w,
+        height: 44.w,
         decoration: BoxDecoration(
-          color: Color(0xFFF3F4F6),
-          shape: BoxShape.circle,
+          color: Color(0xFFE5E7EB),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         child: Center(
-          child: Icon(Icons.lock, color: Color(0xFF9CA3AF), size: 24.sp),
+          child: SvgPicture.asset(
+            'assets/icons/chooseyourdestkilit.svg',
+            width: 20.w,
+            height: 20.w,
+            colorFilter: ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn),
+          ),
         ),
       );
     }
@@ -484,18 +489,18 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         }
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
-        padding: EdgeInsets.all(16.w),
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(16.r),
         ),
         child: Row(
           children: [
             // Icon container
             iconWidget,
 
-            SizedBox(width: 16.w),
+            SizedBox(width: 12.w),
 
             // Lesson info
             Expanded(
@@ -505,7 +510,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                   Text(
                     '$displayNumber. ${lesson.title}',
                     style: TextStyle(
-                      fontSize: 15.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Montserrat',
                       color: Colors.black,
@@ -533,7 +538,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
 
             // Duration or progress
             if (isCompleted)
-              Icon(Icons.check_circle, color: Color(0xFF4ECDC4), size: 24.sp)
+              Icon(Icons.check_circle, color: Color(0xFF4ECDC4), size: 20.sp)
             else if (isInProgress && lesson.userProgress != null)
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -550,9 +555,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                     color: Color(0xFF4ECDC4),
                   ),
                 ),
-              )
-            else if (isLocked)
-              Icon(Icons.lock_outline, color: Color(0xFFBDBDBD), size: 20.sp),
+              ),
           ],
         ),
       ),

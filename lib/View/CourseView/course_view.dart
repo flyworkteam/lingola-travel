@@ -95,6 +95,7 @@ class _CourseViewState extends ConsumerState<CourseView> {
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             Column(
@@ -126,7 +127,7 @@ class _CourseViewState extends ConsumerState<CourseView> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 8.h,
+              bottom: 0,
               child: CustomBottomNavBar(
                 currentIndex: 1,
                 isPremium: widget.isPremium,
@@ -363,31 +364,33 @@ class _CourseViewState extends ConsumerState<CourseView> {
               ),
             ),
 
-            // Progress badge (top-right)
-            if (course.progressPercentage > 0)
-              Positioned(
-                top: 16.h,
-                right: 16.w,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF4ECDC4),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    'IN PROGRESS (${course.progressPercentage}%)',
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: MyColors.white,
-                    ),
+            // Progress badge (top-right) — her zaman göster
+            Positioned(
+              top: 16.h,
+              right: 16.w,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: course.progressPercentage >= 100
+                      ? Color(0xFF2ECC71) // Tamamlandı → yeşil
+                      : Color(
+                          0xFF4ECDC4,
+                        ), // Devam ediyor veya başlanmadı → turkuaz
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Text(
+                  course.progressPercentage >= 100
+                      ? 'COMPLETED ✓'
+                      : 'IN PROGRESS  ${course.progressPercentage}%',
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Montserrat',
+                    color: MyColors.white,
                   ),
                 ),
               ),
+            ),
 
             // Content (bottom) with glassmorphism
             Positioned(
@@ -446,7 +449,7 @@ class _CourseViewState extends ConsumerState<CourseView> {
                                     width: 16.w,
                                     height: 16.w,
                                     colorFilter: const ColorFilter.mode(
-                                      MyColors.white,
+                                      Color(0xFF4ECDC4),
                                       BlendMode.srcIn,
                                     ),
                                     fit: BoxFit.contain,
@@ -471,12 +474,11 @@ class _CourseViewState extends ConsumerState<CourseView> {
 
                         // Play/Lock button
                         GestureDetector(
-                          onTap: () {
+                          onTap: () async {
                             final isUnlocked =
                                 course.isFree || widget.isPremium;
                             if (isUnlocked) {
-                              // Navigate to course detail
-                              Navigator.push(
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CourseDetailView(
@@ -492,12 +494,18 @@ class _CourseViewState extends ConsumerState<CourseView> {
                                           course.progressPercentage,
                                       'image_url': course.imageUrl,
                                       'is_free': course.isFree,
-                                      'level': 'Intermediate', // Default level
+                                      'level': 'Intermediate',
                                     },
                                     isPremium: widget.isPremium,
                                   ),
                                 ),
                               );
+                              // Geri dönünce progress badge'lerini yenile
+                              if (mounted) {
+                                ref
+                                    .read(courseControllerProvider.notifier)
+                                    .init(targetLanguage: _userTargetLanguage);
+                              }
                             } else {
                               print('Course locked: ${course.title}');
                               // TODO: Show premium dialog
@@ -512,13 +520,23 @@ class _CourseViewState extends ConsumerState<CourseView> {
                                   : MyColors.white.withOpacity(0.3),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
-                              (course.isFree || widget.isPremium)
-                                  ? Icons.play_arrow
-                                  : Icons.lock,
-                              color: MyColors.white,
-                              size: 28.sp,
-                            ),
+                            child: (course.isFree || widget.isPremium)
+                                ? Icon(
+                                    Icons.play_arrow,
+                                    color: MyColors.white,
+                                    size: 28.sp,
+                                  )
+                                : Center(
+                                    child: SvgPicture.asset(
+                                      'assets/icons/chooseyourdestkilit.svg',
+                                      width: 28.w,
+                                      height: 28.w,
+                                      colorFilter: ColorFilter.mode(
+                                        MyColors.white,
+                                        BlendMode.srcIn,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                       ],

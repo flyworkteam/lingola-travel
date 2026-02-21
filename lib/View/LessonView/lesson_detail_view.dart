@@ -167,68 +167,66 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
     return Scaffold(
       backgroundColor: MyColors.white,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Main scrollable content with bottom buttons
-            SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top bar with progress
-                  _buildTopBar(),
+      body: Stack(
+        children: [
+          // Main scrollable content with bottom buttons
+          SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top bar with progress
+                _buildTopBar(),
 
-                  SizedBox(height: 20.h),
+                SizedBox(height: 12.h),
 
-                  // Unit title
-                  _buildUnitTitle(),
+                // Unit title
+                _buildUnitTitle(),
 
-                  SizedBox(height: 20.h),
+                SizedBox(height: 12.h),
 
-                  // Lesson image
-                  _buildLessonImage(),
+                // Lesson image
+                _buildLessonImage(),
 
-                  SizedBox(height: 20.h),
+                SizedBox(height: 12.h),
 
-                  // Listen & Repeat badge
-                  _buildListenRepeatBadge(),
+                // Listen & Repeat badge
+                _buildListenRepeatBadge(),
 
+                SizedBox(height: 12.h),
+
+                // Sentence with highlighted word
+                _buildSentence(),
+
+                SizedBox(height: 20.h),
+
+                // Audio controls
+                _buildAudioControls(),
+
+                // Recording indicator (shown when recording)
+                if (isRecording) ...[
                   SizedBox(height: 16.h),
-
-                  // Sentence with highlighted word
-                  _buildSentence(),
-
-                  SizedBox(height: 32.h),
-
-                  // Audio controls
-                  _buildAudioControls(),
-
-                  // Recording indicator (shown when recording)
-                  if (isRecording) ...[
-                    SizedBox(height: 16.h),
-                    _buildRecordingIndicator(),
-                  ],
-
-                  SizedBox(height: 40.h),
-
-                  // Key Vocabulary section
-                  _buildVocabularySection(),
-
-                  SizedBox(height: 24.h),
-
-                  // Bottom navigation buttons (inside scroll)
-                  _buildBottomButtons(),
-
-                  SizedBox(height: 32.h), // Extra bottom padding
+                  _buildRecordingIndicator(),
                 ],
-              ),
-            ),
 
-            // Result overlay with blur effect
-            if (showResult) _buildResultOverlay(),
-          ],
-        ),
+                SizedBox(height: 20.h),
+
+                // Key Vocabulary section
+                _buildVocabularySection(),
+
+                SizedBox(height: 8.h),
+
+                // Bottom navigation buttons (inside scroll)
+                _buildBottomButtons(),
+
+                SizedBox(height: 8.h), // Minimal bottom padding
+              ],
+            ),
+          ),
+
+          // Result overlay with blur effect
+          if (showResult) _buildResultOverlay(),
+        ],
       ),
     );
   }
@@ -236,25 +234,13 @@ class _LessonDetailViewState extends State<LessonDetailView>
   /// Top bar with close button and progress
   Widget _buildTopBar() {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 16.h),
+      padding: EdgeInsets.only(top: 40.h, bottom: 8.h),
       child: Row(
         children: [
           // Close button
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 40.w,
-              height: 40.w,
-              decoration: BoxDecoration(
-                color: MyColors.grey200,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.close,
-                size: 24.sp,
-                color: MyColors.textPrimary,
-              ),
-            ),
+            child: Icon(Icons.close, size: 24.sp, color: MyColors.textPrimary),
           ),
 
           SizedBox(width: 16.w),
@@ -527,13 +513,13 @@ class _LessonDetailViewState extends State<LessonDetailView>
           },
         ),
 
-        SizedBox(width: 24.w),
+        SizedBox(width: 20.w),
 
         // Microphone button (main)
         _buildAudioButton(
           iconPath: 'assets/icons/microphone.svg',
           size: 72.w,
-          iconSize: 30.sp,
+          iconSize: 32.sp,
           color: Color(0xFF4ECDC4),
           iconColor: MyColors.white,
           onTap: () {
@@ -547,7 +533,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
           },
         ),
 
-        SizedBox(width: 24.w),
+        SizedBox(width: 20.w),
 
         // Bookmark button
         Container(
@@ -577,68 +563,76 @@ class _LessonDetailViewState extends State<LessonDetailView>
     required VoidCallback onTap,
     double borderProgress = 0.0,
   }) {
-    final bool isMicButton = size == 72.w;
+    final bool isMicButton = size == 80.w;
     final bool showPulse = isMicButton && isRecording;
     final bool showBorderProgress = borderProgress > 0.0;
 
+    // Sabit dış boyut — pulse ring veya CustomPaint ne kadar büyürse büyüsün Row kaymasın
+    final double outerSize = size + 20.w;
+
     return GestureDetector(
       onTap: onTap,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Pulsing outer ring when recording
-          if (showPulse)
+      child: SizedBox(
+        width: outerSize,
+        height: outerSize,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            // Pulsing outer ring when recording
+            if (showPulse)
+              Container(
+                width: size + 16.w,
+                height: size + 16.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Color(0xFF4ECDC4).withOpacity(0.3),
+                    width: 3,
+                  ),
+                ),
+              ),
+
+            // Progress arc for speaker button (green border fill)
+            if (showBorderProgress)
+              CustomPaint(
+                size: Size(size + 12.w, size + 12.w),
+                painter: CircularProgressPainter(
+                  progress: borderProgress,
+                  color: Color(0xFF4ECDC4),
+                  strokeWidth: 4,
+                ),
+              ),
+
+            // Main button
             Container(
-              width: size + 16.w,
-              height: size + 16.w,
+              width: size,
+              height: size,
               decoration: BoxDecoration(
+                color: color,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Color(0xFF4ECDC4).withOpacity(0.3),
-                  width: 3,
+                boxShadow: color == Color(0xFF4ECDC4)
+                    ? [
+                        BoxShadow(
+                          color: Color(0xFF4ECDC4).withOpacity(0.3),
+                          blurRadius: showPulse ? 20 : 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  iconPath,
+                  width: iconSize,
+                  height: iconSize,
+                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
-
-          // Progress arc for speaker button (green border fill)
-          if (showBorderProgress)
-            CustomPaint(
-              size: Size(size + 12.w, size + 12.w),
-              painter: CircularProgressPainter(
-                progress: borderProgress,
-                color: Color(0xFF4ECDC4),
-                strokeWidth: 4,
-              ),
-            ),
-
-          // Main button
-          Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: color == Color(0xFF4ECDC4)
-                  ? [
-                      BoxShadow(
-                        color: Color(0xFF4ECDC4).withOpacity(0.3),
-                        blurRadius: showPulse ? 20 : 12,
-                        offset: Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                iconPath,
-                width: iconSize,
-                height: iconSize,
-                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -704,7 +698,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
           ),
         ),
 
-        SizedBox(height: 16.h),
+        SizedBox(height: 10.h),
 
         ...vocabulary.map((vocab) => _buildVocabularyCard(vocab)).toList(),
       ],
@@ -726,8 +720,8 @@ class _LessonDetailViewState extends State<LessonDetailView>
     }
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
+      margin: EdgeInsets.only(bottom: 6.h),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: MyColors.grey100,
         borderRadius: BorderRadius.circular(16.r),
@@ -923,13 +917,16 @@ class _LessonDetailViewState extends State<LessonDetailView>
                       ),
                     ),
                   ),
-                  Text(
-                    'Previous',
-                    style: TextStyle(
-                      fontSize: 14.sp, // 15.sp'den 14.sp'ye küçültüldü
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: MyColors.textSecondary,
+                  Padding(
+                    padding: EdgeInsets.only(left: 28.w),
+                    child: Text(
+                      'Previous',
+                      style: TextStyle(
+                        fontSize: 14.sp, // 15.sp'den 14.sp'ye küçültüldü
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textSecondary,
+                      ),
                     ),
                   ),
                 ],
