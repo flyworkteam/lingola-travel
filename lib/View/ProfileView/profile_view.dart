@@ -1,8 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Added for SVG icons
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lingola_travel/Core/Localization/app_localizations.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Repositories/profile_repository.dart';
 import '../../Repositories/auth_repository.dart';
@@ -16,15 +19,15 @@ import 'faq_view.dart';
 import 'app_language_view.dart';
 import 'premium_view.dart';
 
-class ProfileView extends StatefulWidget {
+class ProfileView extends ConsumerStatefulWidget {
   final bool isPremium;
   const ProfileView({super.key, this.isPremium = false});
 
   @override
-  State<ProfileView> createState() => _ProfileViewState();
+  ConsumerState<ProfileView> createState() => _ProfileViewState();
 }
 
-class _ProfileViewState extends State<ProfileView> {
+class _ProfileViewState extends ConsumerState<ProfileView> {
   bool _notificationsEnabled = true;
   String _userName = 'Guest';
   String? _userEmail;
@@ -174,10 +177,13 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider);
+    final l = AppLocalizations.of(langCode);
+
     return Scaffold(
       backgroundColor: MyColors.background,
       body: Stack(
-        key: ValueKey('profile_stack'), // Unique key to force rebuild
+        key: ValueKey('profile_stack'),
         children: [
           // Main content
           SingleChildScrollView(
@@ -194,7 +200,7 @@ class _ProfileViewState extends State<ProfileView> {
 
                   // Profile Title
                   Text(
-                    'Profile',
+                    l.profile,
                     style: TextStyle(
                       fontSize: 32.sp,
                       fontWeight: FontWeight.w700,
@@ -206,17 +212,17 @@ class _ProfileViewState extends State<ProfileView> {
                   SizedBox(height: 32.h),
 
                   // Profile Avatar and Info
-                  _buildProfileHeader(),
+                  _buildProfileHeader(l),
 
                   SizedBox(height: 32.h),
 
                   // Stats Cards
-                  _buildStatsCards(),
+                  _buildStatsCards(l),
 
                   SizedBox(height: 40.h),
 
                   // Account Settings Section
-                  _buildSectionTitle('ACCOUNT SETTINGS'),
+                  _buildSectionTitle(l.accountSettings),
 
                   SizedBox(height: 16.h),
 
@@ -225,7 +231,7 @@ class _ProfileViewState extends State<ProfileView> {
                       iconPath: 'assets/icons/profilesetting.svg',
                       iconColor: Color(0xFF4A90E2),
                       iconBgColor: Color(0xFFE3F2FD),
-                      title: 'Profile Settings',
+                      title: l.profileSettings,
                       onTap: () async {
                         final result = await Navigator.push(
                           context,
@@ -245,7 +251,7 @@ class _ProfileViewState extends State<ProfileView> {
                       iconPath: 'assets/icons/notification.svg',
                       iconColor: Color(0xFF9C27B0),
                       iconBgColor: Color(0xFFF3E5F5),
-                      title: 'Notifications',
+                      title: l.notifications,
                       value: _notificationsEnabled,
                       onChanged: (value) {
                         setState(() {
@@ -258,8 +264,8 @@ class _ProfileViewState extends State<ProfileView> {
                       iconPath: 'assets/icons/profilepremium.svg',
                       iconColor: Color(0xFFFFB800),
                       iconBgColor: Color(0xFFFFF9E6),
-                      title: 'Premium',
-                      badge: 'Passive',
+                      title: l.premium,
+                      badge: l.premiumBadgePassive,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -274,7 +280,7 @@ class _ProfileViewState extends State<ProfileView> {
                   SizedBox(height: 32.h),
 
                   // General Section
-                  _buildSectionTitle('GENERAL'),
+                  _buildSectionTitle(l.general),
 
                   SizedBox(height: 16.h),
 
@@ -283,7 +289,7 @@ class _ProfileViewState extends State<ProfileView> {
                       iconPath: 'assets/icons/applanguage.svg',
                       iconColor: Color(0xFF4ECDC4),
                       iconBgColor: Color(0xFFE0F7F4),
-                      title: 'App Language',
+                      title: l.appLanguage,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -298,7 +304,7 @@ class _ProfileViewState extends State<ProfileView> {
                       iconPath: 'assets/icons/sharefriends.svg',
                       iconColor: Color(0xFF5C6BC0),
                       iconBgColor: Color(0xFFE8EAF6),
-                      title: 'Share Friend',
+                      title: l.shareFriend,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -313,9 +319,9 @@ class _ProfileViewState extends State<ProfileView> {
                       iconPath: 'assets/icons/rateus.svg',
                       iconColor: Color(0xFFFF6B6B),
                       iconBgColor: Color(0xFFFFEBEE),
-                      title: 'Rate Us',
+                      title: l.rateUs,
                       onTap: () {
-                        _showRateUsDialog();
+                        _showRateUsDialog(l);
                       },
                     ),
                     _buildDivider(),
@@ -323,7 +329,7 @@ class _ProfileViewState extends State<ProfileView> {
                       iconPath: 'assets/icons/faq.svg',
                       iconColor: Color(0xFF757575),
                       iconBgColor: Color(0xFFF5F5F5),
-                      title: 'F.A.Q.',
+                      title: l.faq,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -338,7 +344,7 @@ class _ProfileViewState extends State<ProfileView> {
                   SizedBox(height: 32.h),
 
                   // Logout Button
-                  _buildLogoutButton(),
+                  _buildLogoutButton(l),
 
                   SizedBox(height: 24.h),
 
@@ -373,11 +379,10 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   /// Profile Header with Avatar and Name
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(AppLocalizations l) {
     return Center(
       child: Column(
         children: [
-          // Avatar with border
           Container(
             width: 100.w,
             height: 100.w,
@@ -448,7 +453,7 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                 )
               : Text(
-                  'Free Version',
+                  l.freeVersion,
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
@@ -491,28 +496,28 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   /// Stats Cards Row
-  Widget _buildStatsCards() {
+  Widget _buildStatsCards(AppLocalizations l) {
     if (_isLoadingStats) {
       return Row(
         children: [
-          Expanded(child: _buildStatCard('...', 'DAY STREAK')),
+          Expanded(child: _buildStatCard('...', l.statDayStreak)),
           SizedBox(width: 12.w),
-          Expanded(child: _buildStatCard('...', 'WORDS\nLEARNED')),
+          Expanded(child: _buildStatCard('...', l.statWordsLearned)),
           SizedBox(width: 12.w),
-          Expanded(child: _buildStatCard('...', 'PROGRESS')),
+          Expanded(child: _buildStatCard('...', l.statProgress)),
         ],
       );
     }
 
     return Row(
       children: [
-        Expanded(child: _buildStatCard(_dayStreak.toString(), 'DAY STREAK')),
+        Expanded(child: _buildStatCard(_dayStreak.toString(), l.statDayStreak)),
         SizedBox(width: 12.w),
         Expanded(
-          child: _buildStatCard(_formatNumber(_wordsLearned), 'WORDS\nLEARNED'),
+          child: _buildStatCard(_formatNumber(_wordsLearned), l.statWordsLearned),
         ),
         SizedBox(width: 12.w),
-        Expanded(child: _buildStatCard('$_progressPercentage%', 'PROGRESS')),
+        Expanded(child: _buildStatCard('$_progressPercentage%', l.statProgress)),
       ],
     );
   }
@@ -805,10 +810,10 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   /// Logout Button
-  Widget _buildLogoutButton() {
+  Widget _buildLogoutButton(AppLocalizations l) {
     return GestureDetector(
       onTap: () {
-        _showLogoutDialog();
+        _showLogoutDialog(l);
       },
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
@@ -831,7 +836,7 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             SizedBox(width: 8.w),
             Text(
-              'Çıkış Yap',
+              l.logOut,
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
@@ -846,7 +851,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   /// Show logout confirmation dialog
-  void _showLogoutDialog() {
+  void _showLogoutDialog(AppLocalizations l) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -893,26 +898,13 @@ class _ProfileViewState extends State<ProfileView> {
                   SizedBox(height: 24.h),
                   // Title
                   Text(
-                    'You are about to log out',
+                    l.logOut,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Montserrat',
                       color: MyColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  // Description
-                  Text(
-                    "See you again soon! We'll miss your\nbreathing exercises.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                      color: MyColors.textSecondary,
-                      height: 1.4,
                     ),
                   ),
                   SizedBox(height: 32.h),
@@ -956,7 +948,7 @@ class _ProfileViewState extends State<ProfileView> {
                               ),
                             )
                           : Text(
-                              'Log out',
+                              l.logOut,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16.sp,
@@ -976,7 +968,7 @@ class _ProfileViewState extends State<ProfileView> {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12.h),
                       child: Text(
-                        'Cancel',
+                        l.back,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -997,7 +989,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   // Rate Us Dialog
-  void _showRateUsDialog() {
+  void _showRateUsDialog(AppLocalizations l) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -1043,7 +1035,7 @@ class _ProfileViewState extends State<ProfileView> {
                     SizedBox(height: 20.h),
                     // Title
                     Text(
-                      'Uygulamamızı Değerlendirin',
+                      l.rateUs,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 20.sp,
@@ -1054,16 +1046,7 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                     SizedBox(height: 12.h),
                     // Message
-                    Text(
-                      'Mağaza sayfamıza yönlendirileceksiniz. Deneyiminizi paylaşarak bize destek olabilirsiniz!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF6B7280),
-                        height: 1.5,
-                      ),
-                    ),
+
                     SizedBox(height: 24.h),
                     // Rate Button
                     GestureDetector(
@@ -1088,7 +1071,7 @@ class _ProfileViewState extends State<ProfileView> {
                           ],
                         ),
                         child: Text(
-                          'Mağazaya Git',
+                          l.rateUs,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16.sp,
@@ -1108,7 +1091,7 @@ class _ProfileViewState extends State<ProfileView> {
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 12.h),
                         child: Text(
-                          'İptal',
+                          l.cancel, // Replaced 'İptal' with localized string
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16.sp,

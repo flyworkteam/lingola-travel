@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
 import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 
 /// Step 4 of 4 - Daily Goal Selection View
-/// Pixel-perfect implementation from Figma
 class DailyGoalSelectionView extends ConsumerStatefulWidget {
   const DailyGoalSelectionView({super.key});
 
@@ -21,27 +22,6 @@ class _DailyGoalSelectionViewState
     extends ConsumerState<DailyGoalSelectionView> {
   String? _selectedGoal;
 
-  final List<Map<String, String>> _goals = [
-    {
-      'id': 'casual',
-      'title': 'Hafif',
-      'duration': '5 dk/gün',
-      'icon': 'assets/icons/hafif.svg',
-    },
-    {
-      'id': 'regular',
-      'title': 'Normal',
-      'duration': '15 dk/gün',
-      'icon': 'assets/icons/normal.svg',
-    },
-    {
-      'id': 'serious',
-      'title': 'Ciddi',
-      'duration': '30 dk/gün',
-      'icon': 'assets/icons/ciddili.svg',
-    },
-  ];
-
   void _onGoalSelected(String goalId) {
     setState(() {
       _selectedGoal = goalId;
@@ -50,36 +30,51 @@ class _DailyGoalSelectionViewState
 
   void _onContinue() {
     if (_selectedGoal != null) {
-      // Convert goal to minutes and save to state
       int dailyGoalMinutes = _getGoalMinutes(_selectedGoal!);
       ref
           .read(onboardingControllerProvider.notifier)
           .setDailyGoal(_selectedGoal!, dailyGoalMinutes);
-
       Navigator.pushNamed(context, AppRoutes.creatingPlan);
     }
   }
 
-  /// Convert goal ID to minutes
   int _getGoalMinutes(String goalId) {
     switch (goalId) {
-      case 'casual':
-        return 5;
-      case 'regular':
-        return 15;
-      case 'serious':
-        return 30;
-      default:
-        return 15;
+      case 'casual': return 5;
+      case 'regular': return 15;
+      case 'serious': return 30;
+      default: return 15;
     }
   }
 
-  void _onBack() {
-    Navigator.pop(context);
-  }
+  void _onBack() => Navigator.pop(context);
 
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider);
+    final l = AppLocalizations.of(langCode);
+
+    final goals = [
+      {
+        'id': 'casual',
+        'title': l.goalCasual,
+        'duration': l.goalCasualDuration,
+        'icon': 'assets/icons/hafif.svg',
+      },
+      {
+        'id': 'regular',
+        'title': l.goalRegular,
+        'duration': l.goalRegularDuration,
+        'icon': 'assets/icons/normal.svg',
+      },
+      {
+        'id': 'serious',
+        'title': l.goalSerious,
+        'duration': l.goalSeriousDuration,
+        'icon': 'assets/icons/ciddili.svg',
+      },
+    ];
+
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
@@ -88,15 +83,13 @@ class _DailyGoalSelectionViewState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Progress Bar
               SizedBox(height: 20.h),
-              _buildProgressBar(),
-
+              _buildProgressBar(l),
               SizedBox(height: 28.h),
 
               // Title
               Text(
-                'Günlük hedefiniz\nnedir?',
+                l.step4Title,
                 style: GoogleFonts.montserrat(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
@@ -109,7 +102,7 @@ class _DailyGoalSelectionViewState
 
               // Subtitle
               Text(
-                'Öğrenmeye ne kadar zaman ayırmak istediğinizi\nseçin. Bunu daha sonra değiştirebilirsiniz.',
+                l.step4Subtitle,
                 style: GoogleFonts.montserrat(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -124,10 +117,10 @@ class _DailyGoalSelectionViewState
               Expanded(
                 child: ListView.separated(
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _goals.length,
+                  itemCount: goals.length,
                   separatorBuilder: (context, index) => SizedBox(height: 12.h),
                   itemBuilder: (context, index) {
-                    final goal = _goals[index];
+                    final goal = goals[index];
                     final isSelected = _selectedGoal == goal['id'];
                     return _buildGoalCard(
                       goal: goal,
@@ -143,7 +136,6 @@ class _DailyGoalSelectionViewState
               // Bottom Buttons
               Row(
                 children: [
-                  // Back Button
                   Expanded(
                     flex: 2,
                     child: SizedBox(
@@ -169,15 +161,12 @@ class _DailyGoalSelectionViewState
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(
-                                  Icons.arrow_back,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
+                                child: Icon(Icons.arrow_back,
+                                    color: MyColors.white, size: 22.sp),
                               ),
                             ),
                             Text(
-                              'Geri',
+                              l.back,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -191,7 +180,6 @@ class _DailyGoalSelectionViewState
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  // Continue Button
                   Expanded(
                     flex: 3,
                     child: SizedBox(
@@ -212,7 +200,7 @@ class _DailyGoalSelectionViewState
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Devam Et',
+                              l.continueBtn,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -227,11 +215,8 @@ class _DailyGoalSelectionViewState
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(
-                                  Icons.arrow_forward,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
+                                child: Icon(Icons.arrow_forward,
+                                    color: MyColors.white, size: 22.sp),
                               ),
                             ),
                           ],
@@ -250,12 +235,12 @@ class _DailyGoalSelectionViewState
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressBar(AppLocalizations l) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ADIM 4 / 4',
+          l.step4of4,
           style: GoogleFonts.montserrat(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,
@@ -265,8 +250,7 @@ class _DailyGoalSelectionViewState
         ),
         SizedBox(height: 12.h),
         Row(
-          children: [
-            // Step 1 - Completed
+          children: List.generate(4, (i) => [
             Expanded(
               child: Container(
                 height: 4.h,
@@ -276,40 +260,8 @@ class _DailyGoalSelectionViewState
                 ),
               ),
             ),
-            SizedBox(width: 8.w),
-            // Step 2 - Completed
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            // Step 3 - Completed
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            // Step 4 - Current
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-            ),
-          ],
+            if (i < 3) SizedBox(width: 8.w),
+          ]).expand((e) => e).toList(),
         ),
       ],
     );
@@ -344,7 +296,6 @@ class _DailyGoalSelectionViewState
         ),
         child: Row(
           children: [
-            // Icon
             Container(
               width: 48.w,
               height: 48.w,
@@ -374,10 +325,7 @@ class _DailyGoalSelectionViewState
                       color: isSelected ? MyColors.white : null,
                     ),
             ),
-
             SizedBox(width: 16.w),
-
-            // Text Content
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

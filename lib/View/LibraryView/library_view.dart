@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lingola_travel/Core/Localization/app_localizations.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'package:lingola_travel/Riverpod/Controllers/library_controller.dart';
 import 'library_folder_detail_view.dart';
@@ -28,6 +30,8 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
   Widget build(BuildContext context) {
     final viewModel = ref.watch(libraryControllerProvider);
     final folders = viewModel.folders;
+    final langCode = ref.watch(localeProvider);
+    final l = AppLocalizations.of(langCode);
 
     return Scaffold(
       backgroundColor: MyColors.background,
@@ -59,7 +63,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
                         onPressed: () {
                           ref.read(libraryControllerProvider.notifier).init();
                         },
-                        child: Text('Retry'),
+                        child: Text(l.retry),
                       ),
                     ],
                   ),
@@ -78,7 +82,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
 
                       // Header
                       Text(
-                        'YOUR COLLECTION',
+                        l.yourCollection,
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
@@ -89,7 +93,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
                       ),
                       SizedBox(height: 8.h),
                       Text(
-                        'My Library',
+                        l.myLibrary,
                         style: TextStyle(
                           fontSize: 32.sp,
                           fontWeight: FontWeight.w800,
@@ -102,7 +106,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
 
                       // Folders Section Title
                       Text(
-                        'Folders',
+                        l.folders,
                         style: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w700,
@@ -119,7 +123,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
                           child: Padding(
                             padding: EdgeInsets.all(32.h),
                             child: Text(
-                              'No folders yet',
+                              l.noFoldersYet,
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 color: Color(0xFFB8BCC8),
@@ -141,6 +145,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
                                       child: _buildFolderCard(
                                         folder: folders[i],
                                         isVertical: i % 4 == 0 || i % 4 == 3,
+                                        l: l,
                                       ),
                                     ),
                                 ],
@@ -157,6 +162,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
                                       child: _buildFolderCard(
                                         folder: folders[i],
                                         isVertical: i % 4 == 0 || i % 4 == 3,
+                                        l: l,
                                       ),
                                     ),
                                 ],
@@ -183,7 +189,11 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
     );
   }
 
-  Widget _buildFolderCard({required folder, required bool isVertical}) {
+  Widget _buildFolderCard({
+    required folder,
+    required bool isVertical,
+    required dynamic l,
+  }) {
     // Parse color from hex string (e.g., "#E3F2FD" or "E3F2FD")
     Color parseColor(String? colorString) {
       if (colorString == null || colorString.isEmpty) {
@@ -241,7 +251,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${folder.itemCount} items',
+          '${folder.itemCount} ${l.items}',
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w500,

@@ -1,52 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 
 /// Step 3 of 4 - English Level Selection View
-/// Pixel-perfect implementation from Figma
-class EnglishLevelSelectionView extends StatefulWidget {
+class EnglishLevelSelectionView extends ConsumerStatefulWidget {
   final String? selectedLanguage;
 
   const EnglishLevelSelectionView({super.key, this.selectedLanguage});
 
   @override
-  State<EnglishLevelSelectionView> createState() =>
+  ConsumerState<EnglishLevelSelectionView> createState() =>
       _EnglishLevelSelectionViewState();
 }
 
-class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
+class _EnglishLevelSelectionViewState
+    extends ConsumerState<EnglishLevelSelectionView> {
   String? _selectedLevel;
-
-  final List<Map<String, String>> _levels = [
-    {
-      'id': 'beginner',
-      'title': 'Başlangıç',
-      'description': 'Günlük ifadeleri anlayabilir ve kullanabilir.',
-      'icon': 'assets/images/beginner.svg',
-    },
-    {
-      'id': 'elementary',
-      'title': 'Temel',
-      'description': 'Basit ve rutin görevlerde iletişim kurabilir',
-      'icon': 'assets/images/elementary.svg',
-    },
-    {
-      'id': 'intermediate',
-      'title': 'Orta',
-      'description':
-          'Seyahat ederken karşılaşılabilecek durumlarla başa çıkabilir.',
-      'icon': 'assets/images/intermediate.svg',
-    },
-    {
-      'id': 'upper-intermediate',
-      'title': 'İleri Orta',
-      'description': 'İş toplantılarını rahatça yönetebilir',
-      'icon': 'assets/icons/briefcase.svg',
-    },
-  ];
 
   void _onLevelSelected(String levelId) {
     setState(() {
@@ -60,12 +35,40 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
     }
   }
 
-  void _onBack() {
-    Navigator.pop(context);
-  }
+  void _onBack() => Navigator.pop(context);
 
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider);
+    final l = AppLocalizations.of(langCode);
+
+    final levels = [
+      {
+        'id': 'beginner',
+        'title': l.levelBeginner,
+        'description': l.levelBeginnerDesc,
+        'icon': 'assets/images/beginner.svg',
+      },
+      {
+        'id': 'elementary',
+        'title': l.levelElementary,
+        'description': l.levelElementaryDesc,
+        'icon': 'assets/images/elementary.svg',
+      },
+      {
+        'id': 'intermediate',
+        'title': l.levelIntermediate,
+        'description': l.levelIntermediateDesc,
+        'icon': 'assets/images/intermediate.svg',
+      },
+      {
+        'id': 'upper-intermediate',
+        'title': l.levelUpperIntermediate,
+        'description': l.levelUpperIntermediateDesc,
+        'icon': 'assets/icons/briefcase.svg',
+      },
+    ];
+
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
@@ -74,15 +77,13 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Progress Bar
               SizedBox(height: 20.h),
-              _buildProgressBar(),
-
+              _buildProgressBar(l),
               SizedBox(height: 28.h),
 
               // Title
               Text(
-                '${widget.selectedLanguage ?? 'İngilizce'}\nseviyen nedir?',
+                '${widget.selectedLanguage ?? ''}\n${l.step3Title}',
                 style: GoogleFonts.montserrat(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
@@ -95,7 +96,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
 
               // Subtitle
               Text(
-                'Geçmişinize göre dil yolculuğunuzu\nözelleştireceğiz',
+                l.step3Subtitle,
                 style: GoogleFonts.montserrat(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -106,14 +107,14 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
 
               SizedBox(height: 24.h),
 
-              // Level Cards - Fixed height, no scroll
+              // Level Cards
               Expanded(
                 child: ListView.separated(
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _levels.length,
+                  itemCount: levels.length,
                   separatorBuilder: (context, index) => SizedBox(height: 10.h),
                   itemBuilder: (context, index) {
-                    final level = _levels[index];
+                    final level = levels[index];
                     final isSelected = _selectedLevel == level['id'];
                     return _buildLevelCard(
                       level: level,
@@ -129,7 +130,6 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
               // Bottom Buttons
               Row(
                 children: [
-                  // Back Button
                   Expanded(
                     flex: 2,
                     child: SizedBox(
@@ -155,15 +155,12 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(
-                                  Icons.arrow_back,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
+                                child: Icon(Icons.arrow_back,
+                                    color: MyColors.white, size: 22.sp),
                               ),
                             ),
                             Text(
-                              'Geri',
+                              l.back,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -177,7 +174,6 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  // Continue Button
                   Expanded(
                     flex: 3,
                     child: SizedBox(
@@ -198,7 +194,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Devam Et',
+                              l.continueBtn,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -213,11 +209,8 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(
-                                  Icons.arrow_forward,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
+                                child: Icon(Icons.arrow_forward,
+                                    color: MyColors.white, size: 22.sp),
                               ),
                             ),
                           ],
@@ -236,12 +229,12 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressBar(AppLocalizations l) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ADIM 3 / 4',
+          l.step3of4,
           style: GoogleFonts.montserrat(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,
@@ -252,7 +245,6 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
         SizedBox(height: 12.h),
         Row(
           children: [
-            // Step 1 - Completed
             Expanded(
               child: Container(
                 height: 4.h,
@@ -263,7 +255,6 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
               ),
             ),
             SizedBox(width: 8.w),
-            // Step 2 - Completed
             Expanded(
               child: Container(
                 height: 4.h,
@@ -274,7 +265,6 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
               ),
             ),
             SizedBox(width: 8.w),
-            // Step 3 - Current
             Expanded(
               child: Container(
                 height: 4.h,
@@ -285,7 +275,6 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
               ),
             ),
             SizedBox(width: 8.w),
-            // Step 4 - Not completed
             Expanded(
               child: Container(
                 height: 4.h,
@@ -330,7 +319,6 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
         ),
         child: Row(
           children: [
-            // Icon
             level['icon']!.endsWith('.svg')
                 ? SvgPicture.asset(
                     level['icon']!,
@@ -339,9 +327,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                     fit: BoxFit.contain,
                     colorFilter: isSelected
                         ? ColorFilter.mode(
-                            MyColors.lingolaPrimaryColor,
-                            BlendMode.srcIn,
-                          )
+                            MyColors.lingolaPrimaryColor, BlendMode.srcIn)
                         : null,
                   )
                 : Image.asset(
@@ -352,10 +338,7 @@ class _EnglishLevelSelectionViewState extends State<EnglishLevelSelectionView> {
                     filterQuality: FilterQuality.high,
                     color: isSelected ? MyColors.lingolaPrimaryColor : null,
                   ),
-
             SizedBox(width: 12.w),
-
-            // Text Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 import 'profession_selection_view.dart';
 
 class LanguageSelectionView extends ConsumerStatefulWidget {
@@ -33,12 +35,14 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
 
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider);
+    final l = AppLocalizations.of(langCode);
+
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // ── Üst kısım (progress bar + başlık) ──
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
@@ -46,7 +50,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ADIM 1 / 4',
+                      l.step1of4,
                       style: GoogleFonts.montserrat(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
@@ -100,7 +104,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      'Öğrenmek istediğiniz\ndili seçin',
+                      l.step1Title,
                       style: GoogleFonts.montserrat(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.w700,
@@ -110,7 +114,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      'Lütfen öğrenmek istediğiniz\ndili seçin',
+                      l.step1Subtitle,
                       style: GoogleFonts.montserrat(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w400,
@@ -124,7 +128,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
               ),
             ),
 
-            // ── Dil listesi ──
+            // Language list
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               sliver: SliverList(
@@ -183,7 +187,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
               ),
             ),
 
-            // ── Son: Devam Et butonu (listenin hemen altında) ──
+            // Continue button
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 32.h),
@@ -215,7 +219,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                       elevation: 0,
                     ),
                     child: Text(
-                      'Devam Et',
+                      l.continueBtn,
                       style: GoogleFonts.montserrat(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,

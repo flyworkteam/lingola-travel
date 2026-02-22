@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lingola_travel/Core/Localization/app_localizations.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
+import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Riverpod/Controllers/home_view_controller.dart';
 import '../../Riverpod/Controllers/dictionary_controller.dart';
@@ -26,7 +28,9 @@ class HomeView extends ConsumerStatefulWidget {
 }
 
 class _HomeViewState extends ConsumerState<HomeView> {
-  Language _selectedLanguage = AppLanguages.all.first; // Default to English
+  // NOTE: _selectedLanguage drives the home page language picker chip.
+  // It is always synced with localeProvider in build().
+  Language _selectedLanguage = AppLanguages.all.first;
   int _selectedCategoryIndex = 0; // Track selected phrasebook category
   Map<int, double> _swipeProgressMap =
       {}; // Track swipe progress for each feature card
@@ -116,6 +120,21 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep _selectedLanguage in sync with localeProvider
+    final langCode = ref.watch(localeProvider);
+    final syncedLanguage = AppLanguages.getByCode(langCode);
+    if (_selectedLanguage.code != syncedLanguage.code) {
+      // Use post-frame to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedLanguage = syncedLanguage;
+          });
+        }
+      });
+    }
+    final l = AppLocalizations.of(langCode);
+
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
@@ -292,11 +311,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ),
             ),
 
-            // Title
             Padding(
               padding: EdgeInsets.symmetric(vertical: 16.h),
               child: Text(
-                'Select Language',
+                AppLocalizations.of(ref.read(localeProvider)).selectLanguage,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -319,6 +337,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       setState(() {
                         _selectedLanguage = language;
                       });
+                      // Persist via localeProvider
+                      ref.read(localeProvider.notifier).setLocale(language.code);
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -417,6 +437,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Greeting section
   Widget _buildGreeting() {
+    final langCode = ref.read(localeProvider);
+    final l = AppLocalizations.of(langCode);
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
@@ -437,7 +459,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
           // Main title
           Text(
-            'Master Languages\nWhile Exploring',
+            l.homeTitle,
             style: TextStyle(
               fontSize: 26.sp,
               fontWeight: FontWeight.w700,
@@ -454,6 +476,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
   /// Quick Phrasebook section - TAMAMEN DİNAMİK! Backend'den isim + icon 🚀🔥
   Widget _buildQuickPhrasebook() {
     final dictionaryState = ref.watch(dictionaryControllerProvider);
+    final langCode = ref.read(localeProvider);
+    final l = AppLocalizations.of(langCode);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,7 +489,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Quick Phrasebook',
+                l.quickPhrasebook,
                 style: TextStyle(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w700,
@@ -504,7 +528,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   }
                 },
                 child: Text(
-                  'See All',
+                  l.seeAll,
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
@@ -527,7 +551,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               : dictionaryState.categories.isEmpty
               ? Center(
                   child: Text(
-                    'Categories not found',
+                    l.categoriesNotFound,
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: MyColors.textSecondary,
@@ -887,17 +911,19 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   /// Features section
   Widget _buildFeatures() {
+    final langCode = ref.read(localeProvider);
+    final l = AppLocalizations.of(langCode);
     final features = [
       {
-        'title': 'Learn New\nSentence',
-        'subtitle': 'Daily Conversation',
-        'gradient': [Color(0xFF7B68EE), Color(0xFF9D8FFF)], // Purple gradient
+        'title': l.featureLearnSentence,
+        'subtitle': l.featureDailyConversation,
+        'gradient': [Color(0xFF7B68EE), Color(0xFF9D8FFF)],
         'icon': 'assets/images/messagebox.png',
         'isIconSvg': false,
       },
       {
-        'title': 'Learn New\nWords',
-        'subtitle': 'Quick Learn',
+        'title': l.featureLearnWords,
+        'subtitle': l.featureQuickLearn,
         'gradient': [Color(0xFF4A90E2), Color(0xFF5BA3F5)], // Blue gradient
         'icon': 'assets/icons/learnnewword.svg',
         'isIconSvg': true,
@@ -1226,8 +1252,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               alignment: Alignment.centerLeft,
                               child: Padding(
                                 padding: EdgeInsets.only(left: 50.w),
-                                child: Text(
-                                  'SWIPE TO START',
+                                 child: Text(
+                                   AppLocalizations.of(ref.watch(localeProvider)).swipeToStart,
                                   style: TextStyle(
                                     fontSize: 13.sp,
                                     fontWeight: FontWeight.w600,
@@ -1829,7 +1855,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Visual Dictionary',
+                      AppLocalizations.of(ref.watch(localeProvider)).visualDictionary,
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
@@ -1839,7 +1865,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '20,000+ Translated Items',
+                      AppLocalizations.of(ref.watch(localeProvider)).translatedItemsCount,
                       style: TextStyle(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w400,

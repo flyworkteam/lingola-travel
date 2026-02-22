@@ -1,0 +1,818 @@
+Analyzing lingola_travel...                                     
+
+  error • The name 'save' is already defined • lib/Core/Localization/app_localizations.dart:1099:14 • duplicate_definition
+  error • The name 'allTopics' is already defined • lib/Core/Localization/app_localizations.dart:1618:14 • duplicate_definition
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:59:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:62:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:63:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:64:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:68:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:74:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:78:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:81:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/course_repository.dart:82:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:13:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:15:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:16:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:19:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:20:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:23:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:24:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:28:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:32:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:35:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:36:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:148:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:156:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:160:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/lesson_repository.dart:166:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/policy_repository.dart:11:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/policy_repository.dart:30:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Repositories/policy_repository.dart:49:7 • avoid_print
+   info • Statements in an if should be enclosed in a block • lib/Repositories/profile_repository.dart:58:9 • curly_braces_in_flow_control_structures
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:96:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:97:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:100:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:106:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:117:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:118:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:119:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:123:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:130:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/OnboardingController/onboarding_controller.dart:134:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/SplashViewController/splash_view_controller.dart:86:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/course_controller.dart:55:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/course_controller.dart:63:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/course_controller.dart:67:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/course_controller.dart:87:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/course_controller.dart:90:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/course_controller.dart:94:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/dictionary_controller.dart:40:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:47:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:52:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:54:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:64:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:69:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:74:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:76:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:84:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/home_view_controller.dart:91:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:169:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:175:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:176:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:177:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:185:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:188:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:192:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/library_controller.dart:193:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:19:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:45:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:47:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:85:15 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:91:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:122:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:128:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:136:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:146:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:147:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:148:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:151:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:152:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:153:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:161:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:162:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:172:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:174:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:289:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:290:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:291:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:292:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:297:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/api_client.dart:315:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/auth_service.dart:54:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/auth_service.dart:77:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/auth_service.dart:141:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/auth_service.dart:208:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/auth_service.dart:230:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:23:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:39:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:43:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:49:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:51:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:59:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:60:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:68:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:81:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:86:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:87:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:88:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:89:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:103:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:105:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:115:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:117:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:128:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:131:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:150:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:152:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:162:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:164:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:175:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:178:7 • avoid_print
+   info • Uses 'await' on an instance of 'bool', which is not a subtype of 'Future' • lib/Services/onesignal_service.dart:189:26 • await_only_futures
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:192:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:204:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:206:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:216:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/onesignal_service.dart:218:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:40:7 • avoid_print
+   info • 'purchasePackage' is deprecated and shouldn't be used. Use purchase(PurchaseParams) • lib/Services/revenuecat_service.dart:48:46 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:49:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:54:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:56:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:67:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:69:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:78:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:86:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:89:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:101:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/revenuecat_service.dart:111:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/secure_storage_service.dart:25:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/secure_storage_service.dart:30:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/secure_storage_service.dart:32:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/secure_storage_service.dart:35:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/secure_storage_service.dart:43:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/secure_storage_service.dart:45:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/secure_storage_service.dart:49:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:23:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:28:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:35:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:39:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:45:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:47:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:52:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:69:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:74:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:77:13 • avoid_print
+   info • 'listenMode' is deprecated and shouldn't be used. Use SpeechListenOptions.listenMode instead • lib/Services/speech_recognition_service.dart:82:9 • deprecated_member_use
+   info • 'cancelOnError' is deprecated and shouldn't be used. Use SpeechListenOptions.cancelOnError instead • lib/Services/speech_recognition_service.dart:83:9 • deprecated_member_use
+   info • 'partialResults' is deprecated and shouldn't be used. Use SpeechListenOptions.partialResults instead • lib/Services/speech_recognition_service.dart:84:9 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:89:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:99:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:102:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:104:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:113:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:116:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/speech_recognition_service.dart:118:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:27:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:39:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:45:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:50:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:54:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:58:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:62:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:66:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:70:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:75:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:79:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:81:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:93:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:106:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:115:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:119:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:121:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:124:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:163:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:165:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:167:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Services/tts_service.dart:178:7 • avoid_print
+  error • Classes can only extend other classes • lib/View/CourseView/course_detail_view.dart:13:32 • extends_non_class
+  error • No associated named super constructor parameter • lib/View/CourseView/course_detail_view.dart:18:11 • super_formal_parameter_without_associated_named
+  error • Undefined class 'ConsumerState' • lib/View/CourseView/course_detail_view.dart:24:3 • undefined_class
+warning • The method doesn't override an inherited method • lib/View/CourseView/course_detail_view.dart:24:35 • override_on_non_overriding_member
+  error • Classes can only extend other classes • lib/View/CourseView/course_detail_view.dart:27:38 • extends_non_class
+warning • The method doesn't override an inherited method • lib/View/CourseView/course_detail_view.dart:38:8 • override_on_non_overriding_member
+  error • The method 'initState' isn't defined in a superclass of '_CourseDetailViewState' • lib/View/CourseView/course_detail_view.dart:39:11 • undefined_super_member
+  error • The method 'setState' isn't defined for the type '_CourseDetailViewState' • lib/View/CourseView/course_detail_view.dart:41:7 • undefined_method
+  error • The method 'setState' isn't defined for the type '_CourseDetailViewState' • lib/View/CourseView/course_detail_view.dart:49:5 • undefined_method
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:55:24 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:56:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:60:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:61:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:62:7 • avoid_print
+  error • The method 'setState' isn't defined for the type '_CourseDetailViewState' • lib/View/CourseView/course_detail_view.dart:65:9 • undefined_method
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:72:9 • avoid_print
+  error • The method 'setState' isn't defined for the type '_CourseDetailViewState' • lib/View/CourseView/course_detail_view.dart:74:9 • undefined_method
+  error • Undefined name 'ref' • lib/View/CourseView/course_detail_view.dart:75:74 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:78:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:81:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:82:7 • avoid_print
+  error • The method 'setState' isn't defined for the type '_CourseDetailViewState' • lib/View/CourseView/course_detail_view.dart:83:7 • undefined_method
+  error • Undefined name 'ref' • lib/View/CourseView/course_detail_view.dart:84:48 • undefined_identifier
+warning • The method doesn't override an inherited method • lib/View/CourseView/course_detail_view.dart:91:8 • override_on_non_overriding_member
+  error • The method 'dispose' isn't defined in a superclass of '_CourseDetailViewState' • lib/View/CourseView/course_detail_view.dart:93:11 • undefined_super_member
+warning • The method doesn't override an inherited method • lib/View/CourseView/course_detail_view.dart:97:10 • override_on_non_overriding_member
+  error • Undefined name 'ref' • lib/View/CourseView/course_detail_view.dart:98:22 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:120:19 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_detail_view.dart:145:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_detail_view.dart:157:38 • deprecated_member_use
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:189:25 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:207:36 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:213:37 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:224:29 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:232:25 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_detail_view.dart:351:37 • deprecated_member_use
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:363:58 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_detail_view.dart:476:11 • avoid_print
+  error • Undefined name 'context' • lib/View/CourseView/course_detail_view.dart:479:13 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:484:28 • undefined_identifier
+  error • Undefined name 'context' • lib/View/CourseView/course_detail_view.dart:572:11 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/CourseView/course_detail_view.dart:577:26 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_detail_view.dart:594:40 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/CourseView/course_detail_view.dart:607:24 • undefined_identifier
+  error • Undefined name 'l' • lib/View/CourseView/course_detail_view.dart:608:24 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_view.dart:70:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_view.dart:81:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_view.dart:85:7 • avoid_print
+warning • The value of the local variable 'l' isn't used • lib/View/CourseView/course_view.dart:107:11 • unused_local_variable
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_view.dart:119:11 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_view.dart:203:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_view.dart:352:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_view.dart:390:63 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/CourseView/course_view.dart:412:25 • undefined_identifier
+  error • Undefined name 'l' • lib/View/CourseView/course_view.dart:413:28 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_view.dart:436:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_view.dart:439:45 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/CourseView/course_view.dart:488:63 • undefined_identifier
+  error • The returned type 'CourseDetailView' isn't returnable from a 'Widget' function, as required by the closure's context • lib/View/CourseView/course_view.dart:513:57 • return_of_invalid_type_from_closure
+   info • Don't invoke 'print' in production code • lib/View/CourseView/course_view.dart:539:31 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/CourseView/course_view.dart:549:52 • deprecated_member_use
+   info • The private field _bookmarkedItems could be 'final' • lib/View/DictionaryView/dictionary_category_view.dart:34:15 • prefer_final_fields
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:54:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:57:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:153:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:187:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:194:15 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:197:15 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:214:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/dictionary_category_view.dart:422:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/dictionary_category_view.dart:440:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/dictionary_category_view.dart:476:37 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/dictionary_category_view.dart:517:19 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/dictionary_category_view.dart:535:45 • deprecated_member_use
+   info • The private field _bookmarkedCategories could be 'final' • lib/View/DictionaryView/visual_dictionary_view.dart:28:15 • prefer_final_fields
+   info • The private field _bookmarkedWords could be 'final' • lib/View/DictionaryView/visual_dictionary_view.dart:29:15 • prefer_final_fields
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:127:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:130:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:186:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:236:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:261:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:265:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:268:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:283:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:315:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:323:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:331:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:334:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:349:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/DictionaryView/visual_dictionary_view.dart:378:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:573:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:591:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:624:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:626:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:638:35 • deprecated_member_use
+   info • Unnecessary use of 'toList' in a spread • lib/View/DictionaryView/visual_dictionary_view.dart:755:14 • unnecessary_to_list_in_spreads
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:776:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:962:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:980:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/DictionaryView/visual_dictionary_view.dart:1035:37 • deprecated_member_use
+   info • The private field _selectedCategoryIndex could be 'final' • lib/View/HomeView/home_view.dart:34:7 • prefer_final_fields
+   info • The private field _swipeProgressMap could be 'final' • lib/View/HomeView/home_view.dart:35:20 • prefer_final_fields
+   info • The private field _bookmarkedPhrases could be 'final' • lib/View/HomeView/home_view.dart:40:15 • prefer_final_fields
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:52:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:62:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:65:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:69:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:92:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:108:7 • avoid_print
+warning • The value of the local variable 'l' isn't used • lib/View/HomeView/home_view.dart:136:11 • unused_local_variable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:351:60 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:504:21 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:521:21 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:585:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:592:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:598:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:609:31 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:613:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:652:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:654:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:655:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:668:33 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:670:33 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:722:39 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:736:19 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:829:33 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:954:19 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1032:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1044:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1056:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1072:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1118:41 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:1146:27 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:1195:27 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1202:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1205:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1220:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1237:59 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1290:13 • undefined_identifier
+  error • The returned type 'CourseDetailView' isn't returnable from a 'Widget' function, as required by the closure's context • lib/View/HomeView/home_view.dart:1333:35 • return_of_invalid_type_from_closure
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1366:40 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1381:21 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1386:43 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1413:57 • undefined_identifier
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1423:60 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1428:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1442:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1461:41 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1502:18 • undefined_identifier
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1519:15 • undefined_identifier
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1549:59 • undefined_identifier
+  error • Undefined name 'l' • lib/View/HomeView/home_view.dart:1561:59 • undefined_identifier
+  error • The returned type 'CourseDetailView' isn't returnable from a 'Widget' function, as required by the closure's context • lib/View/HomeView/home_view.dart:1589:17 • return_of_invalid_type_from_closure
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1600:35 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/home_view.dart:1682:11 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1699:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1766:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1791:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1840:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/home_view.dart:1925:47 • deprecated_member_use
+   info • The private field _selectedCategoryIndex could be 'final' • lib/View/HomeView/premium_home_view.dart:29:7 • prefer_final_fields
+   info • The private field _swipeProgressMap could be 'final' • lib/View/HomeView/premium_home_view.dart:30:20 • prefer_final_fields
+   info • The private field _bookmarkedPhrases could be 'final' • lib/View/HomeView/premium_home_view.dart:35:15 • prefer_final_fields
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:43:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:51:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:56:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:59:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:70:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:75:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:78:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:84:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:86:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:109:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:125:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:352:60 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:521:21 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:538:21 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:602:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:608:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:614:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:626:31 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:630:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:672:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:676:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:677:29 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:693:33 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:697:33 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:751:39 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:765:19 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:858:33 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:981:19 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1059:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1071:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1083:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1099:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1145:41 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:1173:27 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/HomeView/premium_home_view.dart:1222:27 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1229:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1232:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1247:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1264:59 • deprecated_member_use
+  error • The returned type 'CourseDetailView' isn't returnable from a 'Widget' function, as required by the closure's context • lib/View/HomeView/premium_home_view.dart:1359:35 • return_of_invalid_type_from_closure
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1381:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1401:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1443:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1457:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1476:41 • deprecated_member_use
+  error • The returned type 'CourseDetailView' isn't returnable from a 'Widget' function, as required by the closure's context • lib/View/HomeView/premium_home_view.dart:1597:17 • return_of_invalid_type_from_closure
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1608:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1704:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/HomeView/premium_home_view.dart:1789:47 • deprecated_member_use
+   info • The private field _lastAttemptSuccessful could be 'final' • lib/View/LessonView/lesson_detail_view.dart:55:8 • prefer_final_fields
+   info • The private field _isContinuing could be 'final' • lib/View/LessonView/lesson_detail_view.dart:56:8 • prefer_final_fields
+   info • The private field _recordingSeconds could be 'final' • lib/View/LessonView/lesson_detail_view.dart:61:7 • prefer_final_fields
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:118:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:119:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:120:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:121:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:127:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:134:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:143:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:145:7 • avoid_print
+  error • The named parameter 'style' isn't defined • lib/View/LessonView/lesson_detail_view.dart:181:17 • undefined_named_parameter
+  error • The method '_buildUnitTitle' isn't defined for the type '_LessonDetailViewState' • lib/View/LessonView/lesson_detail_view.dart:210:17 • undefined_method
+  error • The named parameter 'style' isn't defined • lib/View/LessonView/lesson_detail_view.dart:312:13 • undefined_named_parameter
+  error • The instance member 'ref' can't be accessed in an initializer • lib/View/LessonView/lesson_detail_view.dart:325:35 • implicit_this_reference_in_initializer
+  error • Expected a class member • lib/View/LessonView/lesson_detail_view.dart:327:5 • expected_class_member
+   info • Missing type annotation • lib/View/LessonView/lesson_detail_view.dart:327:12 • strict_top_level_inference
+   info • The variable name 'Text' isn't a lowerCamelCase identifier • lib/View/LessonView/lesson_detail_view.dart:327:12 • non_constant_identifier_names
+  error • 'Text' must have a method body because '_LessonDetailViewState' isn't abstract • lib/View/LessonView/lesson_detail_view.dart:327:12 • concrete_class_with_abstract_member
+   info • Missing type annotation • lib/View/LessonView/lesson_detail_view.dart:328:7 • strict_top_level_inference
+   info • The local variable '_lesson' starts with an underscore • lib/View/LessonView/lesson_detail_view.dart:328:7 • no_leading_underscores_for_local_identifiers
+  error • Expected to find ')' • lib/View/LessonView/lesson_detail_view.dart:328:14 • expected_token
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:342:22 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:342:49 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:354:17 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:371:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:372:31 • deprecated_member_use
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:392:31 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:407:22 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:408:21 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:413:31 • undefined_identifier
+  error • Undefined name '_listenButtonAnimation' • lib/View/LessonView/lesson_detail_view.dart:480:22 • undefined_identifier
+  error • Undefined name 'isPlaying' • lib/View/LessonView/lesson_detail_view.dart:488:31 • undefined_identifier
+  error • Undefined name '_listenButtonAnimation' • lib/View/LessonView/lesson_detail_view.dart:488:43 • undefined_identifier
+  error • Undefined name 'isPlaying' • lib/View/LessonView/lesson_detail_view.dart:490:21 • undefined_identifier
+  error • Undefined name '_ttsService' • lib/View/LessonView/lesson_detail_view.dart:492:25 • undefined_identifier
+  error • Undefined name '_listenButtonController' • lib/View/LessonView/lesson_detail_view.dart:493:19 • undefined_identifier
+  error • Undefined name '_listenButtonController' • lib/View/LessonView/lesson_detail_view.dart:494:19 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:495:19 • undefined_function
+  error • Undefined name 'isPlaying' • lib/View/LessonView/lesson_detail_view.dart:496:21 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:499:36 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:501:21 • avoid_print
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:506:19 • undefined_function
+  error • Undefined name 'isPlaying' • lib/View/LessonView/lesson_detail_view.dart:507:21 • undefined_identifier
+  error • Undefined name '_listenButtonController' • lib/View/LessonView/lesson_detail_view.dart:511:19 • undefined_identifier
+  error • Undefined name '_listenButtonController' • lib/View/LessonView/lesson_detail_view.dart:512:19 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:515:42 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:516:21 • avoid_print
+  error • Undefined name '_ttsService' • lib/View/LessonView/lesson_detail_view.dart:519:27 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:523:21 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:527:21 • avoid_print
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:529:25 • undefined_identifier
+  error • Undefined name '_listenButtonController' • lib/View/LessonView/lesson_detail_view.dart:530:23 • undefined_identifier
+  error • Undefined name '_listenButtonController' • lib/View/LessonView/lesson_detail_view.dart:531:23 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:532:23 • undefined_function
+  error • Undefined name 'isPlaying' • lib/View/LessonView/lesson_detail_view.dart:533:25 • undefined_identifier
+  error • Undefined name 'isRecording' • lib/View/LessonView/lesson_detail_view.dart:553:17 • undefined_identifier
+  error • Undefined name '_bookmarkButtonKey' • lib/View/LessonView/lesson_detail_view.dart:567:16 • undefined_identifier
+  error • Undefined name 'isBookmarked' • lib/View/LessonView/lesson_detail_view.dart:572:20 • undefined_identifier
+  error • Undefined name 'isBookmarked' • lib/View/LessonView/lesson_detail_view.dart:573:24 • undefined_identifier
+  error • Undefined name 'isRecording' • lib/View/LessonView/lesson_detail_view.dart:594:43 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:617:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:644:52 • deprecated_member_use
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:670:9 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:675:33 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:689:24 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:696:33 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:707:35 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:719:31 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:764:32 • deprecated_member_use
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:836:29 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:857:49 • deprecated_member_use
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:872:43 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:905:46 • deprecated_member_use
+  error • Undefined name 'currentStep' • lib/View/LessonView/lesson_detail_view.dart:917:23 • undefined_identifier
+  error • Undefined name 'totalSteps' • lib/View/LessonView/lesson_detail_view.dart:917:38 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:917:71 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:917:126 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:935:49 • deprecated_member_use
+  error • Undefined name 'currentStep' • lib/View/LessonView/lesson_detail_view.dart:939:29 • undefined_identifier
+  error • Undefined name 'totalSteps' • lib/View/LessonView/lesson_detail_view.dart:939:44 • undefined_identifier
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:961:21 • undefined_identifier
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:962:21 • undefined_identifier
+  error • Undefined name '_bookmarkButtonKey' • lib/View/LessonView/lesson_detail_view.dart:1040:9 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1044:20 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1055:21 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1063:16 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:1069:33 • deprecated_member_use
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:1078:35 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:1094:35 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1116:7 • undefined_function
+  error • Undefined name 'isBookmarked' • lib/View/LessonView/lesson_detail_view.dart:1117:9 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1122:13 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1122:51 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1124:29 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1127:17 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1129:17 • undefined_identifier
+  error • Undefined name '_libraryRepository' • lib/View/LessonView/lesson_detail_view.dart:1133:34 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1139:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1142:13 • avoid_print
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1143:13 • undefined_function
+  error • Undefined name 'isBookmarked' • lib/View/LessonView/lesson_detail_view.dart:1144:15 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1150:13 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1150:44 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1152:33 • undefined_identifier
+  error • Undefined name '_libraryRepository' • lib/View/LessonView/lesson_detail_view.dart:1153:36 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1160:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1165:7 • avoid_print
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1166:7 • undefined_function
+  error • Undefined name 'isBookmarked' • lib/View/LessonView/lesson_detail_view.dart:1167:9 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1174:5 • undefined_function
+  error • Undefined name 'isRecording' • lib/View/LessonView/lesson_detail_view.dart:1175:7 • undefined_identifier
+  error • Undefined name 'recordedText' • lib/View/LessonView/lesson_detail_view.dart:1176:7 • undefined_identifier
+  error • Undefined name 'similarityScore' • lib/View/LessonView/lesson_detail_view.dart:1177:7 • undefined_identifier
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:1178:7 • undefined_identifier
+  error • Undefined name '_recordingTimer' • lib/View/LessonView/lesson_detail_view.dart:1182:5 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1183:11 • undefined_identifier
+  error • Undefined name 'isRecording' • lib/View/LessonView/lesson_detail_view.dart:1183:22 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1184:9 • undefined_function
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:1185:11 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1191:26 • undefined_identifier
+  error • Undefined name '_speechService' • lib/View/LessonView/lesson_detail_view.dart:1194:13 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1198:11 • avoid_print
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1199:11 • undefined_function
+  error • Undefined name 'recordedText' • lib/View/LessonView/lesson_detail_view.dart:1200:13 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1206:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1210:7 • avoid_print
+  error • Undefined name '_recordingTimer' • lib/View/LessonView/lesson_detail_view.dart:1211:7 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1212:7 • undefined_function
+  error • Undefined name 'isRecording' • lib/View/LessonView/lesson_detail_view.dart:1213:9 • undefined_identifier
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:1214:9 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1217:11 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1218:30 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:1220:47 • undefined_identifier
+  error • Undefined name '_recordingTimer' • lib/View/LessonView/lesson_detail_view.dart:1230:5 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1232:5 • undefined_function
+  error • Undefined name 'isRecording' • lib/View/LessonView/lesson_detail_view.dart:1233:7 • undefined_identifier
+  error • Undefined name '_speechService' • lib/View/LessonView/lesson_detail_view.dart:1236:11 • undefined_identifier
+  error • Undefined name 'recordedText' • lib/View/LessonView/lesson_detail_view.dart:1239:9 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1240:7 • avoid_print
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1241:7 • undefined_function
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:1242:9 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1248:28 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1250:7 • avoid_print
+  error • Undefined name 'similarityScore' • lib/View/LessonView/lesson_detail_view.dart:1255:5 • undefined_identifier
+  error • Undefined name '_speechService' • lib/View/LessonView/lesson_detail_view.dart:1255:23 • undefined_identifier
+  error • Undefined name 'recordedText' • lib/View/LessonView/lesson_detail_view.dart:1255:51 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1256:5 • avoid_print
+  error • Undefined name 'similarityScore' • lib/View/LessonView/lesson_detail_view.dart:1256:34 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1257:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1258:5 • avoid_print
+  error • Undefined name 'recordedText' • lib/View/LessonView/lesson_detail_view.dart:1258:25 • undefined_identifier
+  error • Undefined name 'similarityScore' • lib/View/LessonView/lesson_detail_view.dart:1261:24 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1262:5 • undefined_function
+  error • Undefined name '_lastAttemptSuccessful' • lib/View/LessonView/lesson_detail_view.dart:1263:7 • undefined_identifier
+  error • Undefined name 'showResult' • lib/View/LessonView/lesson_detail_view.dart:1264:7 • undefined_identifier
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:1265:7 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1269:12 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1270:7 • undefined_function
+  error • Undefined name 'showResult' • lib/View/LessonView/lesson_detail_view.dart:1270:22 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1275:9 • undefined_function
+  error • Undefined name 'recordedText' • lib/View/LessonView/lesson_detail_view.dart:1276:11 • undefined_identifier
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:1277:11 • undefined_identifier
+  error • Undefined name '_isContinuing' • lib/View/LessonView/lesson_detail_view.dart:1285:9 • undefined_identifier
+  error • Undefined name 'showResult' • lib/View/LessonView/lesson_detail_view.dart:1288:9 • undefined_identifier
+  error • Undefined name '_lastAttemptSuccessful' • lib/View/LessonView/lesson_detail_view.dart:1288:24 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1289:7 • undefined_function
+  error • Undefined name 'showResult' • lib/View/LessonView/lesson_detail_view.dart:1290:9 • undefined_identifier
+  error • Undefined name 'recordedText' • lib/View/LessonView/lesson_detail_view.dart:1291:9 • undefined_identifier
+  error • Undefined name '_recordingSeconds' • lib/View/LessonView/lesson_detail_view.dart:1292:9 • undefined_identifier
+  error • Undefined name '_lastAttemptSuccessful' • lib/View/LessonView/lesson_detail_view.dart:1298:10 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1299:28 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:1302:39 • undefined_identifier
+  error • The function 'setState' isn't defined • lib/View/LessonView/lesson_detail_view.dart:1312:5 • undefined_function
+  error • Undefined name '_isContinuing' • lib/View/LessonView/lesson_detail_view.dart:1313:7 • undefined_identifier
+  error • Undefined name 'showResult' • lib/View/LessonView/lesson_detail_view.dart:1314:7 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1318:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1321:5 • avoid_print
+  error • Undefined name '_lessonRepository' • lib/View/LessonView/lesson_detail_view.dart:1322:38 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/LessonView/lesson_detail_view.dart:1322:70 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1324:10 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1332:13 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1332:36 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1335:14 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1337:11 • undefined_identifier
+  error • Undefined name 'widget' • lib/View/LessonView/lesson_detail_view.dart:1341:26 • undefined_identifier
+  error • Undefined name 'totalSteps' • lib/View/LessonView/lesson_detail_view.dart:1342:37 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1349:11 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1349:34 • undefined_identifier
+  error • Undefined name 'mounted' • lib/View/LessonView/lesson_detail_view.dart:1352:11 • undefined_identifier
+  error • Undefined name 'context' • lib/View/LessonView/lesson_detail_view.dart:1352:34 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1358:9 • undefined_identifier
+  error • Undefined name '_lessonRepository' • lib/View/LessonView/lesson_detail_view.dart:1362:30 • undefined_identifier
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1363:19 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1367:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1368:9 • avoid_print
+  error • Undefined name '_lesson' • lib/View/LessonView/lesson_detail_view.dart:1368:31 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1369:9 • avoid_print
+  error • Undefined name 'similarityScore' • lib/View/LessonView/lesson_detail_view.dart:1369:29 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1371:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LessonView/lesson_detail_view.dart:1374:7 • avoid_print
+  error • Undefined name '_lastAttemptSuccessful' • lib/View/LessonView/lesson_detail_view.dart:1380:12 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_detail_view.dart:1390:29 • deprecated_member_use
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:1403:49 • undefined_identifier
+  error • Undefined name 'ref' • lib/View/LessonView/lesson_detail_view.dart:1403:108 • undefined_identifier
+  error • Expected a method, getter, setter or operator declaration • lib/View/LessonView/lesson_detail_view.dart:1418:1 • expected_executable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_result_view.dart:35:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_result_view.dart:50:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_result_view.dart:51:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LessonView/lesson_result_view.dart:170:48 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:57:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:60:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:65:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:106:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LibraryView/library_folder_detail_view.dart:135:49 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:224:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:230:15 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:233:15 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LibraryView/library_folder_detail_view.dart:331:67 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/LibraryView/library_folder_detail_view.dart:435:39 • avoid_print
+  error • Undefined name 'l' • lib/View/LibraryView/library_folder_detail_view.dart:564:13 • undefined_identifier
+  error • Undefined name 'l' • lib/View/LibraryView/library_folder_detail_view.dart:576:13 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LibraryView/library_folder_detail_view.dart:605:46 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/LibraryView/library_folder_detail_view.dart:613:19 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LibraryView/library_folder_detail_view.dart:644:39 • deprecated_member_use
+   info • 'color' is deprecated and shouldn't be used. Use colorFilter instead • lib/View/LibraryView/library_folder_detail_view.dart:715:33 • deprecated_member_use
+   info • 'color' is deprecated and shouldn't be used. Use colorFilter instead • lib/View/LibraryView/library_folder_detail_view.dart:735:31 • deprecated_member_use
+   info • Missing type annotation • lib/View/LibraryView/library_view.dart:193:14 • strict_top_level_inference
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/LibraryView/library_view.dart:327:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/NotificationsView/notifications_view.dart:146:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/NotificationsView/notifications_view.dart:434:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/NotificationsView/notifications_view.dart:465:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/NotificationsView/notifications_view.dart:478:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/NotificationsView/notifications_view.dart:493:33 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:107:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:108:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:111:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:119:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:124:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:128:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:143:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/creating_plan_view.dart:150:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/creating_plan_view.dart:235:69 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/creating_plan_view.dart:252:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/creating_plan_view.dart:266:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/daily_goal_selection_view.dart:160:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/daily_goal_selection_view.dart:214:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/daily_goal_selection_view.dart:282:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/daily_goal_selection_view.dart:291:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/daily_goal_selection_view.dart:306:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/english_level_selection_view.dart:154:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/english_level_selection_view.dart:208:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/english_level_selection_view.dart:305:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/english_level_selection_view.dart:314:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/profession_detail_view.dart:147:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/profession_detail_view.dart:202:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/profession_detail_view.dart:273:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/profession_selection_view.dart:302:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardingView/profession_selection_view.dart:375:53 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:88:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:91:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:261:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:308:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:309:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:310:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:318:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/OnboardingView/sign_in_view.dart:325:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/PolicyView/policy_detail_view.dart:39:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/PolicyView/policy_detail_view.dart:41:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/PolicyView/policy_detail_view.dart:44:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/PolicyView/policy_detail_view.dart:50:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/PolicyView/policy_detail_view.dart:57:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/PolicyView/policy_detail_view.dart:58:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/app_language_view.dart:127:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/app_language_view.dart:192:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/app_language_view.dart:199:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/faq_view.dart:202:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/faq_view.dart:213:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/faq_view.dart:214:47 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/premium_view.dart:50:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/premium_view.dart:55:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/premium_view.dart:59:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/premium_view.dart:108:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/premium_view.dart:624:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/premium_view.dart:683:35 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:41:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:46:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:47:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:76:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:84:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:86:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:98:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:106:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:189:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:246:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:357:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:463:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:487:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:498:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:514:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:654:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:762:49 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:888:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_settings_view.dart:890:9 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:929:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_settings_view.dart:1029:52 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/View/ProfileView/profile_settings_view.dart:1262:11 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/View/ProfileView/profile_settings_view.dart:1268:30 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_view.dart:72:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_view.dart:111:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_view.dart:159:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:396:56 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/ProfileView/profile_view.dart:400:23 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:416:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:471:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:542:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:598:33 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/View/ProfileView/profile_view.dart:720:13 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:858:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:924:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:931:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:1009:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:1012:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:1067:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/share_friend_view.dart:103:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/share_friend_view.dart:172:60 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/SplashView/splash_view.dart:63:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:70:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:73:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:79:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:93:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:112:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:116:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:120:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:124:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:128:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:144:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:146:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:147:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:178:15 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:198:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:204:9 • avoid_print
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:223:51 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:306:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:312:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:321:43 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:322:42 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:327:9 • avoid_print
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:338:31 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:341:33 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:359:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:365:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:367:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:382:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:386:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:390:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:400:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:410:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:421:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:426:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:433:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:440:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:444:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:456:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:460:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:465:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:470:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:486:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:497:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:501:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:509:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:519:19 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:522:19 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:526:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:545:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:576:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:577:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:578:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:585:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:592:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:604:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:605:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:606:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:607:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:615:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:622:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:642:11 • avoid_print
+warning • The value of the local variable 'langCode' isn't used • lib/View/VocabularyView/travel_vocabulary_view.dart:657:11 • unused_local_variable
+  error • The name 'langCode' is already defined • lib/View/VocabularyView/travel_vocabulary_view.dart:657:11 • duplicate_definition
+warning • The value of the local variable 'l' isn't used • lib/View/VocabularyView/travel_vocabulary_view.dart:658:11 • unused_local_variable
+  error • The name 'l' is already defined • lib/View/VocabularyView/travel_vocabulary_view.dart:658:11 • duplicate_definition
+   info • 'onPopInvoked' is deprecated and shouldn't be used. Use onPopInvokedWithResult instead. This feature was deprecated after v3.22.0-12.0.pre • lib/View/VocabularyView/travel_vocabulary_view.dart:668:7 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:671:9 • avoid_print
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:738:9 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:769:41 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:769:57 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:815:21 • avoid_print
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:830:42 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:842:23 • undefined_identifier
+   info • Don't invoke 'print' in production code • lib/View/VocabularyView/travel_vocabulary_view.dart:867:21 • avoid_print
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:884:46 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:896:23 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1006:42 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1011:29 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1037:30 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/VocabularyView/travel_vocabulary_view.dart:1100:37 • deprecated_member_use
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1167:54 • undefined_identifier
+   info • Unnecessary use of 'toList' in a spread • lib/View/VocabularyView/travel_vocabulary_view.dart:1277:12 • unnecessary_to_list_in_spreads
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1290:19 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1335:29 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1350:13 • undefined_identifier
+  error • Undefined name 'l' • lib/View/VocabularyView/travel_vocabulary_view.dart:1363:30 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/VocabularyView/travel_vocabulary_view.dart:1426:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/Widgets/Common/app_bottom_navigation.dart:31:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/Widgets/Common/custom_bottom_nav_bar.dart:83:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/Widgets/Common/custom_bottom_nav_bar.dart:171:57 • deprecated_member_use
+
+814 issues found. (ran in 2.9s)

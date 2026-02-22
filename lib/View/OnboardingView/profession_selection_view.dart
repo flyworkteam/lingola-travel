@@ -1,65 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 import 'profession_detail_view.dart';
 
 /// Profession Selection View - Onboarding Step 2 of 4
-/// User selects their profession/background
-class ProfessionSelectionView extends StatefulWidget {
+class ProfessionSelectionView extends ConsumerStatefulWidget {
   final String? selectedLanguage;
 
   const ProfessionSelectionView({super.key, this.selectedLanguage});
 
   @override
-  State<ProfessionSelectionView> createState() =>
+  ConsumerState<ProfessionSelectionView> createState() =>
       _ProfessionSelectionViewState();
 }
 
-class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
-  String? selectedProfession;
-
-  final List<Map<String, String>> professions = [
-    {
-      'name': 'Öğrenci',
-      'subtitle': 'Üniversite veya\nlise',
-      'icon': 'assets/images/student.png',
-      'background': 'assets/images/littlecard.png',
-    },
-    {
-      'name': 'Profesyonel',
-      'subtitle': 'Kurumsal veya\nserbest',
-      'icon': 'assets/images/professional.png',
-      'background': 'assets/images/littlecard.png',
-    },
-    {
-      'name': 'Teknoloji',
-      'subtitle': 'BT, yazılım\nveya veri',
-      'icon': 'assets/images/technology.png',
-      'background': 'assets/images/littlecard.png',
-    },
-    {
-      'name': 'Sağlık',
-      'subtitle': 'Tıp veya\nhemşirelik',
-      'icon': 'assets/images/healtcare.png',
-      'background': 'assets/images/littlecard.png',
-    },
-    {
-      'name': 'Sanat & Medya',
-      'subtitle': 'Tasarım, film\nveya yazarlık',
-      'icon': 'assets/images/artsmedia.png',
-      'background': 'assets/images/littlecard.png',
-    },
-    {
-      'name': 'Diğer',
-      'subtitle': 'Yukarıdakilerin\nhiçbiri',
-      'icon': 'assets/images/other.png',
-      'background': 'assets/images/littlecard.png',
-    },
-  ];
+class _ProfessionSelectionViewState
+    extends ConsumerState<ProfessionSelectionView> {
+  String? selectedProfessionKey; // store key like 'student', 'professional'...
 
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider);
+    final l = AppLocalizations.of(langCode);
+
+    final professions = [
+      {
+        'key': 'student',
+        'name': l.profStudent,
+        'subtitle': l.profStudentSub,
+        'icon': 'assets/images/student.png',
+      },
+      {
+        'key': 'professional',
+        'name': l.profProfessional,
+        'subtitle': l.profProfessionalSub,
+        'icon': 'assets/images/professional.png',
+      },
+      {
+        'key': 'technology',
+        'name': l.profTechnology,
+        'subtitle': l.profTechnologySub,
+        'icon': 'assets/images/technology.png',
+      },
+      {
+        'key': 'healthcare',
+        'name': l.profHealthcare,
+        'subtitle': l.profHealthcareSub,
+        'icon': 'assets/images/healtcare.png',
+      },
+      {
+        'key': 'arts',
+        'name': l.profArtsMedia,
+        'subtitle': l.profArtsMediaSub,
+        'icon': 'assets/images/artsmedia.png',
+      },
+      {
+        'key': 'other',
+        'name': l.profOther,
+        'subtitle': l.profOtherSub,
+        'icon': 'assets/images/other.png',
+      },
+    ];
+
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
@@ -74,7 +80,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'STEP 2 OF 4',
+                    l.step2of4,
                     style: GoogleFonts.montserrat(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
@@ -133,7 +139,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
 
               // Title
               Text(
-                'Mesleğiniz\nNedir?',
+                l.step2Title,
                 style: GoogleFonts.montserrat(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
@@ -146,7 +152,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
 
               // Subtitle
               Text(
-                'Geçmişinize göre dil yolculuğunuzu\nözelleştireceğiz',
+                l.step2Subtitle,
                 style: GoogleFonts.montserrat(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -157,7 +163,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
 
               SizedBox(height: 28.h),
 
-              // Profession Cards Grid - Fixed height, no scroll
+              // Profession Cards Grid
               Expanded(
                 child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
@@ -170,12 +176,12 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                   itemCount: professions.length,
                   itemBuilder: (context, index) {
                     final profession = professions[index];
-                    final isSelected = selectedProfession == profession['name'];
+                    final isSelected = selectedProfessionKey == profession['key'];
 
                     return GestureDetector(
                       onTap: () {
                         setState(() {
-                          selectedProfession = profession['name'];
+                          selectedProfessionKey = profession['key'];
                         });
                       },
                       child: Container(
@@ -207,11 +213,9 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Icon with background card
                               Stack(
                                 alignment: Alignment.center,
                                 children: [
-                                  // Background card - dark when selected, light when not
                                   Container(
                                     width: 52.w,
                                     height: 52.h,
@@ -219,10 +223,10 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                                       color: isSelected
                                           ? MyColors.lingolaPrimaryColor
                                           : const Color(0xFFE0F7F5),
-                                      borderRadius: BorderRadius.circular(14.r),
+                                      borderRadius:
+                                          BorderRadius.circular(14.r),
                                     ),
                                   ),
-                                  // Icon logo - white when selected, turquoise when not
                                   Image.asset(
                                     profession['icon']!,
                                     width: 32.w,
@@ -236,7 +240,6 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                                 ],
                               ),
                               SizedBox(height: 4.h),
-                              // Title (centered)
                               Text(
                                 profession['name']!,
                                 style: GoogleFonts.montserrat(
@@ -249,7 +252,6 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               SizedBox(height: 2.h),
-                              // Subtitle (centered)
                               Text(
                                 profession['subtitle']!,
                                 style: GoogleFonts.montserrat(
@@ -276,15 +278,12 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
               // Bottom Buttons
               Row(
                 children: [
-                  // Back Button
                   Expanded(
                     flex: 2,
                     child: SizedBox(
                       height: 50.h,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
+                        onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD1D5DB),
                           shape: RoundedRectangleBorder(
@@ -312,7 +311,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                               ),
                             ),
                             Text(
-                              'Geri',
+                              l.back,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -326,19 +325,22 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  // Continue Button
                   Expanded(
                     flex: 3,
                     child: SizedBox(
                       height: 50.h,
                       child: ElevatedButton(
-                        onPressed: selectedProfession != null
+                        onPressed: selectedProfessionKey != null
                             ? () {
+                                // find the localized name of the selected profession
+                                final selectedProf = professions.firstWhere(
+                                  (p) => p['key'] == selectedProfessionKey,
+                                );
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => ProfessionDetailView(
-                                      selectedCategory: selectedProfession,
+                                      selectedCategory: selectedProf['name'],
                                       selectedLanguage: widget.selectedLanguage,
                                     ),
                                   ),
@@ -359,7 +361,7 @@ class _ProfessionSelectionViewState extends State<ProfessionSelectionView> {
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Devam Et',
+                              l.continueBtn,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,

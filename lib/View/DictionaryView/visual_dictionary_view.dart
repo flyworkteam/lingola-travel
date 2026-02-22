@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Core/Localization/app_localizations.dart';
+import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
@@ -41,79 +43,82 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   // TTS Service
   late final TtsService _ttsService;
 
-  // STATIC categories - matching database content
-  final List<Map<String, dynamic>> _staticCategories = [
-    {
-      'id': 'dict-cat-011',
-      'name': 'Airport', // NEW: Airport-specific category
-      'icon': 'assets/icons/airport.png',
-      'color': '#B8A7FF',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-002',
-      'name': 'Accommodation',
-      'icon': 'assets/icons/accommodation.png',
-      'color': '#FF9F6A',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-003',
-      'name': 'Transportation',
-      'icon': 'assets/icons/transportation.png',
-      'color': '#F9D26B',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-004',
-      'name': 'Food & Drink',
-      'icon': 'assets/icons/food_drink.png',
-      'color': '#FF8FA5',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-005',
-      'name': 'Shopping',
-      'icon': 'assets/icons/shopping.png',
-      'color': '#8BDDCD',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-006',
-      'name': 'Culture',
-      'icon': 'assets/icons/culture.png',
-      'color': '#B8D9FF',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-007',
-      'name': 'Meeting',
-      'icon': 'assets/icons/meeting.png',
-      'color': '#FFB8B8',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-008',
-      'name': 'Sport',
-      'icon': 'assets/icons/sport.png',
-      'color': '#E4B3FF',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-009',
-      'name': 'Health',
-      'icon': 'assets/icons/health.png',
-      'color': '#B8FFC9',
-      'count': 20,
-    },
-    {
-      'id': 'dict-cat-010',
-      'name': 'Business',
-      'icon': 'assets/icons/business.png',
-      'color': '#A4C8E1',
-      'count': 20,
-    },
-  ];
+  // STATIC categories - using localized names via getter
+  List<Map<String, dynamic>> get _staticCategories {
+    final l = AppLocalizations.of(ref.read(localeProvider));
+    return [
+      {
+        'id': 'dict-cat-011',
+        'name': l.catAirport,
+        'icon': 'assets/icons/airport.png',
+        'color': '#B8A7FF',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-002',
+        'name': l.catAccommodation,
+        'icon': 'assets/icons/accommodation.png',
+        'color': '#FF9F6A',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-003',
+        'name': l.catTransportation,
+        'icon': 'assets/icons/transportation.png',
+        'color': '#F9D26B',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-004',
+        'name': l.catFoodAndDrink,
+        'icon': 'assets/icons/food_drink.png',
+        'color': '#FF8FA5',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-005',
+        'name': l.catShopping,
+        'icon': 'assets/icons/shopping.png',
+        'color': '#8BDDCD',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-006',
+        'name': l.catCulture,
+        'icon': 'assets/icons/culture.png',
+        'color': '#B8D9FF',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-007',
+        'name': l.catMeeting,
+        'icon': 'assets/icons/meeting.png',
+        'color': '#FFB8B8',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-008',
+        'name': l.catSport,
+        'icon': 'assets/icons/sport.png',
+        'color': '#E4B3FF',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-009',
+        'name': l.catHealth,
+        'icon': 'assets/icons/health.png',
+        'color': '#B8FFC9',
+        'count': 20,
+      },
+      {
+        'id': 'dict-cat-010',
+        'name': l.catBusiness,
+        'icon': 'assets/icons/business.png',
+        'color': '#A4C8E1',
+        'count': 20,
+      },
+    ];
+  }
 
   @override
   void initState() {
@@ -442,7 +447,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                               ),
                               SizedBox(width: 12.w),
                               Text(
-                                'Visual Dictionary',
+                                AppLocalizations.of(ref.watch(localeProvider)).visualDictionary,
                                 style: TextStyle(
                                   fontSize: 20.sp,
                                   fontWeight: FontWeight.w700,
@@ -521,7 +526,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           color: MyColors.textPrimary,
         ),
         decoration: InputDecoration(
-          hintText: 'Search words or phrases...',
+          hintText: AppLocalizations.of(ref.watch(localeProvider)).searchWordsOrPhrases,
           hintStyle: TextStyle(
             fontSize: 14.sp,
             fontFamily: 'Montserrat',
@@ -574,7 +579,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               ),
               SizedBox(height: 16.h),
               Text(
-                'No categories found',
+                AppLocalizations.of(ref.watch(localeProvider)).noCategoriesFound,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -584,7 +589,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'Try searching with different keywords',
+                AppLocalizations.of(ref.watch(localeProvider)).tryDifferentKeywords,
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontFamily: 'Montserrat',
@@ -692,7 +697,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               children: [
                 Expanded(
                   child: Text(
-                    '${category['count']} items',
+                    '${AppLocalizations.of(ref.watch(localeProvider)).itemsCount(category['count'] as int)}',
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w400,
@@ -724,7 +729,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent Search',
+              AppLocalizations.of(ref.watch(localeProvider)).recentSearch,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w700,
@@ -735,7 +740,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
             TextButton(
               onPressed: _clearRecentSearches,
               child: Text(
-                'Clear',
+                AppLocalizations.of(ref.watch(localeProvider)).clearText,
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
@@ -871,7 +876,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               Padding(
                 padding: EdgeInsets.only(left: 28.w),
                 child: Text(
-                  'Recent item',
+                  AppLocalizations.of(ref.watch(localeProvider)).recentItem,
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w400,
@@ -923,7 +928,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                 ),
                 SizedBox(width: 12.w),
                 Text(
-                  'Visual Dictionary',
+                  AppLocalizations.of(ref.watch(localeProvider)).visualDictionary,
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w700,
@@ -963,7 +968,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      'No words found',
+                      AppLocalizations.of(ref.watch(localeProvider)).noWordsFound,
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
@@ -973,7 +978,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'Try searching with different keywords',
+                      AppLocalizations.of(ref.watch(localeProvider)).tryDifferentKeywords,
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontFamily: 'Montserrat',

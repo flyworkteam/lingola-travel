@@ -1,20 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lingola_travel/Core/Localization/app_localizations.dart';
 import 'package:lingola_travel/Models/language.dart';
+import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
 
-class AppLanguageView extends StatefulWidget {
+class AppLanguageView extends ConsumerStatefulWidget {
   const AppLanguageView({super.key});
 
   @override
-  State<AppLanguageView> createState() => _AppLanguageViewState();
+  ConsumerState<AppLanguageView> createState() => _AppLanguageViewState();
 }
 
-class _AppLanguageViewState extends State<AppLanguageView> {
-  Language _selectedLanguage = AppLanguages.all.first; // Default to English
+class _AppLanguageViewState extends ConsumerState<AppLanguageView> {
+  late Language _selectedLanguage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Will be set properly on first build via didChangeDependencies
+    _selectedLanguage = AppLanguages.all.first;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final currentCode = ref.read(localeProvider);
+    _selectedLanguage = AppLanguages.getByCode(currentCode);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider);
+    final l = AppLocalizations.of(langCode);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -42,7 +62,7 @@ class _AppLanguageViewState extends State<AppLanguageView> {
                   ),
                   SizedBox(width: 12.w),
                   Text(
-                    'App Language',
+                    l.appLanguageViewTitle,
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
@@ -57,7 +77,7 @@ class _AppLanguageViewState extends State<AppLanguageView> {
 
               // Title
               Text(
-                'Select the application\nlanguage',
+                l.appLanguageViewSubtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24.sp,
@@ -80,9 +100,7 @@ class _AppLanguageViewState extends State<AppLanguageView> {
                   children: [
                     _buildLanguageItem(
                       flagAsset: language.flagAsset,
-                      name: language.getLocalizedName(
-                        _selectedLanguage.code,
-                      ), // Use localized name
+                      name: language.getLocalizedName(langCode),
                       language: language,
                       isSelected: isSelected,
                     ),
@@ -115,14 +133,16 @@ class _AppLanguageViewState extends State<AppLanguageView> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () {
-                      // TODO: Save language preference
-                      Navigator.pop(context);
+                    onTap: () async {
+                      await ref
+                          .read(localeProvider.notifier)
+                          .setLocale(_selectedLanguage.code);
+                      if (context.mounted) Navigator.pop(context);
                     },
                     borderRadius: BorderRadius.circular(16.r),
                     child: Center(
                       child: Text(
-                        'Save',
+                        l.save,
                         style: TextStyle(
                           fontSize: 17.sp,
                           fontWeight: FontWeight.w700,
@@ -184,7 +204,6 @@ class _AppLanguageViewState extends State<AppLanguageView> {
         ),
         child: Row(
           children: [
-            // Flag
             ClipRRect(
               borderRadius: BorderRadius.circular(4.r),
               child: Image.asset(
@@ -195,7 +214,6 @@ class _AppLanguageViewState extends State<AppLanguageView> {
               ),
             ),
             SizedBox(width: 16.w),
-            // Language Name
             Expanded(
               child: Text(
                 name,
@@ -207,7 +225,6 @@ class _AppLanguageViewState extends State<AppLanguageView> {
                 ),
               ),
             ),
-            // Selection Indicator
             if (isSelected)
               Container(
                 width: 24.w,
