@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 import 'profession_selection_view.dart';
 
 class LanguageSelectionView extends ConsumerStatefulWidget {
@@ -35,8 +34,8 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
 
   @override
   Widget build(BuildContext context) {
-    final langCode = ref.watch(localeProvider);
-    final l = AppLocalizations.of(langCode);
+    // Always use English for onboarding
+    final l = AppLocalizations.of('en');
 
     return Scaffold(
       backgroundColor: MyColors.white,

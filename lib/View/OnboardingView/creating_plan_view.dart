@@ -27,11 +27,11 @@ class _CreatingPlanViewState extends ConsumerState<CreatingPlanView>
   String _currentStatus = 'Analyzing your professional background...';
 
   final List<String> _statusMessages = [
-    'Profesyonel geçmişiniz analiz ediliyor...',
-    'Kelime setleri özelleştiriliyor...',
-    'Öğrenme yolunuz hazırlanıyor...',
-    'Hedefleriniz için optimize ediliyor...',
-    'Kişiselleştirilmiş planınız tamamlanıyor...',
+    'Analyzing your professional background...',
+    'Customizing vocabulary sets...',
+    'Preparing your learning path...',
+    'Optimizing for your goals...',
+    'Finalizing your personalized plan...',
   ];
 
   @override

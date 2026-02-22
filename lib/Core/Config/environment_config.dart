@@ -32,7 +32,7 @@ class EnvironmentConfig {
     switch (_currentEnvironment) {
       case Environment.development:
         // Real device: use local network IP (without /api suffix, ApiClient adds it)
-        return 'http://192.168.0.26:3000';
+        return 'http://10.252.15.1122:3000';
       case Environment.staging:
         return 'https://staging-api.lingolatravel.com';
       case Environment.production:

@@ -44,7 +44,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Progress Bar
               Text(
-                'ADIM 2 / 4',
+                'STEP 2 / 4',
                 style: GoogleFonts.montserrat(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
@@ -101,7 +101,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Title
               Text(
-                'Mesleğiniz\nNedir?',
+                'What is your\nProfession?',
                 style: GoogleFonts.montserrat(
                   fontSize: 36.sp,
                   fontWeight: FontWeight.w700,
@@ -114,7 +114,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Subtitle
               Text(
-                'Geçmişinize göre dil yolculuğunuzu\nözelleştireceğiz',
+                'We will customize your language journey\naccording to your background',
                 style: GoogleFonts.montserrat(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -211,7 +211,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                               ),
                             ),
                             Text(
-                              'Geri',
+                              'Back',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -259,7 +259,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Devam Et',
+                              'Continue',
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,

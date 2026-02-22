@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 import 'profession_detail_view.dart';
 
 /// Profession Selection View - Onboarding Step 2 of 4
@@ -24,8 +23,8 @@ class _ProfessionSelectionViewState
 
   @override
   Widget build(BuildContext context) {
-    final langCode = ref.watch(localeProvider);
-    final l = AppLocalizations.of(langCode);
+    // Always use English for onboarding
+    final l = AppLocalizations.of('en');
 
     final professions = [
       {
@@ -176,7 +175,8 @@ class _ProfessionSelectionViewState
                   itemCount: professions.length,
                   itemBuilder: (context, index) {
                     final profession = professions[index];
-                    final isSelected = selectedProfessionKey == profession['key'];
+                    final isSelected =
+                        selectedProfessionKey == profession['key'];
 
                     return GestureDetector(
                       onTap: () {
@@ -223,8 +223,7 @@ class _ProfessionSelectionViewState
                                       color: isSelected
                                           ? MyColors.lingolaPrimaryColor
                                           : const Color(0xFFE0F7F5),
-                                      borderRadius:
-                                          BorderRadius.circular(14.r),
+                                      borderRadius: BorderRadius.circular(14.r),
                                     ),
                                   ),
                                   Image.asset(

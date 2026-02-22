@@ -7,6 +7,7 @@ import 'package:lingola_travel/Models/language.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Riverpod/Controllers/home_view_controller.dart';
 import '../../Riverpod/Controllers/dictionary_controller.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 import '../../Repositories/profile_repository.dart';
 import '../../Repositories/travel_phrase_repository.dart';
 import '../../Models/travel_phrase_model.dart';
@@ -137,6 +138,20 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep _selectedLanguage in sync with localeProvider
+    final langCode = ref.watch(localeProvider);
+    final syncedLanguage = AppLanguages.getByCode(langCode);
+    if (_selectedLanguage.code != syncedLanguage.code) {
+      // Use post-frame to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedLanguage = syncedLanguage;
+          });
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
@@ -340,6 +355,10 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                       setState(() {
                         _selectedLanguage = language;
                       });
+                      // Persist via localeProvider
+                      ref
+                          .read(localeProvider.notifier)
+                          .setLocale(language.code);
                       Navigator.pop(context);
                     },
                     child: Container(

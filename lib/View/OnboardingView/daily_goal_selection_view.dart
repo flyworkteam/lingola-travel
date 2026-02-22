@@ -7,7 +7,6 @@ import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
 import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 
 /// Step 4 of 4 - Daily Goal Selection View
 class DailyGoalSelectionView extends ConsumerStatefulWidget {
@@ -40,10 +39,14 @@ class _DailyGoalSelectionViewState
 
   int _getGoalMinutes(String goalId) {
     switch (goalId) {
-      case 'casual': return 5;
-      case 'regular': return 15;
-      case 'serious': return 30;
-      default: return 15;
+      case 'casual':
+        return 5;
+      case 'regular':
+        return 15;
+      case 'serious':
+        return 30;
+      default:
+        return 15;
     }
   }
 
@@ -51,8 +54,8 @@ class _DailyGoalSelectionViewState
 
   @override
   Widget build(BuildContext context) {
-    final langCode = ref.watch(localeProvider);
-    final l = AppLocalizations.of(langCode);
+    // Always use English for onboarding
+    final l = AppLocalizations.of('en');
 
     final goals = [
       {
@@ -161,8 +164,11 @@ class _DailyGoalSelectionViewState
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(Icons.arrow_back,
-                                    color: MyColors.white, size: 22.sp),
+                                child: Icon(
+                                  Icons.arrow_back,
+                                  color: MyColors.white,
+                                  size: 22.sp,
+                                ),
                               ),
                             ),
                             Text(
@@ -215,8 +221,11 @@ class _DailyGoalSelectionViewState
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(Icons.arrow_forward,
-                                    color: MyColors.white, size: 22.sp),
+                                child: Icon(
+                                  Icons.arrow_forward,
+                                  color: MyColors.white,
+                                  size: 22.sp,
+                                ),
                               ),
                             ),
                           ],
@@ -250,18 +259,21 @@ class _DailyGoalSelectionViewState
         ),
         SizedBox(height: 12.h),
         Row(
-          children: List.generate(4, (i) => [
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor,
-                  borderRadius: BorderRadius.circular(2.r),
+          children: List.generate(
+            4,
+            (i) => [
+              Expanded(
+                child: Container(
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: MyColors.lingolaPrimaryColor,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
                 ),
               ),
-            ),
-            if (i < 3) SizedBox(width: 8.w),
-          ]).expand((e) => e).toList(),
+              if (i < 3) SizedBox(width: 8.w),
+            ],
+          ).expand((e) => e).toList(),
         ),
       ],
     );

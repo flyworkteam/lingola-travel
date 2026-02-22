@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 
 /// Step 3 of 4 - English Level Selection View
 class EnglishLevelSelectionView extends ConsumerStatefulWidget {
@@ -39,8 +38,8 @@ class _EnglishLevelSelectionViewState
 
   @override
   Widget build(BuildContext context) {
-    final langCode = ref.watch(localeProvider);
-    final l = AppLocalizations.of(langCode);
+    // Always use English for onboarding
+    final l = AppLocalizations.of('en');
 
     final levels = [
       {
@@ -155,8 +154,11 @@ class _EnglishLevelSelectionViewState
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(Icons.arrow_back,
-                                    color: MyColors.white, size: 22.sp),
+                                child: Icon(
+                                  Icons.arrow_back,
+                                  color: MyColors.white,
+                                  size: 22.sp,
+                                ),
                               ),
                             ),
                             Text(
@@ -209,8 +211,11 @@ class _EnglishLevelSelectionViewState
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Center(
-                                child: Icon(Icons.arrow_forward,
-                                    color: MyColors.white, size: 22.sp),
+                                child: Icon(
+                                  Icons.arrow_forward,
+                                  color: MyColors.white,
+                                  size: 22.sp,
+                                ),
                               ),
                             ),
                           ],
@@ -327,7 +332,9 @@ class _EnglishLevelSelectionViewState
                     fit: BoxFit.contain,
                     colorFilter: isSelected
                         ? ColorFilter.mode(
-                            MyColors.lingolaPrimaryColor, BlendMode.srcIn)
+                            MyColors.lingolaPrimaryColor,
+                            BlendMode.srcIn,
+                          )
                         : null,
                   )
                 : Image.asset(
