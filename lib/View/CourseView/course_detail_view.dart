@@ -470,22 +470,20 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         if (!isLocked) {
           print('🎯 Opening lesson: ${lesson.id}');
 
-          final result = await Navigator.push(
+          await Navigator.push(
             context,
             MaterialPageRoute(
               fullscreenDialog: true,
               builder: (context) => LessonDetailView(
-                lessonId: lesson.id, // Use actual lesson ID from API
+                lessonId: lesson.id,
                 isPremium: widget.isPremium,
+                totalLessonsInCourse: _lessons.length,
               ),
             ),
           );
 
-          // If lesson was completed, refresh course data
-          if (result == true) {
-            print('🔄 Lesson completed, refreshing course data...');
-            _loadLessons();
-          }
+          // Always refresh when returning from a lesson (sync fix)
+          _loadLessons();
         }
       },
       child: Container(
@@ -536,26 +534,8 @@ class _CourseDetailViewState extends State<CourseDetailView> {
 
             SizedBox(width: 12.w),
 
-            // Duration or progress
-            if (isCompleted)
-              Icon(Icons.check_circle, color: Color(0xFF4ECDC4), size: 20.sp)
-            else if (isInProgress && lesson.userProgress != null)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Color(0xFF4ECDC4).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  '${lesson.userProgress}%',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Montserrat',
-                    color: Color(0xFF4ECDC4),
-                  ),
-                ),
-              ),
+            // No trailing icon needed
+            SizedBox(width: 4.w),
           ],
         ),
       ),
@@ -583,22 +563,20 @@ class _CourseDetailViewState extends State<CourseDetailView> {
 
     return GestureDetector(
       onTap: () async {
-        final result = await Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             fullscreenDialog: true,
             builder: (context) => LessonDetailView(
               lessonId: resumeLesson.id,
               isPremium: widget.isPremium,
+              totalLessonsInCourse: _lessons.length,
             ),
           ),
         );
 
-        // If lesson was completed, refresh course data
-        if (result == true) {
-          print('🔄 Lesson completed, refreshing course data...');
-          _loadLessons();
-        }
+        // Always refresh when returning from a lesson (sync fix)
+        _loadLessons();
       },
       child: Container(
         width: double.infinity,

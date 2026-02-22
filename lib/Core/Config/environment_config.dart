@@ -31,16 +31,17 @@ class EnvironmentConfig {
     // Fallback based on environment
     switch (_currentEnvironment) {
       case Environment.development:
-        return 'http://10.0.2.2:3000/api'; // Android emulator uses 10.0.2.2 for localhost
+        // Real device: use local network IP (without /api suffix, ApiClient adds it)
+        return 'http://192.168.0.26:3000';
       case Environment.staging:
-        return 'https://staging-api.lingolatravel.com/api';
+        return 'https://staging-api.lingolatravel.com';
       case Environment.production:
-        return 'https://api.lingolatravel.com/api';
+        return 'https://api.lingolatravel.com';
     }
   }
 
   /// Get API version
-  static String get apiVersion => dotenv.env['API_VERSION'] ?? 'v1';
+  static String get apiVersion => dotenv.env['API_VERSION'] ?? 'api/v1';
 
   /// Get API timeout
   static String get apiTimeout => dotenv.env['API_TIMEOUT'] ?? '60';

@@ -27,7 +27,7 @@ class _AppLanguageViewState extends State<AppLanguageView> {
           child: Column(
             children: [
               SizedBox(height: 12.h),
-              
+
               // Header
               Row(
                 children: [
@@ -52,7 +52,7 @@ class _AppLanguageViewState extends State<AppLanguageView> {
                   ),
                 ],
               ),
-              
+
               SizedBox(height: 24.h),
 
               // Title
@@ -73,8 +73,7 @@ class _AppLanguageViewState extends State<AppLanguageView> {
               // Language List
               ...List.generate(AppLanguages.all.length, (index) {
                 final language = AppLanguages.all[index];
-                final isSelected =
-                    _selectedLanguage.code == language.code;
+                final isSelected = _selectedLanguage.code == language.code;
                 final isLast = index == AppLanguages.all.length - 1;
 
                 return Column(

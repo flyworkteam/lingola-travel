@@ -42,17 +42,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
   void initState() {
     super.initState();
     _loadUserProfile();
-    // ONLY load if NOT already loaded - prevents re-initialization on navigation back (FREE user)
+    // Always reload to show latest progress
     Future.microtask(() async {
       try {
-        // Check if home data already loaded
-        final homeState = ref.read(homeViewControllerProvider);
-        if (homeState.courses.isEmpty && !homeState.isLoading) {
-          print('📚 Loading courses for first time...');
-          await ref.read(homeViewControllerProvider.notifier).init();
-        } else {
-          print('📚 Courses already loaded, skipping init');
-        }
+        print('📚 Loading courses (always fresh)...');
+        await ref.read(homeViewControllerProvider.notifier).init();
 
         // Small delay before loading dictionary
         await Future.delayed(Duration(milliseconds: 100));
@@ -1289,14 +1283,17 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Widget _buildCurrentCourseCard() {
     final homeState = ref.watch(homeViewControllerProvider);
 
-    // Backend'den gelen ilk kursu "Current Course" olarak göster
-    final currentCourse = homeState.courses.isNotEmpty
-        ? homeState.courses.first
-        : null;
+    if (homeState.courses.isEmpty) return const SizedBox.shrink();
 
-    if (currentCourse == null) {
-      return const SizedBox.shrink();
-    }
+    // Show the first in-progress course (0 < progress < 100)
+    // Fallback 1: first incomplete course, Fallback 2: very first course
+    final currentCourse = homeState.courses.firstWhere(
+      (c) => c.progressPercentage > 0 && c.progressPercentage < 100,
+      orElse: () => homeState.courses.firstWhere(
+        (c) => c.progressPercentage < 100,
+        orElse: () => homeState.courses.first,
+      ),
+    );
 
     final progress = currentCourse.progressPercentage / 100.0;
     final completedLessons = currentCourse.lessonsCompleted;
@@ -1306,11 +1303,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => CourseView(
-              isPremium: false,
-            ),
-          ),
+          MaterialPageRoute(builder: (context) => CourseView(isPremium: false)),
         );
       },
       child: Container(

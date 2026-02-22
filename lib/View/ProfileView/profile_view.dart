@@ -82,12 +82,17 @@ class _ProfileViewState extends State<ProfileView> {
             _dayStreak = stats['current_streak'] ?? 0;
             _wordsLearned = stats['saved_words_count'] ?? 0;
 
-            // Calculate progress percentage based on lessons completed
-            // Assuming 100 lessons is 100% progress (adjust as needed)
+            // Calculate progress percentage based on lessons completed vs total lessons
             int lessonsCompleted = stats['total_lessons_completed'] ?? 0;
-            _progressPercentage = (lessonsCompleted > 100)
-                ? 100
-                : lessonsCompleted;
+            int totalLessons = stats['total_lessons_count'] ?? 100;
+            
+            if (totalLessons > 0) {
+              _progressPercentage = ((lessonsCompleted / totalLessons) * 100).round();
+            } else {
+              _progressPercentage = 0;
+            }
+            
+            if (_progressPercentage > 100) _progressPercentage = 100;
 
             _isLoadingStats = false;
           });

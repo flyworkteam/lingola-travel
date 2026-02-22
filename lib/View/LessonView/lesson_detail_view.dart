@@ -13,11 +13,13 @@ import 'package:lingola_travel/Models/course_model.dart';
 class LessonDetailView extends StatefulWidget {
   final String lessonId;
   final bool isPremium;
+  final int? totalLessonsInCourse; // Total lessons in the course (for progress bar)
 
   const LessonDetailView({
     super.key,
     required this.lessonId,
     this.isPremium = false,
+    this.totalLessonsInCourse,
   });
 
   @override
@@ -39,14 +41,16 @@ class _LessonDetailViewState extends State<LessonDetailView>
   bool _isLoading = true;
   String? _errorMessage;
 
-  int currentStep = 1; // Will be set from backend (user's current progress)
-  int totalSteps = 10;
+  int currentStep = 0; // Lesson order in course (for progress bar)
+  int totalSteps = 10; // Total lessons in course (for progress bar)
   bool isBookmarked = false; // Bookmark state
   bool isRecording = false; // Recording state
   bool isPlaying = false; // Audio playing state
   String recordedText = ''; // Recorded text from speech recognition
   bool showResult = false; // Show result screen
   double similarityScore = 0.0; // Similarity score from speech comparison
+  bool _lastAttemptSuccessful = false; // Whether the last speech attempt passed (>= 80%)
+  bool _isContinuing = false; // Prevents double-tap on Continue
   final GlobalKey _bookmarkButtonKey = GlobalKey(); // Key for bookmark button
 
   // Recording timer
@@ -71,6 +75,25 @@ class _LessonDetailViewState extends State<LessonDetailView>
     _loadLessonData();
   }
 
+  /// Close lesson — saves minimal progress record so the next lesson unlocks,
+  /// then pops the route.
+  Future<void> _closeLesson() async {
+    // If the lesson loaded, ensure a progress row exists so the backend
+    // unlock check (`prev_ulp.user_id IS NOT NULL`) passes for the next lesson.
+    if (_lesson != null) {
+      try {
+        await _lessonRepository.updateLessonProgress(
+          lessonId: widget.lessonId,
+          currentStep: 1, // mark as "started" at minimum
+          completed: false,
+        );
+      } catch (_) {
+        // Ignore errors — just close
+      }
+    }
+    if (mounted) Navigator.pop(context, false);
+  }
+
   /// Load lesson data from backend
   Future<void> _loadLessonData() async {
     setState(() {
@@ -84,9 +107,9 @@ class _LessonDetailViewState extends State<LessonDetailView>
       if (response.success && response.data != null) {
         setState(() {
           _lesson = response.data;
-          totalSteps = response.data!.totalSteps;
-          // Set current step from backend (user's progress in this lesson)
-          currentStep = response.data!.currentUserStep ?? 1;
+          totalSteps = widget.totalLessonsInCourse ?? response.data!.totalSteps;
+          // Use the lesson's order as the current position in the course
+          currentStep = response.data!.lessonOrder;
           _isLoading = false;
         });
         print('✅ Lesson loaded: ${_lesson?.title}');
@@ -239,7 +262,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
         children: [
           // Close button
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: _closeLesson,
             child: Icon(Icons.close, size: 24.sp, color: MyColors.textPrimary),
           ),
 
@@ -779,90 +802,12 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
   /// Build vocabulary icon with error handling
   Widget _buildVocabularyIcon(String? iconPath, Color iconColor) {
-    // Comprehensive icon mapping for various vocabulary types
-    final Map<String, IconData> iconMapping = {
-      // Greetings & Social
-      'greeting': Icons.waving_hand,
-      'goodbye': Icons.exit_to_app,
-      'hello': Icons.emoji_people,
-      'handshake': Icons.handshake,
-      'happy': Icons.sentiment_satisfied_alt,
-      'please': Icons.volunteer_activism,
-      'thanks': Icons.favorite,
-
-      // Questions & Help
-      'question': Icons.help_outline,
-      'help': Icons.support_agent,
-
-      // People & Identity
-      'person': Icons.person,
-      'family': Icons.family_restroom,
-      'name': Icons.badge,
-
-      // Travel & Transport
-      'plane': Icons.flight,
-      'airport': Icons.local_airport,
-      'gate': Icons.meeting_room,
-      'departure': Icons.flight_takeoff,
-      'checkin': Icons.check_circle_outline,
-      'boardingpass': Icons.confirmation_number,
-      'transport': Icons.directions_bus,
-      'taxi': Icons.local_taxi,
-      'train': Icons.train,
-
-      // Colors
-      'color': Icons.palette,
-      'red': Icons.circle,
-      'blue': Icons.circle,
-      'green': Icons.circle,
-
-      // Numbers
-      'number': Icons.numbers,
-      'one': Icons.looks_one,
-      'two': Icons.looks_two,
-
-      // Food & Drink
-      'food': Icons.restaurant,
-      'drink': Icons.local_cafe,
-      'coffee': Icons.coffee,
-      'water': Icons.water_drop,
-
-      // Accommodation
-      'hotel': Icons.hotel,
-      'room': Icons.bed,
-
-      // Shopping
-      'shopping': Icons.shopping_bag,
-      'money': Icons.attach_money,
-      'card': Icons.credit_card,
-
-      // Time & Weather
-      'time': Icons.access_time,
-      'weather': Icons.wb_sunny,
-    };
-
     // If no icon path, show default icon
     if (iconPath == null || iconPath.isEmpty) {
       return Icon(Icons.school, size: 20.sp, color: iconColor);
     }
 
-    // Extract icon name from path (e.g., "assets/icons/greeting.svg" -> "greeting")
-    final iconName = iconPath
-        .split('/')
-        .last
-        .replaceAll('.svg', '')
-        .replaceAll('.png', '')
-        .toLowerCase()
-        .trim();
-
-    final matchedIcon = iconMapping[iconName];
-
-    // If we have a mapping, use Material Icon
-    if (matchedIcon != null) {
-      return Icon(matchedIcon, size: 20.sp, color: iconColor);
-    }
-
-    // Try to load SVG with comprehensive error handling
+    // Direkt SVG'yi assets'ten yükle
     return SvgPicture.asset(
       iconPath,
       width: 20.w,
@@ -941,77 +886,20 @@ class _LessonDetailViewState extends State<LessonDetailView>
         Expanded(
           flex: 3,
           child: GestureDetector(
-            onTap: () async {
-              // Check if this step was completed successfully (score >= 80%)
-              final stepCompleted =
-                  recordedText.isNotEmpty && similarityScore >= 0.8;
-
-              if (currentStep < totalSteps) {
-                // Move to next step
-                setState(() {
-                  // Only increment progress if current step was completed successfully
-                  if (stepCompleted) {
-                    currentStep++;
-                  }
-                  // Reset for next question
-                  recordedText = '';
-                  similarityScore = 0.0;
-                  showResult = false;
-                });
-
-                if (stepCompleted) {
-                  print('✅ Step completed! Progress: $currentStep/$totalSteps');
-                  // Save progress
-                  await _saveProgressToBackend();
-                } else {
-                  print('⏭️ Skipped to next question (no progress saved)');
-                }
-              } else {
-                // All questions viewed - check if lesson is actually completed
-                if (currentStep >= totalSteps) {
-                  print('🎉 Lesson completed! Saving final progress...');
-                  await _saveProgressToBackend();
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '🎉 Lesson completed! Moving to next lesson...',
-                        ),
-                        duration: Duration(seconds: 2),
-                        backgroundColor: Color(0xFF4ECDC4),
-                      ),
-                    );
-
-                    await Future.delayed(Duration(seconds: 2));
-                    if (mounted) {
-                      Navigator.pop(context, true);
-                    }
-                  }
-                } else {
-                  // Not enough steps completed
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '📚 Complete more exercises to finish the lesson (${currentStep}/${totalSteps})',
-                        style: TextStyle(fontFamily: 'Montserrat'),
-                      ),
-                      backgroundColor: Color(0xFFFF9800),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              }
-            },
+            onTap: () => _handleContinue(),
             child: Container(
-              height: 48.h, // 56.h'den 48.h'ye küçültüldü
+              height: 48.h,
               decoration: BoxDecoration(
-                color: Color(0xFF4ECDC4),
+                gradient: LinearGradient(
+                  colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
                     color: Color(0xFF4ECDC4).withOpacity(0.3),
-                    blurRadius: 12,
+                    blurRadius: 8,
                     offset: Offset(0, 4),
                   ),
                 ],
@@ -1019,36 +907,27 @@ class _LessonDetailViewState extends State<LessonDetailView>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Text(
-                    'Continue',
-                    style: TextStyle(
-                      fontSize: 15.sp, // 16.sp'den 15.sp'ye küçültüldü
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: MyColors.white,
-                    ),
-                  ),
-                  // Arrow with glassmorphism on the far right
-                  Positioned(
-                    right: 8.w,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                        child: Container(
-                          padding: EdgeInsets.all(6.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward,
-                            size: 16.sp, // 18.sp'den 16.sp'ye küçültüldü
-                            color: MyColors.white,
-                          ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        currentStep >= totalSteps ? 'Finish' : 'Continue',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Montserrat',
+                          color: Colors.white,
                         ),
                       ),
-                    ),
+                      SizedBox(width: 8.w),
+                      Icon(
+                        currentStep >= totalSteps
+                            ? Icons.check_circle
+                            : Icons.arrow_forward,
+                        color: Colors.white,
+                        size: 20.sp,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1361,17 +1240,22 @@ class _LessonDetailViewState extends State<LessonDetailView>
     print('🎯 Target: $targetSentence');
     print('🗣️ Spoken: $recordedText');
 
-    // Show result
+    // Show result overlay — auto-dismisses after 1.5 seconds
+    final didSucceed = similarityScore >= 0.73;
     setState(() {
+      _lastAttemptSuccessful = didSucceed;
       showResult = true;
-      // Don't increment here - let Continue button handle it
+      _recordingSeconds = 0;
     });
 
-    // Auto-hide result after 2.5 seconds
-    Future.delayed(Duration(milliseconds: 2500), () {
-      if (mounted) {
+    Future.delayed(Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      setState(() => showResult = false);
+      if (didSucceed) {
+        _handleContinue();
+      } else {
+        // Reset so user can record again
         setState(() {
-          showResult = false;
           recordedText = '';
           _recordingSeconds = 0;
         });
@@ -1379,41 +1263,104 @@ class _LessonDetailViewState extends State<LessonDetailView>
     });
   }
 
-  /// Save current progress to backend
+  /// Handle the continue action after a lesson attempt
+  Future<void> _handleContinue() async {
+    if (_isContinuing) return; // Prevent double-tap
+
+    // If overlay is showing and attempt wasn't successful, treat as Try Again
+    if (showResult && !_lastAttemptSuccessful) {
+      setState(() {
+        showResult = false;
+        recordedText = '';
+        _recordingSeconds = 0;
+      });
+      return;
+    }
+
+    // If no successful attempt yet, show hint
+    if (!_lastAttemptSuccessful) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '⚠️ Lütfen önce mikrofona basarak cümleyi okuyun (%80+ başarı gerekli)',
+            style: TextStyle(fontFamily: 'Montserrat'),
+          ),
+          duration: Duration(seconds: 2),
+          backgroundColor: MyColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isContinuing = true;
+      showResult = false;
+      // Note: do NOT touch currentStep here — it would flash max/total on screen
+    });
+
+    print('✅ Lesson completed! Saving progress...');
+    await _saveProgressToBackend();
+
+    print('🎉 Getting next lesson...');
+    final nextLessonResponse = await _lessonRepository.getNextLesson(widget.lessonId);
+
+    if (!mounted) return;
+
+    if (nextLessonResponse.success && nextLessonResponse.data != null) {
+      final nextLessonId = nextLessonResponse.data!['id'] as String;
+      final transition = nextLessonResponse.data!['transition'] as String? ?? 'same_course';
+
+      if (transition == 'new_course') {
+        // Course finished — pop back to course detail so user sees the course list
+        if (mounted) Navigator.pop(context, true);
+      } else {
+        // Same course — navigate directly to next lesson
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LessonDetailView(
+              lessonId: nextLessonId,
+              isPremium: widget.isPremium,
+              totalLessonsInCourse: totalSteps,
+            ),
+          ),
+        );
+      }
+    } else if (nextLessonResponse.success && nextLessonResponse.data == null) {
+      // All courses/lessons completed — go back to courses
+      if (mounted) Navigator.pop(context, true);
+    } else {
+      // API error — go back
+      if (mounted) Navigator.pop(context, true);
+    }
+  }
+
+  /// Save current progress to backend (marks lesson as COMPLETED)
   Future<void> _saveProgressToBackend() async {
     if (_lesson == null) return;
 
     try {
-      final progressPercentage = ((currentStep / totalSteps) * 100).round();
-      final isLessonCompleted = currentStep >= totalSteps;
-
-      await _lessonRepository.updateLessonProgress(
+      // Always call completeLesson — this is only invoked after a successful attempt
+      final response = await _lessonRepository.completeLesson(
         lessonId: _lesson!.id,
-        currentStep: currentStep,
-        progressPercentage: progressPercentage,
-        completed: isLessonCompleted,
-        score: isLessonCompleted
-            ? (similarityScore * 100).toInt()
-            : null, // Only send score on completion
       );
 
-      if (isLessonCompleted) {
+      if (response.success) {
         print('🎉 Lesson COMPLETED and saved to backend!');
-        print('✅ Progress: $currentStep/$totalSteps (100%)');
+        print('✅ Lesson ID: ${_lesson!.id}');
         print('🏆 Score: ${(similarityScore * 100).toInt()}');
       } else {
-        print(
-          '✅ Progress saved: $currentStep/$totalSteps ($progressPercentage%)',
-        );
+        print('❌ completeLesson failed: ${response.error}');
       }
     } catch (e) {
       print('❌ Failed to save progress: $e');
     }
   }
 
-  /// Check if speech is successful (similarity >= 0.8)
+  /// Check if speech is successful (similarity >= 0.73)
   bool _isSuccessful() {
-    return similarityScore >= 0.8;
+    return _lastAttemptSuccessful;
   }
 
   /// Build result overlay with blur effect
@@ -1444,16 +1391,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
                   color: isSuccess ? Color(0xFF2EC4B6) : Color(0xFFF44336),
                 ),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                'Score: ${(similarityScore * 100).toInt()}%',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Montserrat',
-                  color: Colors.white,
-                ),
-              ),
+
             ],
           ),
         ),

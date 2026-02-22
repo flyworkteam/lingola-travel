@@ -13,7 +13,9 @@ class ApiClient {
   final SecureStorageService _secureStorage = SecureStorageService();
 
   ApiClient._internal() {
-    final baseUrl = '${AppConfig.baseUrl}/${AppConfig.apiVersion}';
+    final baseUrl = AppConfig.apiVersion.isEmpty
+        ? AppConfig.baseUrl
+        : '${AppConfig.baseUrl}/${AppConfig.apiVersion}';
     print('🌐 API Client initialized with base URL: $baseUrl');
 
     _dio = Dio(

@@ -139,4 +139,32 @@ class LessonRepository extends BaseRepository {
       return handleError(e);
     }
   }
+
+  /// Get next lesson after current lesson
+  Future<ApiResponse<Map<String, dynamic>?>> getNextLesson(
+    String lessonId,
+  ) async {
+    try {
+      print('🔍 Fetching next lesson after: $lessonId');
+      final response = await _apiClient.get('/lessons/$lessonId/next');
+
+      if (response.success && response.data != null) {
+        final nextLessonData = response.data['nextLesson'];
+
+        if (nextLessonData == null) {
+          // No more lessons
+          print('✅ No more lessons - All completed!');
+          return ApiResponse(success: true, data: null);
+        }
+
+        print('✅ Next lesson found: ${nextLessonData['id']}');
+        return ApiResponse(success: true, data: nextLessonData);
+      }
+
+      return ApiResponse(success: false, error: response.error);
+    } catch (e) {
+      print('❌ Exception in getNextLesson: $e');
+      return handleError(e);
+    }
+  }
 }
