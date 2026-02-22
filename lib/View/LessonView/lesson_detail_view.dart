@@ -907,27 +907,40 @@ class _LessonDetailViewState extends State<LessonDetailView>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        currentStep >= totalSteps ? 'Finish' : 'Continue',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Montserrat',
-                          color: Colors.white,
+                  Padding(
+                    padding: EdgeInsets.only(right: 28.w),
+                    child: Text(
+                      currentStep >= totalSteps ? 'Finish' : 'Continue',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 8.w,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Icon(
+                            currentStep >= totalSteps
+                                ? Icons.check_circle
+                                : Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 16.sp,
+                          ),
                         ),
                       ),
-                      SizedBox(width: 8.w),
-                      Icon(
-                        currentStep >= totalSteps
-                            ? Icons.check_circle
-                            : Icons.arrow_forward,
-                        color: Colors.white,
-                        size: 20.sp,
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
