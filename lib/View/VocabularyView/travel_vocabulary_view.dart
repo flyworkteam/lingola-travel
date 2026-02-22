@@ -13,6 +13,7 @@ import '../../Riverpod/Controllers/library_controller.dart';
 import '../../Repositories/library_repository.dart';
 import '../../Repositories/dictionary_repository.dart';
 import '../../Services/tts_service.dart';
+import '../../Riverpod/Providers/selected_language_provider.dart';
 
 class TravelVocabularyView extends ConsumerStatefulWidget {
   final bool isPremium;
@@ -39,6 +40,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   int _categoryRequestId =
       0; // Track category selection requests to prevent race conditions
   bool _isInitialized = false; // Track if initialization completed
+
+  // Track the last language we loaded content for, to detect changes
+  String? _lastLoadedLanguage;
 
   // Audio player
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -129,6 +133,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       // ✅ CRITICAL: Load bookmarks in TRULY async way - fire and forget
       // Don't await, don't block UI, just start loading in background
       _loadBookmarkedItemsAsync();
+
+      // Record the language we loaded content for, so build() doesn't reload on first render
+      _lastLoadedLanguage = ref.read(selectedLanguageProvider);
 
       _isInitialized = true;
       print('✅ Init completed successfully (bookmarks loading in background)');
@@ -618,6 +625,27 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
 
   @override
   Widget build(BuildContext context) {
+    // 🔑 Watch selectedLanguageProvider — when user saves a new language in
+    // Profile Settings, reload words and phrases in the new language.
+    final currentLanguage = ref.watch(selectedLanguageProvider);
+    if (_isInitialized && currentLanguage != _lastLoadedLanguage) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          print('🔄 TravelVocab: Language changed to $currentLanguage — reloading content');
+          _lastLoadedLanguage = currentLanguage;
+          // Reset to All Topics to avoid stale category state
+          setState(() {
+            _selectedCategory = 'All Topics';
+          });
+          // Reload both words and phrases
+          _loadWords(null);
+          ref
+              .read(travelVocabularyControllerProvider.notifier)
+              .init();
+        }
+      });
+    }
+
     return PopScope(
       canPop: true,
       onPopInvoked: (didPop) {

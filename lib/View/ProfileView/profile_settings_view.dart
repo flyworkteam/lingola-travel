@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../Models/language.dart';
@@ -7,15 +8,16 @@ import '../../Repositories/profile_repository.dart';
 import '../../Repositories/notification_repository.dart';
 import '../../Services/secure_storage_service.dart';
 import '../../Services/onesignal_service.dart';
+import '../../Riverpod/Providers/selected_language_provider.dart';
 
-class ProfileSettingsView extends StatefulWidget {
+class ProfileSettingsView extends ConsumerStatefulWidget {
   const ProfileSettingsView({super.key});
 
   @override
-  State<ProfileSettingsView> createState() => _ProfileSettingsViewState();
+  ConsumerState<ProfileSettingsView> createState() => _ProfileSettingsViewState();
 }
 
-class _ProfileSettingsViewState extends State<ProfileSettingsView> {
+class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   final ProfileRepository _profileRepository = ProfileRepository();
   bool _isSaving = false;
   bool _isLoading = true;
@@ -843,26 +845,18 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
     setState(() => _isSaving = true);
 
     try {
-      final result = await _profileRepository.updateProfile(
+      // 1. Update profile info (name)
+      final profileResult = await _profileRepository.updateProfile(
         name: _nameController.text.trim(),
       );
 
       if (!mounted) return;
 
-      if (result.success) {
-        // Close the page and notify parent
-        if (mounted) {
-          Navigator.pop(
-            context,
-            true,
-          ); // Return true to indicate profile was updated
-        }
-      } else {
-        // Show error
+      if (!profileResult.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              result.error?.message ??
+              profileResult.error?.message ??
                   'Failed to update profile. Please try again.',
               style: TextStyle(
                 fontSize: 14.sp,
@@ -878,6 +872,28 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
             margin: EdgeInsets.all(16.w),
           ),
         );
+        return;
+      }
+
+      // 2. Save selected language to user_onboarding
+      final langResult = await _profileRepository.saveOnboarding(
+        targetLanguage: _selectedLanguage.code,
+      );
+
+      if (!mounted) return;
+
+      if (langResult.success) {
+        // 3. Update global language provider so CourseView & TravelVocabularyView refresh
+        ref.read(selectedLanguageProvider.notifier).state = _selectedLanguage.code;
+        print('✅ Language saved & provider updated: ${_selectedLanguage.code}');
+      } else {
+        print('⚠️ Language save failed: ${langResult.error?.message}');
+        // Non-fatal — profile name was saved, just language didn't update
+      }
+
+      // 4. Close settings page and notify parent that profile was updated
+      if (mounted) {
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (!mounted) return;

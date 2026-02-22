@@ -8,6 +8,7 @@ import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import '../../Riverpod/Controllers/course_controller.dart';
 import '../../Models/course_model.dart';
 import '../../Repositories/profile_repository.dart';
+import '../../Riverpod/Providers/selected_language_provider.dart';
 import 'course_detail_view.dart';
 
 class CourseView extends ConsumerStatefulWidget {
@@ -34,31 +35,33 @@ class _CourseViewState extends ConsumerState<CourseView> {
   @override
   void initState() {
     super.initState();
-    // Load user profile and courses
+    // Load user profile to initialize the language provider, then load courses
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadUserProfileAndCourses();
+      _initLanguageAndCourses();
     });
   }
 
-  /// Load user profile to get target language, then load courses
-  Future<void> _loadUserProfileAndCourses() async {
+  /// On first load: fetch profile from backend to set the language provider,
+  /// then load courses. After that, selectedLanguageProvider handles updates.
+  Future<void> _initLanguageAndCourses() async {
     try {
       final response = await _profileRepository.getProfile();
       if (response.success && response.data != null) {
         final userData = response.data['user'];
-        final targetLanguage = userData['target_language'] as String?;
+        final targetLanguage = (userData['target_language'] as String?) ?? 'en';
 
         if (mounted) {
+          // Sync the global provider with the backend value on first load
+          ref.read(selectedLanguageProvider.notifier).state = targetLanguage;
           setState(() {
-            _userTargetLanguage = targetLanguage ?? 'en';
+            _userTargetLanguage = targetLanguage;
           });
 
-          // Load courses with user's target language
           ref
               .read(courseControllerProvider.notifier)
-              .init(targetLanguage: _userTargetLanguage);
+              .init(targetLanguage: targetLanguage);
 
-          print('✅ Loaded courses for language: $_userTargetLanguage');
+          print('✅ Courses initialized for language: $targetLanguage');
         }
       } else {
         // Fallback to English if profile fetch fails
@@ -74,7 +77,6 @@ class _CourseViewState extends ConsumerState<CourseView> {
       }
     } catch (e) {
       print('❌ Error loading user profile: $e');
-      // Fallback to English on error
       if (mounted) {
         setState(() {
           _userTargetLanguage = 'en';
@@ -92,6 +94,24 @@ class _CourseViewState extends ConsumerState<CourseView> {
 
   @override
   Widget build(BuildContext context) {
+    // 🔑 Watch selectedLanguageProvider — when language changes (from profile settings),
+    // reload courses in the newly selected language.
+    final currentLanguage = ref.watch(selectedLanguageProvider);
+    if (_userTargetLanguage != null && currentLanguage != _userTargetLanguage) {
+      // Language changed externally — update local var and reload courses
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _userTargetLanguage = currentLanguage;
+          });
+          ref
+              .read(courseControllerProvider.notifier)
+              .init(targetLanguage: currentLanguage);
+          print('🔄 Language changed to $currentLanguage — reloading courses');
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: MyColors.background,
       body: SafeArea(
