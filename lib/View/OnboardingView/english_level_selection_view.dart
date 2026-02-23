@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Core/Routes/app_routes.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 
 /// Step 3 of 4 - English Level Selection View
 class EnglishLevelSelectionView extends ConsumerStatefulWidget {
@@ -38,8 +39,9 @@ class _EnglishLevelSelectionViewState
 
   @override
   Widget build(BuildContext context) {
-    // Always use English for onboarding
-    final l = AppLocalizations.of('en');
+    // Use system language for onboarding
+    final appLocale = ref.watch(localeProvider);
+    final l = AppLocalizations.of(appLocale);
 
     final levels = [
       {

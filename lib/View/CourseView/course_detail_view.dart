@@ -321,7 +321,18 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                         ..._lessons.asMap().entries.map((entry) {
                           final index = entry.key;
                           final lesson = entry.value;
-                          return _buildLessonItem(lesson, index + 1);
+
+                          // Find first incomplete lesson (this is the "current" lesson)
+                          final firstIncompleteIndex = _lessons.indexWhere(
+                            (l) => l.userStatus != 'completed',
+                          );
+                          final isCurrentLesson = index == firstIncompleteIndex;
+
+                          return _buildLessonItem(
+                            lesson,
+                            index + 1,
+                            isCurrentLesson: isCurrentLesson,
+                          );
                         }),
 
                       SizedBox(height: 24.h),
@@ -404,10 +415,19 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     );
   }
 
-  Widget _buildLessonItem(LessonModel lesson, int displayNumber) {
+  Widget _buildLessonItem(
+    LessonModel lesson,
+    int displayNumber, {
+    bool isCurrentLesson = false,
+  }) {
     final isCompleted = lesson.userStatus == 'completed';
-    final isInProgress = lesson.userStatus == 'in_progress';
+    final isInProgress = lesson.userStatus == 'in_progress' || isCurrentLesson;
     final isLocked = lesson.userStatus == 'locked';
+
+    // Debug print
+    print(
+      '🔍 Lesson ${lesson.title}: status=${lesson.userStatus}, isCompleted=$isCompleted, isInProgress=$isInProgress, isLocked=$isLocked, isCurrentLesson=$isCurrentLesson',
+    );
 
     Color bgColor;
     Widget iconWidget;
@@ -492,6 +512,14 @@ class _CourseDetailViewState extends State<CourseDetailView> {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Color(0xFFF3F4F6), width: 0.8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -514,20 +542,44 @@ class _CourseDetailViewState extends State<CourseDetailView> {
                       color: Colors.black,
                     ),
                   ),
-                  if (lesson.description.isNotEmpty) ...[
-                    SizedBox(height: 4.h),
-                    Text(
-                      lesson.description,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF666666),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                  SizedBox(height: 4.h),
+                  // Duration and status info
+                  Builder(
+                    builder: (context) {
+                      // Calculate estimated duration (approx 1 min per step)
+                      final estimatedMins = lesson.totalSteps > 0
+                          ? lesson.totalSteps
+                          : 8;
+
+                      String statusText;
+                      Color statusColor;
+
+                      if (isCompleted) {
+                        statusText = '$estimatedMins Mins • Completed';
+                        statusColor = Color(0xFF666666);
+                      } else if (isInProgress) {
+                        statusText = '$estimatedMins Mins • In Progress';
+                        statusColor = Color(0xFF4ECDC4); // Turquoise
+                      } else if (isLocked) {
+                        statusText = '$estimatedMins Mins';
+                        statusColor = Color(0xFF9CA3AF); // Gray for locked
+                      } else {
+                        // Available to start
+                        statusText = '$estimatedMins Mins';
+                        statusColor = Color(0xFF666666);
+                      }
+
+                      return Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w400,
+                          fontFamily: 'Montserrat',
+                          color: statusColor,
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

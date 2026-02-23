@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 import 'english_level_selection_view.dart';
 
 /// Profession Detail Input View - Step 2 of 4 (Part 2)
 /// User enters their specific profession/job title
-class ProfessionDetailView extends StatefulWidget {
+class ProfessionDetailView extends ConsumerStatefulWidget {
   final String? selectedCategory;
   final String? selectedLanguage;
 
@@ -17,10 +20,11 @@ class ProfessionDetailView extends StatefulWidget {
   });
 
   @override
-  State<ProfessionDetailView> createState() => _ProfessionDetailViewState();
+  ConsumerState<ProfessionDetailView> createState() =>
+      _ProfessionDetailViewState();
 }
 
-class _ProfessionDetailViewState extends State<ProfessionDetailView> {
+class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
   final TextEditingController _professionController = TextEditingController();
   bool _hasText = false;
 
@@ -32,6 +36,9 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final appLocale = ref.watch(localeProvider);
+    final l = AppLocalizations.of(appLocale);
+
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
@@ -44,7 +51,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Progress Bar
               Text(
-                'STEP 2 / 4',
+                l.step2of4,
                 style: GoogleFonts.montserrat(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
@@ -101,7 +108,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Title
               Text(
-                'What is your\nProfession?',
+                l.step2Title,
                 style: GoogleFonts.montserrat(
                   fontSize: 36.sp,
                   fontWeight: FontWeight.w700,
@@ -115,7 +122,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
 
               // Subtitle
               Text(
-                'We will customize your language journey\naccording to your background',
+                l.step2Subtitle,
                 style: GoogleFonts.montserrat(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
@@ -213,7 +220,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                               ),
                             ),
                             Text(
-                              'Back',
+                              l.back,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -261,7 +268,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              'Continue',
+                              l.continueBtn,
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,

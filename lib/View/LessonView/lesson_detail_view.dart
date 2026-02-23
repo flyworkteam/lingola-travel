@@ -13,7 +13,8 @@ import 'package:lingola_travel/Models/course_model.dart';
 class LessonDetailView extends StatefulWidget {
   final String lessonId;
   final bool isPremium;
-  final int? totalLessonsInCourse; // Total lessons in the course (for progress bar)
+  final int?
+  totalLessonsInCourse; // Total lessons in the course (for progress bar)
 
   const LessonDetailView({
     super.key,
@@ -49,7 +50,8 @@ class _LessonDetailViewState extends State<LessonDetailView>
   String recordedText = ''; // Recorded text from speech recognition
   bool showResult = false; // Show result screen
   double similarityScore = 0.0; // Similarity score from speech comparison
-  bool _lastAttemptSuccessful = false; // Whether the last speech attempt passed (>= 80%)
+  bool _lastAttemptSuccessful =
+      false; // Whether the last speech attempt passed (>= 80%)
   bool _isContinuing = false; // Prevents double-tap on Continue
   final GlobalKey _bookmarkButtonKey = GlobalKey(); // Key for bookmark button
 
@@ -586,9 +588,18 @@ class _LessonDetailViewState extends State<LessonDetailView>
     required VoidCallback onTap,
     double borderProgress = 0.0,
   }) {
-    final bool isMicButton = size == 80.w;
+    final bool isMicButton = size == 72.w;
     final bool showPulse = isMicButton && isRecording;
-    final bool showBorderProgress = borderProgress > 0.0;
+
+    // Calculate mic progress based on recording duration
+    final double micProgress = isMicButton && isRecording
+        ? (_recordingSeconds / 10.0).clamp(0.0, 1.0) // Max 10 seconds
+        : 0.0;
+
+    final bool showBorderProgress = borderProgress > 0.0 || micProgress > 0.0;
+    final double actualProgress = micProgress > 0.0
+        ? micProgress
+        : borderProgress;
 
     // Sabit dış boyut — pulse ring veya CustomPaint ne kadar büyürse büyüsün Row kaymasın
     final double outerSize = size + 20.w;
@@ -621,7 +632,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
               CustomPaint(
                 size: Size(size + 12.w, size + 12.w),
                 painter: CircularProgressPainter(
-                  progress: borderProgress,
+                  progress: actualProgress,
                   color: Color(0xFF4ECDC4),
                   strokeWidth: 4,
                 ),
@@ -1315,13 +1326,16 @@ class _LessonDetailViewState extends State<LessonDetailView>
     await _saveProgressToBackend();
 
     print('🎉 Getting next lesson...');
-    final nextLessonResponse = await _lessonRepository.getNextLesson(widget.lessonId);
+    final nextLessonResponse = await _lessonRepository.getNextLesson(
+      widget.lessonId,
+    );
 
     if (!mounted) return;
 
     if (nextLessonResponse.success && nextLessonResponse.data != null) {
       final nextLessonId = nextLessonResponse.data!['id'] as String;
-      final transition = nextLessonResponse.data!['transition'] as String? ?? 'same_course';
+      final transition =
+          nextLessonResponse.data!['transition'] as String? ?? 'same_course';
 
       if (transition == 'new_course') {
         // Course finished — pop back to course detail so user sees the course list
@@ -1404,7 +1418,6 @@ class _LessonDetailViewState extends State<LessonDetailView>
                   color: isSuccess ? Color(0xFF2EC4B6) : Color(0xFFF44336),
                 ),
               ),
-
             ],
           ),
         ),

@@ -631,7 +631,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     if (_isInitialized && currentLanguage != _lastLoadedLanguage) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          print('🔄 TravelVocab: Language changed to $currentLanguage — reloading content');
+          print(
+            '🔄 TravelVocab: Language changed to $currentLanguage — reloading content',
+          );
           _lastLoadedLanguage = currentLanguage;
           // Reset to All Topics to avoid stale category state
           setState(() {
@@ -639,9 +641,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
           });
           // Reload both words and phrases
           _loadWords(null);
-          ref
-              .read(travelVocabularyControllerProvider.notifier)
-              .init();
+          ref.read(travelVocabularyControllerProvider.notifier).init();
         }
       });
     }
@@ -707,15 +707,23 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: MyColors.textPrimary, size: 24.sp),
-        onPressed: () {
+      leading: GestureDetector(
+        onTap: () {
           // Audio will be stopped in deactivate() automatically
           // Just navigate back without blocking operations
           if (mounted) {
             Navigator.pop(context);
           }
         },
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: SvgPicture.asset(
+            'assets/icons/gerigelmeiconu.svg',
+            width: 13.w,
+            height: 13.w,
+            fit: BoxFit.contain,
+          ),
+        ),
       ),
       title: Text(
         'Travel Vocabulary',
@@ -1168,7 +1176,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                           colorFilter: ColorFilter.mode(
                             isBookmarked
                                 ? const Color(0xFF2989E9)
-                                : Color(0xFF4ECDC4),
+                                : Color(0xFFB0B0B0),
                             BlendMode.srcIn,
                           ),
                         ),
@@ -1492,7 +1500,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                           colorFilter: ColorFilter.mode(
                             isBookmarked
                                 ? const Color(0xFF2989E9)
-                                : Color(0xFF4ECDC4),
+                                : Color(0xFFB0B0B0),
                             BlendMode.srcIn,
                           ),
                         ),

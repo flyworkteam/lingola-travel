@@ -435,19 +435,20 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                           // Header with back button and title
                           Row(
                             children: [
-                              IconButton(
-                                icon: Icon(
-                                  Icons.arrow_back,
-                                  color: MyColors.textPrimary,
-                                  size: 24.sp,
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: SvgPicture.asset(
+                                  'assets/icons/gerigelmeiconu.svg',
+                                  width: 13.w,
+                                  height: 13.w,
+                                  fit: BoxFit.contain,
                                 ),
-                                onPressed: () => Navigator.pop(context),
-                                padding: EdgeInsets.zero,
-                                constraints: BoxConstraints(),
                               ),
                               SizedBox(width: 12.w),
                               Text(
-                                AppLocalizations.of(ref.watch(localeProvider)).visualDictionary,
+                                AppLocalizations.of(
+                                  ref.watch(localeProvider),
+                                ).visualDictionary,
                                 style: TextStyle(
                                   fontSize: 20.sp,
                                   fontWeight: FontWeight.w700,
@@ -526,7 +527,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           color: MyColors.textPrimary,
         ),
         decoration: InputDecoration(
-          hintText: AppLocalizations.of(ref.watch(localeProvider)).searchWordsOrPhrases,
+          hintText: AppLocalizations.of(
+            ref.watch(localeProvider),
+          ).searchWordsOrPhrases,
           hintStyle: TextStyle(
             fontSize: 14.sp,
             fontFamily: 'Montserrat',
@@ -579,7 +582,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               ),
               SizedBox(height: 16.h),
               Text(
-                AppLocalizations.of(ref.watch(localeProvider)).noCategoriesFound,
+                AppLocalizations.of(
+                  ref.watch(localeProvider),
+                ).noCategoriesFound,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -589,7 +594,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               ),
               SizedBox(height: 8.h),
               Text(
-                AppLocalizations.of(ref.watch(localeProvider)).tryDifferentKeywords,
+                AppLocalizations.of(
+                  ref.watch(localeProvider),
+                ).tryDifferentKeywords,
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontFamily: 'Montserrat',
@@ -916,19 +923,20 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
             // Header with back button and title
             Row(
               children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: MyColors.textPrimary,
-                    size: 24.sp,
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: SvgPicture.asset(
+                    'assets/icons/gerigelmeiconu.svg',
+                    width: 13.w,
+                    height: 13.w,
+                    fit: BoxFit.contain,
                   ),
-                  onPressed: () => Navigator.pop(context),
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(),
                 ),
                 SizedBox(width: 12.w),
                 Text(
-                  AppLocalizations.of(ref.watch(localeProvider)).visualDictionary,
+                  AppLocalizations.of(
+                    ref.watch(localeProvider),
+                  ).visualDictionary,
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w700,
@@ -968,7 +976,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      AppLocalizations.of(ref.watch(localeProvider)).noWordsFound,
+                      AppLocalizations.of(
+                        ref.watch(localeProvider),
+                      ).noWordsFound,
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
@@ -978,7 +988,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      AppLocalizations.of(ref.watch(localeProvider)).tryDifferentKeywords,
+                      AppLocalizations.of(
+                        ref.watch(localeProvider),
+                      ).tryDifferentKeywords,
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontFamily: 'Montserrat',

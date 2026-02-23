@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../Core/Localization/app_localizations.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 import 'profession_selection_view.dart';
 
 class LanguageSelectionView extends ConsumerStatefulWidget {
@@ -34,12 +35,13 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
 
   @override
   Widget build(BuildContext context) {
-    // Always use English for onboarding
-    final l = AppLocalizations.of('en');
+    final appLocale = ref.watch(localeProvider);
+    final l = AppLocalizations.of(appLocale);
 
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
+        bottom: false, // 🔥 ALT BOŞLUK KALKTI
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -54,52 +56,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
                         color: MyColors.lingolaPrimaryColor,
-                        letterSpacing: 0.5,
                       ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 4.h,
-                            decoration: BoxDecoration(
-                              color: MyColors.lingolaPrimaryColor,
-                              borderRadius: BorderRadius.circular(2.r),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Expanded(
-                          child: Container(
-                            height: 4.h,
-                            decoration: BoxDecoration(
-                              color: MyColors.grey200,
-                              borderRadius: BorderRadius.circular(2.r),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Expanded(
-                          child: Container(
-                            height: 4.h,
-                            decoration: BoxDecoration(
-                              color: MyColors.grey200,
-                              borderRadius: BorderRadius.circular(2.r),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Expanded(
-                          child: Container(
-                            height: 4.h,
-                            decoration: BoxDecoration(
-                              color: MyColors.grey200,
-                              borderRadius: BorderRadius.circular(2.r),
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                     SizedBox(height: 16.h),
                     Text(
@@ -107,20 +64,14 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                       style: GoogleFonts.montserrat(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.w700,
-                        color: MyColors.black,
-                        height: 1.2,
-                        letterSpacing: -0.5,
                       ),
                     ),
                     SizedBox(height: 12.h),
                     Text(
                       l.step1Subtitle,
                       style: GoogleFonts.montserrat(
-                        letterSpacing: -0.5,
                         fontSize: 14.sp,
-                        fontWeight: FontWeight.w400,
                         color: MyColors.textSecondary,
-                        height: 1.5,
                       ),
                     ),
                     SizedBox(height: 24.h),
@@ -129,7 +80,6 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
               ),
             ),
 
-            // Language list
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               sliver: SliverList(
@@ -167,7 +117,6 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                                 width: 36.w,
                                 height: 27.h,
                                 fit: BoxFit.cover,
-                                filterQuality: FilterQuality.high,
                               ),
                             ),
                             SizedBox(width: 12.w),
@@ -176,7 +125,6 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                               style: GoogleFonts.montserrat(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w500,
-                                color: MyColors.black,
                               ),
                             ),
                           ],
@@ -188,12 +136,10 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
               ),
             ),
 
-            // Continue button
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 32.h),
+                padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 24.h),
                 child: SizedBox(
-                  width: double.infinity,
                   height: 56.h,
                   child: ElevatedButton(
                     onPressed: selectedLanguage != null
@@ -201,6 +147,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                             ref
                                 .read(onboardingControllerProvider.notifier)
                                 .setTargetLanguage(selectedLanguage!);
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(

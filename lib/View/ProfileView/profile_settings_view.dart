@@ -3,18 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../Core/Localization/app_localizations.dart';
 import '../../Models/language.dart';
 import '../../Repositories/profile_repository.dart';
 import '../../Repositories/notification_repository.dart';
 import '../../Services/secure_storage_service.dart';
 import '../../Services/onesignal_service.dart';
+import '../../Riverpod/Providers/locale_provider.dart';
 import '../../Riverpod/Providers/selected_language_provider.dart';
 
 class ProfileSettingsView extends ConsumerStatefulWidget {
   const ProfileSettingsView({super.key});
 
   @override
-  ConsumerState<ProfileSettingsView> createState() => _ProfileSettingsViewState();
+  ConsumerState<ProfileSettingsView> createState() =>
+      _ProfileSettingsViewState();
 }
 
 class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
@@ -122,6 +125,9 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
 
   @override
   Widget build(BuildContext context) {
+    final appLocale = ref.watch(localeProvider);
+    final l = AppLocalizations.of(appLocale);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading
@@ -290,24 +296,24 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                         SizedBox(height: 12.h),
 
                         // Full Name
-                        _buildLabel('Full Name'),
+                        _buildLabel(l.fullName),
                         SizedBox(height: 10.h),
                         _buildInputField(
                           controller: _nameController,
                           iconPath: 'assets/icons/fullname.svg',
-                          hint: 'Enter your name',
+                          hint: l.enterYourName,
                           enabled: true,
                         ),
 
                         SizedBox(height: 20.h),
 
                         // E-mail
-                        _buildLabel('E-mail'),
+                        _buildLabel(l.email),
                         SizedBox(height: 10.h),
                         _buildInputField(
                           controller: _emailController,
                           iconPath: 'assets/icons/email.svg',
-                          hint: 'Enter your email',
+                          hint: l.enterYourEmail,
                           enabled: false,
                           showLock: true,
                         ),
@@ -315,12 +321,12 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                         SizedBox(height: 20.h),
 
                         // Age
-                        _buildLabel('Age'),
+                        _buildLabel(l.age),
                         SizedBox(height: 10.h),
                         _buildInputField(
                           controller: _ageController,
                           iconPath: 'assets/icons/age.svg',
-                          hint: 'Enter your age',
+                          hint: l.enterYourAge,
                           enabled: false,
                           showLock: true,
                         ),
@@ -328,14 +334,14 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                         SizedBox(height: 24.h),
 
                         // Gender
-                        _buildLabel('Gender'),
+                        _buildLabel(l.gender),
                         SizedBox(height: 12.h),
-                        _buildGenderSelector(),
+                        _buildGenderSelector(l),
 
                         SizedBox(height: 24.h),
 
                         // Language
-                        _buildLabel('Select Learn Language'),
+                        _buildLabel(l.selectLearnLanguage),
                         SizedBox(height: 10.h),
                         _buildLanguageDropdown(),
 
@@ -379,7 +385,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                                         ),
                                       )
                                     : Text(
-                                        'Save',
+                                        l.save,
                                         style: TextStyle(
                                           fontSize: 17.sp,
                                           fontWeight: FontWeight.w700,
@@ -528,12 +534,12 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
-  Widget _buildGenderSelector() {
+  Widget _buildGenderSelector(AppLocalizations l) {
     return Row(
       children: [
         Expanded(
           child: _buildGenderOption(
-            label: 'Male',
+            label: l.male,
             iconPath: 'assets/icons/male.svg',
             isSelected: _selectedGender == 'Male',
             onTap: () => setState(() => _selectedGender = 'Male'),
@@ -542,7 +548,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
         SizedBox(width: 12.w),
         Expanded(
           child: _buildGenderOption(
-            label: 'Female',
+            label: l.female,
             iconPath: 'assets/icons/female.svg',
             isSelected: _selectedGender == 'Female',
             onTap: () => setState(() => _selectedGender = 'Female'),
@@ -884,7 +890,8 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
 
       if (langResult.success) {
         // 3. Update global language provider so CourseView & TravelVocabularyView refresh
-        ref.read(selectedLanguageProvider.notifier).state = _selectedLanguage.code;
+        ref.read(selectedLanguageProvider.notifier).state =
+            _selectedLanguage.code;
         print('✅ Language saved & provider updated: ${_selectedLanguage.code}');
       } else {
         print('⚠️ Language save failed: ${langResult.error?.message}');

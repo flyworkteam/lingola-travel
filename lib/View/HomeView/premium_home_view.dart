@@ -1200,8 +1200,8 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                           final finalProgress =
                               _swipeProgressMap[cardIndex] ?? 0.0;
                           if (finalProgress > constraints.maxWidth * 0.7) {
-                            // Success - Navigate based on feature type
-                            if (title.contains('Sentence')) {
+                            // Success - Navigate based on cardIndex (language-independent)
+                            if (cardIndex == 0) {
                               // Learn New Sentence -> Travel Vocabulary (Phrases tab)
                               Navigator.push(
                                 context,
@@ -1212,7 +1212,7 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                                       ),
                                 ),
                               );
-                            } else if (title.contains('Words')) {
+                            } else if (cardIndex == 1) {
                               // Learn New Words -> Visual Dictionary
                               Navigator.push(
                                 context,
@@ -1221,15 +1221,6 @@ class _PremiumHomeViewState extends ConsumerState<PremiumHomeView> {
                                       const VisualDictionaryView(
                                         isPremium: true,
                                       ),
-                                ),
-                              );
-                            } else if (title.contains('Speaking')) {
-                              // Practice Speaking -> Course View
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CourseView(isPremium: true),
                                 ),
                               );
                             }

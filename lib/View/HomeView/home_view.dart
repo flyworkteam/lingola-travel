@@ -160,7 +160,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   SizedBox(height: 16.h),
 
                   // Quick Phrasebook
-                  _buildQuickPhrasebook(),
+                  _buildQuickPhrasebook(l),
 
                   SizedBox(height: 4.h),
 
@@ -168,7 +168,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   _buildQuestions(),
 
                   // Features
-                  _buildFeatures(),
+                  _buildFeatures(l),
 
                   SizedBox(height: 16.h),
 
@@ -480,7 +480,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
 
   /// Quick Phrasebook section - TAMAMEN DİNAMİK! Backend'den isim + icon 🚀🔥
-  Widget _buildQuickPhrasebook() {
+  Widget _buildQuickPhrasebook(AppLocalizations l) {
     final dictionaryState = ref.watch(dictionaryControllerProvider);
     final langCode = ref.read(localeProvider);
     final l = AppLocalizations.of(langCode);
@@ -584,7 +584,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       padding: EdgeInsets.only(right: 16.w),
                       child: _buildPhrasebookCategory(
                         iconPath: category.iconPath, // DİREKT BACKEND'TEN! 🔥
-                        label: category.name,
+                        label: _getLocalizedCategoryName(category.name, l),
                         isSelected: isSelected,
                         onTap: () async {
                           // Prevent navigation if still loading or already navigating
@@ -919,7 +919,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
 
   /// Features section
-  Widget _buildFeatures() {
+  Widget _buildFeatures(AppLocalizations l) {
     final langCode = ref.read(localeProvider);
     final l = AppLocalizations.of(langCode);
     final features = [
@@ -1168,8 +1168,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           final finalProgress =
                               _swipeProgressMap[cardIndex] ?? 0.0;
                           if (finalProgress > constraints.maxWidth * 0.7) {
-                            // Success - Navigate based on feature type
-                            if (title.contains('Sentence')) {
+                            // Success - Navigate based on cardIndex (language-independent)
+                            if (cardIndex == 0) {
                               // Learn New Sentence -> Travel Vocabulary (Phrases tab)
                               Navigator.push(
                                 context,
@@ -1180,7 +1180,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                       ),
                                 ),
                               );
-                            } else if (title.contains('Words')) {
+                            } else if (cardIndex == 1) {
                               // Learn New Words -> Visual Dictionary
                               Navigator.push(
                                 context,
@@ -1189,15 +1189,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                       const VisualDictionaryView(
                                         isPremium: false,
                                       ),
-                                ),
-                              );
-                            } else if (title.contains('Speaking')) {
-                              // Practice Speaking -> Course View
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CourseView(isPremium: false),
                                 ),
                               );
                             }
@@ -1943,6 +1934,46 @@ class _HomeViewState extends ConsumerState<HomeView> {
         ),
       ),
     );
+  }
+
+  /// Get localized category name based on backend category
+  String _getLocalizedCategoryName(String backendName, AppLocalizations l) {
+    switch (backendName.toLowerCase()) {
+      case 'general':
+        return l.catGeneral;
+      case 'trip':
+        return l.catTrip;
+      case 'airport':
+        return l.catAirport;
+      case 'accommodation':
+        return l.catAccommodation;
+      case 'transportation':
+        return l.catTransportation;
+      case 'food & drink':
+      case 'food and drink':
+        return l.catFoodAndDrink;
+      case 'shopping':
+      case 'shop':
+        return l.catShop;
+      case 'culture':
+        return l.catCulture;
+      case 'meeting':
+        return l.catMeeting;
+      case 'sport':
+        return l.catSport;
+      case 'health':
+        return l.catHealth;
+      case 'business':
+        return l.catBusiness;
+      case 'direction & navigation':
+      case 'direction':
+      case 'navigation':
+        return l.catDirection;
+      case 'emergency':
+        return l.catEmergency;
+      default:
+        return backendName; // Fallback to original name
+    }
   }
 
   /// Bottom Navigation Bar - Floating with oval background
