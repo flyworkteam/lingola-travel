@@ -109,12 +109,14 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                         fontWeight: FontWeight.w700,
                         color: MyColors.black,
                         height: 1.2,
+                        letterSpacing: -0.5,
                       ),
                     ),
                     SizedBox(height: 12.h),
                     Text(
                       l.step1Subtitle,
                       style: GoogleFonts.montserrat(
+                        letterSpacing: -0.5,
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w400,
                         color: MyColors.textSecondary,

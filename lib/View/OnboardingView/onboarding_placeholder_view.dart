@@ -35,9 +35,10 @@ class OnboardingPlaceholderView extends StatelessWidget {
                   stepNumber,
                   style: GoogleFonts.montserrat(
                     fontSize: 14.sp,
+                    
                     fontWeight: FontWeight.w600,
                     color: MyColors.lingolaPrimaryColor,
-                    letterSpacing: 0.5,
+                    letterSpacing: -0.5,
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -46,6 +47,7 @@ class OnboardingPlaceholderView extends StatelessWidget {
                   style: GoogleFonts.montserrat(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
                     color: MyColors.black,
                   ),
                   textAlign: TextAlign.center,

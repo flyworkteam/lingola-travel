@@ -391,6 +391,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
                       color: MyColors.black,
+                      letterSpacing: -0.3
                     ),
                   ),
                 ],
@@ -418,6 +419,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                   fontSize: 22.sp,
                   fontWeight: FontWeight.w700,
                   color: MyColors.black,
+                  letterSpacing: -0.5,
                   height: 1.2,
                 ),
                 textAlign: TextAlign.center,
@@ -431,6 +433,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w400,
                   color: MyColors.textSecondary,
+                  letterSpacing: -0.5,
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,

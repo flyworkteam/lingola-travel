@@ -94,6 +94,7 @@ class _DailyGoalSelectionViewState
               Text(
                 l.step4Title,
                 style: GoogleFonts.montserrat(
+                  letterSpacing: -0.5,
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w700,
                   color: MyColors.black,
@@ -107,6 +108,7 @@ class _DailyGoalSelectionViewState
               Text(
                 l.step4Subtitle,
                 style: GoogleFonts.montserrat(
+                  letterSpacing: -0.5,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
                   color: MyColors.grey600,

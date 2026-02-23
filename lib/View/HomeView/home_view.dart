@@ -7,18 +7,19 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/language.dart';
 import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
-import '../../Riverpod/Controllers/home_view_controller.dart';
-import '../../Riverpod/Controllers/dictionary_controller.dart';
+
+import '../../Models/travel_phrase_model.dart';
 import '../../Repositories/profile_repository.dart';
 import '../../Repositories/travel_phrase_repository.dart';
-import '../../Models/travel_phrase_model.dart';
-import '../NotificationsView/notifications_view.dart';
-import '../VocabularyView/travel_vocabulary_view.dart';
-import '../DictionaryView/visual_dictionary_view.dart';
-import '../CourseView/course_view.dart';
+import '../../Riverpod/Controllers/dictionary_controller.dart';
+import '../../Riverpod/Controllers/home_view_controller.dart';
 import '../CourseView/course_detail_view.dart';
+import '../CourseView/course_view.dart';
+import '../DictionaryView/visual_dictionary_view.dart';
+import '../NotificationsView/notifications_view.dart';
 import '../ProfileView/premium_view.dart';
 import '../ProfileView/profile_view.dart';
+import '../VocabularyView/travel_vocabulary_view.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -31,13 +32,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
   // NOTE: _selectedLanguage drives the home page language picker chip.
   // It is always synced with localeProvider in build().
   Language _selectedLanguage = AppLanguages.all.first;
-  int _selectedCategoryIndex = 0; // Track selected phrasebook category
-  Map<int, double> _swipeProgressMap =
+  final int _selectedCategoryIndex = 0; // Track selected phrasebook category
+  final Map<int, double> _swipeProgressMap =
       {}; // Track swipe progress for each feature card
   bool _isNavigating = false; // Prevent double navigation
   String _userName = 'Guest';
   List<TravelPhraseModel> _phrases = [];
-  Set<String> _bookmarkedPhrases = {}; // Track bookmarked phrase IDs
+  final Set<String> _bookmarkedPhrases = {}; // Track bookmarked phrase IDs
   final ProfileRepository _profileRepository = ProfileRepository();
   final TravelPhraseRepository _travelPhraseRepository =
       TravelPhraseRepository();
@@ -270,6 +271,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
                 color: MyColors.textPrimary,
+                letterSpacing: -0.5,
               ),
             ),
             SizedBox(width: 4.w),
@@ -338,7 +340,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         _selectedLanguage = language;
                       });
                       // Persist via localeProvider
-                      ref.read(localeProvider.notifier).setLocale(language.code);
+                      ref
+                          .read(localeProvider.notifier)
+                          .setLocale(language.code);
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -449,6 +453,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             'Hey, $_userName 👋',
             style: TextStyle(
               fontSize: 16.sp,
+              letterSpacing: -0.5,
               fontWeight: FontWeight.w400,
               fontFamily: 'Montserrat',
               color: MyColors.textSecondary,
@@ -464,6 +469,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               fontSize: 26.sp,
               fontWeight: FontWeight.w700,
               fontFamily: 'Montserrat',
+              letterSpacing: -0.5,
               color: MyColors.textPrimary,
               height: 1.2,
             ),
@@ -491,7 +497,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
               Text(
                 l.quickPhrasebook,
                 style: TextStyle(
-                  fontSize: 20.sp,
+                  fontSize: 14.sp,
+                  letterSpacing: -0.5,
                   fontWeight: FontWeight.w700,
                   fontFamily: 'Montserrat',
                   color: MyColors.textPrimary,
@@ -530,7 +537,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 child: Text(
                   l.seeAll,
                   style: TextStyle(
-                    fontSize: 13.sp,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -773,7 +780,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Widget _buildQuestions() {
     // Show loading or empty state if no phrases
     if (_phrases.isEmpty) {
-      return const SizedBox.shrink();
+      return const CircularProgressIndicator.adaptive();
     }
 
     return Padding(
@@ -854,6 +861,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
                     height: 1.3,
@@ -866,7 +874,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 Text(
                   turkishText,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
+                    letterSpacing: -0.5,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -884,13 +893,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
             child: GestureDetector(
               onTap: onBookmarkToggle,
               child: Container(
-                width: 44.w,
-                height: 44.h,
+                width: 30.w,
+                height: 30.h,
                 decoration: BoxDecoration(
                   color: isBookmarked
                       ? const Color(0xFFE3F2FD)
                       : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(5.r),
                 ),
                 child: Center(
                   child: Icon(
@@ -898,7 +907,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     color: isBookmarked
                         ? const Color(0xFF2196F3)
                         : const Color(0xFF9CA3AF),
-                    size: 26.sp,
+                    size: 20.sp,
                   ),
                 ),
               ),
@@ -942,7 +951,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
               Text(
                 'Features',
                 style: TextStyle(
-                  fontSize: 20.sp,
+                  fontSize: 14.sp,
+                  letterSpacing: -0.5,
                   fontWeight: FontWeight.w700,
                   fontFamily: 'Montserrat',
                   color: MyColors.textPrimary,
@@ -956,7 +966,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 child: Text(
                   'See All',
                   style: TextStyle(
-                    fontSize: 13.sp,
+                    fontSize: 12.sp,
+                    letterSpacing: -0.5,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -971,7 +982,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
         // Horizontal scrollable feature cards - full width
         SizedBox(
-          height: 300.h,
+          height: 275.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.only(left: 16.w),
@@ -1066,18 +1077,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
               children: [
                 // Icon
                 Container(
-                  width: 55.w,
-                  height: 55.h,
+                  width: 40.w,
+                  height: 40.h,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(18.r),
+                    borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Center(
                     child: isIconSvg
                         ? SvgPicture.asset(
                             iconPath,
-                            width: 36.w,
-                            height: 36.h,
+                            width: 26.w,
+                            height: 26.h,
                             colorFilter: ColorFilter.mode(
                               Colors.white,
                               BlendMode.srcIn,
@@ -1092,14 +1103,15 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   ),
                 ),
 
-                SizedBox(height: 24.h),
+                SizedBox(height: 20.h),
 
                 // Title
                 Text(
                   title,
                   style: TextStyle(
                     fontSize: 24.sp,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.5,
                     fontFamily: 'Montserrat',
                     color: Colors.white,
                     height: 1.2,
@@ -1112,7 +1124,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 10.sp,
+                    letterSpacing: -0.5,
+                    height: 1.2,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: Colors.white.withOpacity(0.9),
@@ -1252,8 +1266,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               alignment: Alignment.centerLeft,
                               child: Padding(
                                 padding: EdgeInsets.only(left: 50.w),
-                                 child: Text(
-                                   AppLocalizations.of(ref.watch(localeProvider)).swipeToStart,
+                                child: Text(
+                                  AppLocalizations.of(
+                                    ref.watch(localeProvider),
+                                  ).swipeToStart,
                                   style: TextStyle(
                                     fontSize: 13.sp,
                                     fontWeight: FontWeight.w600,
@@ -1289,7 +1305,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
           Text(
             'Quick Actions',
             style: TextStyle(
-              fontSize: 20.sp,
+              fontSize: 14.sp,
+              letterSpacing: -0.5,
               fontWeight: FontWeight.w700,
               fontFamily: 'Montserrat',
               color: MyColors.textPrimary,
@@ -1382,6 +1399,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
                       fontFamily: 'Montserrat',
                       color: Colors.white,
                       height: 1.2,
@@ -1396,7 +1414,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       Text(
                         '${(progress * 100).toInt()}% Progress',
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'Montserrat',
                           color: Colors.white,
@@ -1406,7 +1424,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       Text(
                         '$completedLessons/$totalLessons Lessons',
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w400,
                           fontFamily: 'Montserrat',
                           color: Colors.white.withOpacity(0.9),
@@ -1611,7 +1629,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
                 color: MyColors.textPrimary,
@@ -1625,7 +1643,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             Text(
               subtitle,
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: 11.sp,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Montserrat',
                 color: MyColors.textSecondary,
@@ -1641,7 +1659,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 Text(
                   'Start Course',
                   style: TextStyle(
-                    fontSize: 13.sp,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -1706,7 +1724,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     child: Text(
                       'PRO MEMBERSHIP',
                       style: TextStyle(
-                        fontSize: 11.sp,
+                        fontSize: 10.sp,
+
                         fontWeight: FontWeight.w700,
                         fontFamily: 'Montserrat',
                         color: Colors.white,
@@ -1718,19 +1737,20 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   // Premium logo
                   SvgPicture.asset(
                     'assets/images/premiumlogo.svg',
-                    width: 48.w,
-                    height: 48.h,
+                    width: 40.w,
+                    height: 40.h,
                   ),
                 ],
               ),
 
-              SizedBox(height: 20.h),
+              SizedBox(height: 16.h),
 
               // Title
               Text(
                 'Unlimited Access',
                 style: TextStyle(
-                  fontSize: 24.sp,
+                  fontSize: 20.sp,
+                  letterSpacing: -0.5,
                   fontWeight: FontWeight.w700,
                   fontFamily: 'Montserrat',
                   color: Colors.white,
@@ -1738,21 +1758,22 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ),
 
-              SizedBox(height: 12.h),
+              SizedBox(height: 6.h),
 
               // Description
               Text(
                 'Unlock live translator and all\ncity guides worldwide.',
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w400,
                   fontFamily: 'Montserrat',
+                  letterSpacing: -0.5,
                   color: Colors.white.withOpacity(0.85),
                   height: 1.4,
                 ),
               ),
 
-              SizedBox(height: 24.h),
+              SizedBox(height: 16.h),
 
               // UPGRADE NOW button
               GestureDetector(
@@ -1766,10 +1787,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 },
                 child: Container(
                   width: double.infinity,
-                  height: 56.h,
+                  height: 40.h,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
+                    borderRadius: BorderRadius.circular(10.r),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.white.withOpacity(0.2),
@@ -1782,11 +1803,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     child: Text(
                       'UPGRADE NOW',
                       style: TextStyle(
-                        fontSize: 15.sp,
+                        fontSize: 12.sp,
+                        letterSpacing: -0.5,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'Montserrat',
                         color: Color(0xFF1A2332),
-                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
@@ -1855,9 +1876,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(ref.watch(localeProvider)).visualDictionary,
+                      AppLocalizations.of(
+                        ref.watch(localeProvider),
+                      ).visualDictionary,
                       style: TextStyle(
-                        fontSize: 18.sp,
+                        fontSize: 14.sp,
+                        letterSpacing: -0.5,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'Montserrat',
                         color: MyColors.textPrimary,
@@ -1865,9 +1889,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      AppLocalizations.of(ref.watch(localeProvider)).translatedItemsCount,
+                      AppLocalizations.of(
+                        ref.watch(localeProvider),
+                      ).translatedItemsCount,
                       style: TextStyle(
-                        fontSize: 13.sp,
+                        fontSize: 12.sp,
+                        letterSpacing: -0.5,
                         fontWeight: FontWeight.w400,
                         fontFamily: 'Montserrat',
                         color: MyColors.textSecondary,

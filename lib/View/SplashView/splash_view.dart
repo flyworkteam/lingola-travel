@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../Core/Theme/my_colors.dart';
+
 import '../../Core/Routes/app_routes.dart';
-import '../../Services/secure_storage_service.dart';
+import '../../Core/Theme/my_colors.dart';
 import '../../Repositories/profile_repository.dart';
+import '../../Services/secure_storage_service.dart';
 
 /// Splash View - First Screen (Complete Implementation)
 /// All 4 SVGs + Gradient + Text
@@ -173,7 +174,7 @@ class _SplashViewState extends State<SplashView> {
                     fontSize: 40.sp,
                     fontWeight: FontWeight.w700,
                     color: MyColors.white,
-                    letterSpacing: -2.0,
+                    letterSpacing: -0.3,
                     height: 1.0,
                   ),
                 ),

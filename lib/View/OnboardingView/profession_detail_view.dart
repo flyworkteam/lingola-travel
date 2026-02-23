@@ -106,6 +106,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                   fontSize: 36.sp,
                   fontWeight: FontWeight.w700,
                   color: MyColors.black,
+                  letterSpacing: -0.5,
                   height: 1.1,
                 ),
               ),
@@ -118,6 +119,7 @@ class _ProfessionDetailViewState extends State<ProfessionDetailView> {
                 style: GoogleFonts.montserrat(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
+                  letterSpacing: -0.5,
                   color: MyColors.textSecondary,
                   height: 1.4,
                 ),

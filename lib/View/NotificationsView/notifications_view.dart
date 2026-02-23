@@ -168,6 +168,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
                     height: 1.2,
+                    letterSpacing: -0.3,
                   ),
                 ),
 
@@ -178,7 +179,8 @@ class _NotificationsViewState extends State<NotificationsView> {
                   'Are you sure you want to delete all\nyour notifications? This action\ncannot be undone',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
+                    letterSpacing: -0.3,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
@@ -361,7 +363,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                   Text(
                     'No notifications',
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Montserrat',
                       color: MyColors.textSecondary,
@@ -460,6 +462,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                   notification.message,
                   style: TextStyle(
                     fontSize: 13.sp,
+                    letterSpacing: -0.5,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'Montserrat',
                     color: Colors.white.withOpacity(0.9),

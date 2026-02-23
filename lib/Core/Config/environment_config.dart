@@ -28,15 +28,16 @@ class EnvironmentConfig {
       return envUrl;
     }
 
+
     // Fallback based on environment
     switch (_currentEnvironment) {
       case Environment.development:
         // Real device: use local network IP (without /api suffix, ApiClient adds it)
-        return 'http://10.252.15.1122:3000';
+        return 'https://lingolatravel.fly-work.com';
       case Environment.staging:
-        return 'https://staging-api.lingolatravel.com';
+        return 'https://lingolatravel.fly-work.com';
       case Environment.production:
-        return 'https://api.lingolatravel.com';
+        return 'https://lingolatravel.fly-work.com';
     }
   }
 

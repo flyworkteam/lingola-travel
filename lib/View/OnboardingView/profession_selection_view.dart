@@ -81,6 +81,7 @@ class _ProfessionSelectionViewState
                   Text(
                     l.step2of4,
                     style: GoogleFonts.montserrat(
+                      
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
                       color: MyColors.lingolaPrimaryColor,
@@ -141,6 +142,7 @@ class _ProfessionSelectionViewState
                 l.step2Title,
                 style: GoogleFonts.montserrat(
                   fontSize: 28.sp,
+                  letterSpacing: -0.5,
                   fontWeight: FontWeight.w700,
                   color: MyColors.black,
                   height: 1.2,
@@ -154,6 +156,7 @@ class _ProfessionSelectionViewState
                 l.step2Subtitle,
                 style: GoogleFonts.montserrat(
                   fontSize: 14.sp,
+                  letterSpacing: -0.5,
                   fontWeight: FontWeight.w400,
                   color: MyColors.grey600,
                   height: 1.3,
