@@ -283,7 +283,11 @@ class _LibraryFolderDetailViewState
                               'oldName': widget.folderName,
                             });
                           },
-                          child: Icon(Icons.arrow_back_ios_new, size: 24.sp),
+                          child: SvgPicture.asset(
+                            'assets/icons/gerigelmeiconu.svg',
+                            width: 13.w,
+                            height: 13.w,
+                          ),
                         ),
                         SizedBox(width: 12.w),
                         Expanded(
@@ -371,17 +375,47 @@ class _LibraryFolderDetailViewState
                   ),
 
                   // Tabs
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    child: Row(
-                      children: [
-                        _buildTab('All', 0),
-                        SizedBox(width: 32.w),
-                        _buildTab('Words', 1),
-                        SizedBox(width: 32.w),
-                        _buildTab('Phrases', 2),
-                      ],
-                    ),
+                  Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Row(
+                          children: [
+                            _buildTab('All', 0),
+                            SizedBox(width: 32.w),
+                            _buildTab('Words', 1),
+                            SizedBox(width: 32.w),
+                            _buildTab('Phrases', 2),
+                          ],
+                        ),
+                      ),
+                      // Full width underline with active indicator
+                      Container(
+                        height: 2.h,
+                        margin: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Stack(
+                          children: [
+                            // Base gray line (full width)
+                            Container(height: 2.h, color: Color(0xFFE5E7EB)),
+                            // Active blue indicator
+                            AnimatedPositioned(
+                              duration: Duration(milliseconds: 250),
+                              curve: Curves.easeInOut,
+                              left: _selectedTab == 0
+                                  ? 0
+                                  : (_selectedTab == 1 ? 48.w : 128.w),
+                              child: Container(
+                                height: 2.h,
+                                width: _selectedTab == 0
+                                    ? 23.w
+                                    : (_selectedTab == 1 ? 54.w : 67.w),
+                                color: Color(0xFF4ECDC4),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
 
                   SizedBox(height: 16.h),
@@ -516,24 +550,17 @@ class _LibraryFolderDetailViewState
           _selectedTab = index;
         });
       },
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Montserrat',
-              color: isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
-            ),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 8.h),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Montserrat',
+            color: isSelected ? Color(0xFF4ECDC4) : Color(0xFF9CA3AF),
           ),
-          SizedBox(height: 8.h),
-          Container(
-            height: 2.h,
-            width: 40.w,
-            color: isSelected ? Color(0xFF4ECDC4) : Colors.transparent,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -635,11 +662,12 @@ class _LibraryFolderDetailViewState
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: Color(0xFFF3F4F6), width: 1.0),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -697,17 +725,17 @@ class _LibraryFolderDetailViewState
                               item.targetLanguage,
                             ),
                             child: Container(
-                              width: 48.w,
-                              height: 48.h,
+                              width: 40.w,
+                              height: 40.h,
                               decoration: BoxDecoration(
                                 color: Color(0xFFE0F7F4),
-                                borderRadius: BorderRadius.circular(12.r),
+                                borderRadius: BorderRadius.circular(10.r),
                               ),
-                              padding: EdgeInsets.all(12.w),
+                              padding: EdgeInsets.all(10.w),
                               child: SvgPicture.asset(
                                 'assets/icons/travelvocabularyseslendirme.svg',
-                                width: 24.w,
-                                height: 24.h,
+                                width: 20.w,
+                                height: 20.h,
                                 color: Color(0xFF4ECDC4),
                               ),
                             ),
@@ -717,17 +745,17 @@ class _LibraryFolderDetailViewState
 
                           // Bookmark Button (already saved) - BEYAZIMSI ARKAPLAN
                           Container(
-                            width: 48.w,
-                            height: 48.h,
+                            width: 40.w,
+                            height: 40.h,
                             decoration: BoxDecoration(
                               color: Color(0xFFF3F4F6), // Beyazımsı gri
-                              borderRadius: BorderRadius.circular(12.r),
+                              borderRadius: BorderRadius.circular(10.r),
                             ),
-                            padding: EdgeInsets.all(12.w),
+                            padding: EdgeInsets.all(10.w),
                             child: SvgPicture.asset(
                               'assets/icons/travelvocabularykaydet.svg',
-                              width: 24.w,
-                              height: 24.h,
+                              width: 20.w,
+                              height: 20.h,
                               color: Color(0xFF4ECDC4),
                             ),
                           ),

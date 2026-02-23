@@ -168,8 +168,8 @@ class CustomBottomNavBar extends StatelessWidget {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: MyColors.lingolaPrimaryColor.withOpacity(0.2),
-                    blurRadius: 8,
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
                 ]
