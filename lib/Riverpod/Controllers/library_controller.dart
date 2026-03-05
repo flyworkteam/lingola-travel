@@ -47,6 +47,27 @@ class LibraryController extends StateNotifier<LibraryViewModel> {
     }
   }
 
+  /// Update an existing folder
+  Future<bool> updateFolder({
+    required String folderId,
+    required String name,
+  }) async {
+    try {
+      final response = await _libraryRepository.updateFolder(
+        folderId: folderId,
+        name: name,
+      );
+
+      if (response.success) {
+        await loadFolders(); // Listeyi yenile
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /// Load all library folders
   Future<void> loadFolders() async {
     try {

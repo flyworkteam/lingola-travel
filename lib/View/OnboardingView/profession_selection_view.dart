@@ -1,10 +1,10 @@
+import 'package:easy_localization/easy_localization.dart'; // easy_localization eklendi
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../Core/Localization/app_localizations.dart';
+
 import '../../Core/Theme/my_colors.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 import 'profession_detail_view.dart';
 
 /// Profession Selection View - Onboarding Step 2 of 4
@@ -24,45 +24,42 @@ class _ProfessionSelectionViewState
 
   @override
   Widget build(BuildContext context) {
-    // Use system language for onboarding
-    final appLocale = ref.watch(localeProvider);
-    final l = AppLocalizations.of(appLocale);
-
+    // Meslek listesini build içinde tanımlıyoruz ki dil değiştiğinde isimler güncellensin
     final professions = [
       {
         'key': 'student',
-        'name': l.profStudent,
-        'subtitle': l.profStudentSub,
+        'name': 'prof_student_title'.tr(),
+        'subtitle': 'prof_student_desc'.tr(),
         'icon': 'assets/images/student.png',
       },
       {
         'key': 'professional',
-        'name': l.profProfessional,
-        'subtitle': l.profProfessionalSub,
+        'name': 'prof_professional_title'.tr(),
+        'subtitle': 'prof_professional_desc'.tr(),
         'icon': 'assets/images/professional.png',
       },
       {
         'key': 'technology',
-        'name': l.profTechnology,
-        'subtitle': l.profTechnologySub,
+        'name': 'prof_tech_title'.tr(),
+        'subtitle': 'prof_tech_desc'.tr(),
         'icon': 'assets/images/technology.png',
       },
       {
         'key': 'healthcare',
-        'name': l.profHealthcare,
-        'subtitle': l.profHealthcareSub,
-        'icon': 'assets/images/healtcare.png',
+        'name': 'prof_health_title'.tr(),
+        'subtitle': 'prof_health_desc'.tr(),
+        'icon': 'assets/images/healtcare.png', // Orijinal dosya adını korudum
       },
       {
         'key': 'arts',
-        'name': l.profArtsMedia,
-        'subtitle': l.profArtsMediaSub,
+        'name': 'prof_arts_title'.tr(),
+        'subtitle': 'prof_arts_desc'.tr(),
         'icon': 'assets/images/artsmedia.png',
       },
       {
         'key': 'other',
-        'name': l.profOther,
-        'subtitle': l.profOtherSub,
+        'name': 'prof_other_title'.tr(),
+        'subtitle': 'prof_other_desc'.tr(),
         'icon': 'assets/images/other.png',
       },
     ];
@@ -81,9 +78,9 @@ class _ProfessionSelectionViewState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l.step2of4,
+                    'step_2_of_4'.tr(),
                     style: GoogleFonts.montserrat(
-                      fontSize: 12.sp,
+                      fontSize: 11.sp,
                       fontWeight: FontWeight.w600,
                       color: MyColors.lingolaPrimaryColor,
                       letterSpacing: 1.2,
@@ -138,12 +135,12 @@ class _ProfessionSelectionViewState
 
               SizedBox(height: 16.h),
 
-              // Title
+              // Title (Letter spacing %-5 olarak uyarlandı)
               Text(
-                l.step2Title,
+                'prof_title'.tr(),
                 style: GoogleFonts.montserrat(
-                  fontSize: 28.sp,
-                  letterSpacing: -0.5,
+                  fontSize: 32.sp,
+                  letterSpacing: 32.sp * -0.05, // %-5 hesaplaması
                   fontWeight: FontWeight.w700,
                   color: MyColors.black,
                   height: 1.2,
@@ -152,29 +149,30 @@ class _ProfessionSelectionViewState
 
               SizedBox(height: 6.h),
 
-              // Subtitle
+              // Subtitle (Letter spacing %-5 olarak uyarlandı)
               Text(
-                l.step2Subtitle,
+                'prof_subtitle'.tr(),
                 style: GoogleFonts.montserrat(
-                  fontSize: 14.sp,
-                  letterSpacing: -0.5,
-                  fontWeight: FontWeight.w400,
-                  color: MyColors.grey600,
+                  fontSize: 16.sp,
+                  letterSpacing: 16.sp * -0.05, // %-5 hesaplaması
+                  fontWeight: FontWeight.w300,
+                  color: Colors.black,
                   height: 1.3,
                 ),
               ),
 
-              SizedBox(height: 28.h),
+              SizedBox(height: 12.h),
 
               // Profession Cards Grid
               Expanded(
                 child: GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
+                  padding: EdgeInsets.only(bottom: 80.h),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 10.w,
-                    mainAxisSpacing: 8.h,
-                    childAspectRatio: 1.25,
+                    mainAxisSpacing: 9.h,
+                    childAspectRatio: 1.1,
                   ),
                   itemCount: professions.length,
                   itemBuilder: (context, index) {
@@ -185,7 +183,7 @@ class _ProfessionSelectionViewState
                     return GestureDetector(
                       onTap: () {
                         setState(() {
-                          selectedProfessionKey = profession['key'];
+                          selectedProfessionKey = profession['key'] as String;
                         });
                       },
                       child: Container(
@@ -201,10 +199,14 @@ class _ProfessionSelectionViewState
                             width: isSelected ? 2.5 : 1.5,
                           ),
                           boxShadow: [
+                            // Görüntü_3'teki (image_3.png) gölge değerleri
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                              color: const Color(
+                                0xFF303030,
+                              ).withOpacity(0.3), // #303030 at 30% opaklık
+                              offset: const Offset(0, 2), // X: 0, Y: 2
+                              blurRadius: 4, // Blur 4
+                              spreadRadius: 0, // Spread 0
                             ),
                           ],
                         ),
@@ -231,7 +233,7 @@ class _ProfessionSelectionViewState
                                     ),
                                   ),
                                   Image.asset(
-                                    profession['icon']!,
+                                    profession['icon'] as String,
                                     width: 32.w,
                                     height: 32.h,
                                     fit: BoxFit.contain,
@@ -244,7 +246,7 @@ class _ProfessionSelectionViewState
                               ),
                               SizedBox(height: 4.h),
                               Text(
-                                profession['name']!,
+                                profession['name'] as String,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.w700,
@@ -256,9 +258,9 @@ class _ProfessionSelectionViewState
                               ),
                               SizedBox(height: 2.h),
                               Text(
-                                profession['subtitle']!,
+                                profession['subtitle'] as String,
                                 style: GoogleFonts.montserrat(
-                                  fontSize: 11.sp,
+                                  fontSize: 10.sp,
                                   fontWeight: FontWeight.w400,
                                   color: MyColors.textSecondary,
                                   height: 1.2,
@@ -314,14 +316,14 @@ class _ProfessionSelectionViewState
                               ),
                             ),
                             Text(
-                              l.back,
+                              'btn_back'.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                                 color: MyColors.white,
                               ),
                             ),
-                            SizedBox(width: 20.w),
+                            Spacer(),
                           ],
                         ),
                       ),
@@ -329,13 +331,12 @@ class _ProfessionSelectionViewState
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: SizedBox(
                       height: 50.h,
                       child: ElevatedButton(
                         onPressed: selectedProfessionKey != null
                             ? () {
-                                // find the localized name of the selected profession
                                 final selectedProf = professions.firstWhere(
                                   (p) => p['key'] == selectedProfessionKey,
                                 );
@@ -364,7 +365,7 @@ class _ProfessionSelectionViewState
                           children: [
                             SizedBox(width: 20.w),
                             Text(
-                              l.continueBtn,
+                              'continue_btn'.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,

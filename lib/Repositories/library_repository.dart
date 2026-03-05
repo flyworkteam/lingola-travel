@@ -56,6 +56,22 @@ class LibraryRepository extends BaseRepository {
     }
   }
 
+  Future<ApiResponse<bool>> updateFolder({
+    required String folderId,
+    required String name,
+    String? color,
+  }) async {
+    try {
+      final response = await apiClient.put(
+        '/library/folders/$folderId',
+        data: {'name': name, 'color': color ?? '#3B82F6'},
+      );
+      return ApiResponse(success: response.success);
+    } catch (e) {
+      return ApiResponse(success: false);
+    }
+  }
+
   /// Add an item (word or phrase) to a folder
   Future<ApiResponse<bool>> addItemToFolder({
     required String folderId,
@@ -107,36 +123,23 @@ class LibraryRepository extends BaseRepository {
   }
 
   /// Remove bookmark by item details
+  /// Remove bookmark by item details
   Future<ApiResponse<bool>> removeBookmarkByItem({
     required String itemType,
     required String itemId,
   }) async {
     try {
-      // Get bookmarks first to find the ID
-      final response = await apiClient.get('/library/bookmarks');
+      // Doğrudan item_id ve item_type ile DELETE isteği atıyoruz
+      final response = await apiClient.delete(
+        '/library/bookmarks/$itemId',
+        queryParameters: {'item_type': itemType},
+      );
 
-      if (response.success && response.data != null) {
-        final bookmarks = response.data['bookmarks'] as List<dynamic>;
-        final bookmark = bookmarks.firstWhere(
-          (b) => b['item_type'] == itemType && b['item_id'] == itemId,
-          orElse: () => null,
-        );
-
-        if (bookmark != null) {
-          final bookmarkId = bookmark['bookmark_id'];
-          final deleteResponse = await apiClient.delete(
-            '/library/bookmarks/$bookmarkId',
-          );
-
-          return ApiResponse(
-            success: deleteResponse.success,
-            data: deleteResponse.success,
-            error: deleteResponse.error,
-          );
-        }
-      }
-
-      return ApiResponse(success: false, data: false);
+      return ApiResponse(
+        success: response.success,
+        data: response.success,
+        error: response.error,
+      );
     } catch (e) {
       return handleError(e);
     }

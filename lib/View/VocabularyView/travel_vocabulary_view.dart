@@ -1,19 +1,21 @@
+import 'dart:async';
+import 'dart:convert'; // JSON işlemleri için eklendi
+
+import 'package:audioplayers/audioplayers.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Core/Utils/language_data.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'dart:async';
-import '../../Riverpod/Controllers/travel_vocabulary_controller.dart';
-import '../../Riverpod/Controllers/dictionary_controller.dart';
-import '../../Riverpod/Controllers/library_controller.dart';
-import '../../Repositories/library_repository.dart';
-import '../../Repositories/dictionary_repository.dart';
-import '../../Services/tts_service.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Yerel kayıt için eklendi
+
 import '../../Riverpod/Providers/selected_language_provider.dart';
+import '../../Services/tts_service.dart';
 
 class TravelVocabularyView extends ConsumerStatefulWidget {
   final bool isPremium;
@@ -31,17 +33,14 @@ class TravelVocabularyView extends ConsumerStatefulWidget {
 
 class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   // State variables
-  bool _isShowingWords =
-      true; // ✅ DEFAULT: Words (Kelimeler) - changed from false to true
-  String _selectedCategory = 'All Topics';
+  bool _isShowingWords = true; // DEFAULT: Words
+  String _selectedCategory = LocaleKeys.travel_vocabulary_all_topics;
   final TextEditingController _searchController = TextEditingController();
-  Set<String> _bookmarkedItems = {}; // Will be loaded from backend
-  bool _isLoadingCategory = false; // Prevent rapid category changes
-  int _categoryRequestId =
-      0; // Track category selection requests to prevent race conditions
-  bool _isInitialized = false; // Track if initialization completed
 
-  // Track the last language we loaded content for, to detect changes
+  // YEREL BOOKMARK YÖNETİMİ
+  Set<String> _bookmarkedItems = {};
+  static const String _localBookmarksKey = 'lingola_local_bookmarks';
+
   String? _lastLoadedLanguage;
 
   // Audio player
@@ -50,683 +49,258 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   StreamSubscription? _audioCompletionSubscription;
   late TtsService _ttsService;
 
-  // Words state (local)
-  bool _isLoadingWords = false;
-  List<dynamic> _words = [];
-  String? _wordsError;
+  // Sabit Kategori Listesi (Lokalizasyondan)
+  final List<String> _categories = [
+    LocaleKeys.travel_vocabulary_all_topics,
+    LocaleKeys.home_catGeneral,
+    LocaleKeys.home_catTravel,
+    LocaleKeys.home_catAccommodation,
+    LocaleKeys.home_catFoodAndDrink,
+    LocaleKeys.home_catCulture,
+    LocaleKeys.home_catShop,
+    LocaleKeys.home_catDirection,
+    LocaleKeys.home_catSport,
+    LocaleKeys.home_catHealth,
+    LocaleKeys.home_catBusiness,
+    LocaleKeys.home_catEmergency,
+  ];
 
   @override
   void initState() {
     super.initState();
 
-    // Get TTS service singleton and initialize it
     _ttsService = TtsService();
     _ttsService
         .init()
         .then((_) {
-          print('✅ TTS initialized in travel_vocabulary_view');
+          debugPrint('✅ TTS initialized in travel_vocabulary_view');
         })
         .catchError((e) {
-          print('⚠️ Error initializing TTS: $e');
+          debugPrint('⚠️ Error initializing TTS: $e');
         });
 
-    // ✅ CRITICAL: Stop TTS immediately, non-blocking (fire and forget)
-    // Don't use microtask or await - just stop and move on
-    _ttsService.stop().catchError((e) {
-      print('⚠️ Error stopping TTS in initState: $e');
-    });
-
-    // Setup audio completion listener with ULTRA SAFE mounted checks
     _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
       event,
     ) {
-      // DOUBLE CHECK: both mounted AND subscription is not null
-      if (mounted && _audioCompletionSubscription != null) {
-        try {
-          setState(() {
-            _playingItemId = null;
-          });
-        } catch (e) {
-          print('⚠️ setState in audio completion failed: $e');
-        }
-      }
-    });
-
-    // Set initial category if provided
-    if (widget.initialCategory != null) {
-      _selectedCategory = widget.initialCategory!;
-    }
-
-    // SIMPLER initialization - less complex async handling
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _simpleInit();
-    });
-  }
-
-  // 🚀 ULTRA FAST initialization - NO DELAYS, NON-BLOCKING
-  void _simpleInit() {
-    if (!mounted || _isInitialized) {
-      print('❌ Already initialized or widget not mounted');
-      return;
-    }
-
-    print('🚀 ULTRA Simple init BULLETPROOF (NO DELAYS)');
-
-    try {
-      // Dictionary categories already loaded by parent
-      print('✅ Dictionary categories already loaded by parent');
-
-      // ✅ CRITICAL: NO DELAYS! Load immediately
-      if (widget.initialCategory != null) {
-        print('🎯 Filtering by category: ${widget.initialCategory}');
-        // ✅ Load words for selected category (since _isShowingWords = true by default)
-        _loadWords(widget.initialCategory);
-      } else {
-        print('🔄 Generic vocab init - Loading All Topics');
-        // ✅ Load All Topics for both Words and Phrases
-        _loadWords(null); // null = All Topics for Words
-        ref
-            .read(travelVocabularyControllerProvider.notifier)
-            .init(); // All Topics for Phrases
-      }
-
-      // ✅ CRITICAL: Load bookmarks in TRULY async way - fire and forget
-      // Don't await, don't block UI, just start loading in background
-      _loadBookmarkedItemsAsync();
-
-      // Record the language we loaded content for, so build() doesn't reload on first render
-      _lastLoadedLanguage = ref.read(selectedLanguageProvider);
-
-      _isInitialized = true;
-      print('✅ Init completed successfully (bookmarks loading in background)');
-    } catch (e, stackTrace) {
-      print('❌ FATAL init error: $e');
-      print('📍 Stack: $stackTrace');
-    }
-  }
-
-  // 🚀 Load bookmarks TRULY async - fire and forget, non-blocking
-  void _loadBookmarkedItemsAsync() {
-    // Background task - don't await, don't block
-    Future(() async {
-      if (!mounted) return;
-
-      try {
-        final repository = LibraryRepository();
-        final allBookmarkedIds = <String>{};
-
-        // Get all folders
-        final foldersResponse = await repository.getFolders();
-        if (!mounted) return;
-
-        if (foldersResponse.success && foldersResponse.data != null) {
-          // ✅ CRITICAL FIX: Load ALL folders in PARALLEL instead of sequential
-          final futures = foldersResponse.data!.map((folder) async {
-            try {
-              final itemsResponse = await repository.getFolderItems(
-                folderId: folder.id,
-                limit: 100,
-              );
-
-              if (itemsResponse.success && itemsResponse.data != null) {
-                return itemsResponse.data!.map((item) => item.itemId).toList();
-              }
-            } catch (e) {
-              print('⚠️ Error loading folder ${folder.id}: $e');
-            }
-            return <String>[];
-          }).toList();
-
-          // Wait for ALL folders to load in parallel (much faster!)
-          final results = await Future.wait(futures);
-
-          if (!mounted) return;
-
-          // Merge all results
-          for (final ids in results) {
-            allBookmarkedIds.addAll(ids);
-          }
-
-          // Update UI only once
-          if (mounted) {
-            setState(() {
-              _bookmarkedItems = allBookmarkedIds;
-            });
-            print(
-              '📚 Loaded ${_bookmarkedItems.length} bookmarked items (parallel loading)',
-            );
-          }
-        }
-      } catch (e) {
-        print('❌ Error loading bookmarks: $e');
-        // Silently fail - bookmarks are not critical
-      }
-    });
-  }
-
-  // Load words by category from backend
-  Future<void> _loadWords(String? categoryName) async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoadingWords = true;
-      _wordsError = null;
-    });
-
-    try {
-      final repository = DictionaryRepository();
-
-      // ✅ All Topics seçiliyse tüm kategoriler için kelime yükle
-      if (categoryName == null || categoryName == 'All Topics') {
-        final dictionaryState = ref.read(dictionaryControllerProvider);
-        final allWords = <dynamic>[];
-
-        // Her kategori için kelime yükle
-        for (var category in dictionaryState.categories) {
-          final response = await repository.getWordsByCategory(
-            categoryId: category.id,
-            limit: 12, // Her kategoriden 12 kelime
-          );
-
-          if (response.success && response.data != null) {
-            allWords.addAll(response.data!);
-          }
-        }
-
-        if (!mounted) return;
-        setState(() {
-          _words = allWords;
-          _isLoadingWords = false;
-        });
-        return;
-      }
-
-      // Belirli bir kategori seçiliyse
-      String? categoryId;
-      final dictionaryState = ref.read(dictionaryControllerProvider);
-      final category = dictionaryState.categories.firstWhere(
-        (cat) => cat.name == categoryName,
-        orElse: () => dictionaryState.categories.first,
-      );
-      categoryId = category.id;
-
-      final response = await repository.getWordsByCategory(
-        categoryId: categoryId,
-        limit: 100,
-      );
-
-      if (!mounted) return;
-
-      if (response.success && response.data != null) {
-        setState(() {
-          _words = response.data!;
-          _isLoadingWords = false;
-        });
-      } else {
-        setState(() {
-          _wordsError = response.error?.message ?? 'Failed to load words';
-          _isLoadingWords = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _wordsError = 'Network error: ${e.toString()}';
-        _isLoadingWords = false;
-      });
-    }
-  }
-
-  // Categories - DİNAMİK! Backend'den geliyor + All Topics ekliyoruz
-  List<Map<String, dynamic>> get _categories {
-    final dictionaryState = ref.watch(dictionaryControllerProvider);
-
-    final allTopicsCategory = {'name': 'All Topics'};
-
-    if (dictionaryState.categories.isNotEmpty) {
-      final backendCategories = dictionaryState.categories.map((category) {
-        return {'name': category.name};
-      }).toList();
-
-      return [allTopicsCategory, ...backendCategories];
-    }
-
-    // Fallback: Loading durumunda default kategoriler
-    return [allTopicsCategory];
-  }
-
-  // Category selection handler - RACE-CONDITION SAFE with REQUEST ID
-  void _onCategorySelected(String categoryName) async {
-    if (!mounted || _isLoadingCategory) {
-      print('⏳ Already loading or widget disposed');
-      return;
-    }
-
-    // Generate unique request ID to track this specific selection
-    final requestId = ++_categoryRequestId;
-    print('📂 Selecting category: $categoryName (requestId: $requestId)');
-
-    setState(() {
-      _isLoadingCategory = true;
-      _selectedCategory = categoryName;
-      _playingItemId = null;
-    });
-
-    // ✅ Stop audio BEFORE async operations (fire-and-forget, non-blocking)
-    _audioPlayer.stop().catchError((e) => print('⚠️ Audio stop error: $e'));
-    _ttsService.stop().catchError((e) => print('⚠️ TTS stop error: $e'));
-
-    try {
-      // ✅ NO DELAY! Check immediately
-      if (!mounted || requestId != _categoryRequestId) {
-        print(
-          '⏭️ Ignoring old category request $requestId (current: $_categoryRequestId)',
-        );
-        return;
-      }
-
-      // Load content with timeout protection
-      await Future.any([
-        Future(() async {
-          if (_isShowingWords) {
-            await _loadWords(
-              categoryName == 'All Topics' ? null : categoryName,
-            );
-          } else {
-            if (categoryName == 'All Topics') {
-              await ref
-                  .read(travelVocabularyControllerProvider.notifier)
-                  .init();
-            } else {
-              await ref
-                  .read(travelVocabularyControllerProvider.notifier)
-                  .filterByCategory(categoryName);
-            }
-          }
-        }),
-        Future.delayed(Duration(seconds: 10), () {
-          throw TimeoutException('Category loading timeout');
-        }),
-      ]);
-
-      // After loading, check if this is still the current request
-      if (!mounted || requestId != _categoryRequestId) {
-        print(
-          '⏭️ Ignoring old category result $requestId (current: $_categoryRequestId)',
-        );
-        return;
-      }
-    } on TimeoutException catch (e) {
-      print('⏱️ Category selection timeout: $e');
-    } catch (e) {
-      print('❌ Category selection error: $e');
-    } finally {
-      // Only reset loading flag if this is still the current request
-      if (mounted && requestId == _categoryRequestId) {
-        setState(() {
-          _isLoadingCategory = false;
-        });
-      }
-    }
-  }
-
-  @override
-  void deactivate() {
-    // Called when widget is removed from tree but might be reinserted
-    // Stop audio BEFORE dispose
-    print('🔄 TravelVocabularyView deactivating...');
-
-    // ✅ Fire-and-forget - don't block deactivate lifecycle
-    _audioPlayer.stop().catchError((e) {
-      print('⚠️ AudioPlayer stop error in deactivate: $e');
-    });
-
-    _ttsService.stop().catchError((e) {
-      print('⚠️ TTS stop error in deactivate: $e');
-    });
-
-    _playingItemId = null;
-
-    super.deactivate();
-  }
-
-  @override
-  void dispose() {
-    print('🗑️ TravelVocabularyView disposing SAFELY...');
-
-    // Invalidate any pending category requests
-    _categoryRequestId = -1;
-
-    // CRITICAL: Cancel subscription FIRST before any setState can happen
-    try {
-      _audioCompletionSubscription?.cancel();
-      _audioCompletionSubscription = null;
-    } catch (e) {
-      print('⚠️ Subscription cancel error: $e');
-    }
-
-    // Clear playing state
-    _playingItemId = null;
-
-    // Reset initialization flag
-    _isInitialized = false;
-
-    // ✅ Stop audio WITHOUT await (fire-and-forget to prevent blocking dispose)
-    _audioPlayer.stop().catchError((e) {
-      print('⚠️ AudioPlayer stop error: $e');
-    });
-
-    // ✅ Stop TTS WITHOUT await (fire-and-forget)
-    _ttsService.stop().catchError((e) {
-      print('⚠️ TTS stop error: $e');
-    });
-
-    // Dispose controllers
-    try {
-      _searchController.dispose();
-    } catch (e) {
-      print('⚠️ SearchController dispose error: $e');
-    }
-
-    // Finally dispose audio player
-    try {
-      _audioPlayer.dispose();
-    } catch (e) {
-      print('⚠️ AudioPlayer dispose error: $e');
-    }
-
-    super.dispose();
-    print('✅ TravelVocabularyView disposed successfully');
-  }
-
-  // Play audio for word or phrase using TTS or audio URL - BULLETPROOF
-  Future<void> _playAudio(
-    String itemId,
-    String? audioUrl,
-    String translation,
-    String? targetLanguage,
-  ) async {
-    // ULTRA safe checks - also check if subscription exists
-    if (!mounted || _audioCompletionSubscription == null) {
-      print('❌ Widget not mounted or disposed, skipping audio');
-      return;
-    }
-
-    print('🔊 Playing audio for: $itemId');
-
-    try {
-      // If already playing this item, stop it
-      if (_playingItemId == itemId) {
-        print('⏹️ Stopping current audio');
-        try {
-          await _audioPlayer.stop();
-          await _ttsService.stop();
-        } catch (e) {
-          print('⚠️ Error stopping: $e');
-        }
-
-        if (mounted) {
-          setState(() {
-            _playingItemId = null;
-          });
-        }
-        return;
-      }
-
-      // Stop any current audio
-      try {
-        await _audioPlayer.stop();
-        await _ttsService.stop();
-      } catch (e) {
-        print('⚠️ Error stopping previous: $e');
-      }
-
-      if (!mounted) return;
-
-      // Start new audio
-      setState(() {
-        _playingItemId = itemId;
-      });
-
-      if (audioUrl != null && audioUrl.isNotEmpty) {
-        print('🎵 Playing audio URL');
-        try {
-          await _audioPlayer.play(UrlSource(audioUrl));
-        } catch (e) {
-          print('❌ Audio player error: $e');
-          if (mounted) {
-            setState(() {
-              _playingItemId = null;
-            });
-          }
-        }
-      } else {
-        print(
-          '🔊🔊🔊 VOCABULARY SPEAKER BUTTON - Using TTS for: "$translation" in $targetLanguage',
-        );
-        try {
-          // TTS with mounted check - don't await to prevent UI blocking
-          if (mounted) {
-            // Fire and forget - TTS will complete in background
-            _ttsService
-                .speak(translation, languageCode: targetLanguage)
-                .then((_) {
-                  print('✅ TTS completed for: $translation');
-                })
-                .catchError((e) {
-                  print('❌ TTS error in callback: $e');
-                });
-          }
-        } catch (e) {
-          print('❌ TTS error: $e');
-          if (mounted) {
-            setState(() {
-              _playingItemId = null;
-            });
-          }
-          return;
-        }
-
-        // Reset after delay with mounted check
-        Future.delayed(Duration(seconds: 3), () {
-          if (mounted && _playingItemId == itemId) {
-            setState(() {
-              _playingItemId = null;
-            });
-          }
-        });
-      }
-    } catch (e) {
-      print('❌ CRITICAL Audio error: $e');
       if (mounted) {
         setState(() {
           _playingItemId = null;
         });
       }
+    });
+
+    if (widget.initialCategory != null) {
+      if (widget.initialCategory == 'All Topics' ||
+          widget.initialCategory == LocaleKeys.travel_vocabulary_all_topics) {
+        _selectedCategory = LocaleKeys.travel_vocabulary_all_topics;
+      } else {
+        _selectedCategory = widget.initialCategory!;
+      }
+    }
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _loadLocalBookmarks(); // Artık API'den değil, cihazın hafızasından çekiyor
+      _lastLoadedLanguage = ref.read(selectedLanguageProvider);
+    });
+
+    // Arama barı için dinleyici
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  // --- %100 YEREL (LOCAL) BOOKMARK YÜKLEME ---
+  Future<void> _loadLocalBookmarks() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? bookmarksJson = prefs.getString(_localBookmarksKey);
+
+      if (bookmarksJson != null) {
+        final List<dynamic> decoded = jsonDecode(bookmarksJson);
+        if (mounted) {
+          setState(() {
+            _bookmarkedItems = decoded.cast<String>().toSet();
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Yerel favoriler yüklenirken hata: $e');
     }
   }
 
-  void _toggleBookmark(
+  // --- %100 YEREL (LOCAL) BOOKMARK KAYDETME/SİLME ---
+  Future<void> _toggleBookmark(
     String itemId, {
     String? itemType,
     String? category,
   }) async {
-    final isCurrentlyBookmarked = _bookmarkedItems.contains(itemId);
-
+    // 1. Arayüzü anında güncelle
     setState(() {
-      if (isCurrentlyBookmarked) {
+      if (_bookmarkedItems.contains(itemId)) {
         _bookmarkedItems.remove(itemId);
       } else {
         _bookmarkedItems.add(itemId);
       }
     });
 
-    final repository = LibraryRepository();
+    // 2. Arka planda cihaz hafızasına (SharedPreferences) kaydet (Sıfır API isteği)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String encoded = jsonEncode(_bookmarkedItems.toList());
+      await prefs.setString(_localBookmarksKey, encoded);
+    } catch (e) {
+      debugPrint('❌ Yerel favoriler kaydedilirken hata: $e');
+    }
+  }
 
-    if (isCurrentlyBookmarked) {
-      // REMOVE from library
-      try {
-        final type = itemType ?? 'travel_phrase';
+  // Kullanıcı Kategori değiştirdiğinde (Sadece sesi durdurur)
+  void _onCategorySelected(String categoryName) {
+    if (!mounted) return;
 
-        print('🗑️ Removing from library:');
-        print('   itemId: $itemId');
-        print('   itemType: $type');
+    if (_playingItemId != null) {
+      _audioPlayer.stop().catchError((e) {});
+      _ttsService.stop().catchError((e) {});
+    }
 
-        final response = await repository.removeBookmarkByItem(
-          itemType: type,
-          itemId: itemId,
-        );
+    setState(() {
+      _selectedCategory = categoryName;
+      _playingItemId = null;
+    });
+  }
 
-        print('✅ Remove response: success=${response.success}');
+  @override
+  void dispose() {
+    _audioCompletionSubscription?.cancel();
+    _playingItemId = null;
+    _audioPlayer.stop().catchError((e) {});
+    _ttsService.stop().catchError((e) {});
+    _searchController.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
-        if (response.success) {
-          // Refresh library to update counts
-          ref.read(libraryControllerProvider.notifier).loadFolders();
-        }
-      } catch (e) {
-        print('❌ Error removing from library: $e');
-        // Revert local state on error
-        setState(() {
-          _bookmarkedItems.add(itemId);
-        });
+  // İngilizce metni oluşturmak için camelCase anahtarları düzenleyen yardımcı fonksiyon
+  String _getEnglishText(String key) {
+    final lastPart = key.split('.').last;
+
+    if (lastPart == 'oneMomentPlease') return 'One moment, please';
+
+    final RegExp exp = RegExp(r'(?<=[a-z])(?=[A-Z])');
+    final parts = lastPart.split(exp);
+
+    String formatted = parts.map((p) => p.toLowerCase()).join(' ');
+    formatted = formatted[0].toUpperCase() + formatted.substring(1);
+    formatted = formatted.replaceAll(RegExp(r'\bi\b'), 'I');
+
+    formatted = formatted.replaceAll("I dont ", "I don't ");
+    formatted = formatted.replaceAll("Im ", "I'm ");
+    formatted = formatted.replaceAll("Youre ", "You're ");
+    formatted = formatted.replaceAll("Cant ", "Can't ");
+    formatted = formatted.replaceAll("Lets ", "Let's ");
+
+    final lower = formatted.toLowerCase();
+    if (lower.startsWith('can ') ||
+        lower.startsWith('where ') ||
+        lower.startsWith('what ') ||
+        lower.startsWith('is ') ||
+        lower.startsWith('do ') ||
+        lower.startsWith('how ') ||
+        lower.startsWith('which ') ||
+        lower.startsWith('will ') ||
+        lower.startsWith('are ') ||
+        lower.startsWith('should ')) {
+      formatted += '?';
+    }
+
+    return formatted;
+  }
+
+  // Ses çalma (Yalnızca TTS kullanılıyor)
+  Future<void> _playAudio(String itemId, String englishText) async {
+    if (!mounted || _audioCompletionSubscription == null) return;
+
+    try {
+      if (_playingItemId == itemId) {
+        await _audioPlayer.stop();
+        await _ttsService.stop();
+        if (mounted) setState(() => _playingItemId = null);
+        return;
       }
-    } else {
-      // ADD to library
-      try {
-        final type = itemType ?? 'travel_phrase';
-        final cat = category ?? _selectedCategory;
 
-        print('🔖 Saving to library:');
-        print('   itemId: $itemId');
-        print('   itemType: $type');
-        print('   category: $cat');
+      await _audioPlayer.stop();
+      await _ttsService.stop();
 
-        final response = await repository.addBookmark(
-          itemType: type,
-          itemId: itemId,
-          category: cat,
-        );
+      if (!mounted) return;
+      setState(() => _playingItemId = itemId);
 
-        print('✅ Response: success=${response.success}');
+      // İngilizce metni her zaman 'en' koduyla okutuyoruz
+      _ttsService.speak(englishText, languageCode: 'en').catchError((e) {
+        debugPrint('❌ TTS error: $e');
+        if (mounted) setState(() => _playingItemId = null);
+      });
 
-        if (response.success) {
-          // Refresh library to update counts
-          ref.read(libraryControllerProvider.notifier).loadFolders();
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted && _playingItemId == itemId) {
+          setState(() => _playingItemId = null);
         }
-      } catch (e) {
-        print('❌ Error saving to library: $e');
-        // Revert local state on error
-        setState(() {
-          _bookmarkedItems.remove(itemId);
-        });
-      }
+      });
+    } catch (e) {
+      debugPrint('❌ CRITICAL Audio error: $e');
+      if (mounted) setState(() => _playingItemId = null);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // 🔑 Watch selectedLanguageProvider — when user saves a new language in
-    // Profile Settings, reload words and phrases in the new language.
     final currentLanguage = ref.watch(selectedLanguageProvider);
-    if (_isInitialized && currentLanguage != _lastLoadedLanguage) {
+    if (currentLanguage != _lastLoadedLanguage) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          print(
-            '🔄 TravelVocab: Language changed to $currentLanguage — reloading content',
-          );
           _lastLoadedLanguage = currentLanguage;
-          // Reset to All Topics to avoid stale category state
-          setState(() {
-            _selectedCategory = 'All Topics';
-          });
-          // Reload both words and phrases
-          _loadWords(null);
-          ref.read(travelVocabularyControllerProvider.notifier).init();
+          setState(() {});
         }
       });
     }
 
     return PopScope(
       canPop: true,
-      onPopInvoked: (didPop) {
-        // Don't use async here - just trigger cleanup
-        // Audio is already stopped in deactivate()
-        print('🔙 Pop invoked, didPop: $didPop');
-      },
+      onPopInvoked: (didPop) {},
       child: Scaffold(
-        backgroundColor: MyColors.white, // Consistent white background
+        backgroundColor: MyColors.white,
         appBar: _buildAppBar(),
         body: SafeArea(
           bottom: false,
           child: Stack(
-            key: ValueKey(
-              'travel_vocab_stack_${widget.initialCategory}',
-            ), // Unique key to force rebuild
             children: [
-              // Main content
               Column(
                 children: [
-                  SizedBox(height: 16.h), // Added spacing from AppBar
-                  // Search bar
+                  SizedBox(height: 16.h),
                   _buildSearchBar(),
-
                   SizedBox(height: 20.h),
-
-                  // Word/Phrases toggle switch
                   _buildTabSwitcher(),
-
                   SizedBox(height: 20.h),
-
-                  // Category filters
                   _buildCategoryFilters(),
-
                   SizedBox(height: 20.h),
-
-                  // Content
                   Expanded(child: _buildContent()),
                 ],
               ),
-
-              // Bottom Navigation Bar
-              CustomBottomNavBar(
-                key: ValueKey('bottom_nav_travel_vocab'), // Unique key
-                currentIndex: 1,
-                isPremium: widget.isPremium,
-              ),
+              CustomBottomNavBar(currentIndex: 1, isPremium: widget.isPremium),
             ],
           ),
         ),
       ),
-    ); // PopScope child end
+    );
   }
 
-  /// AppBar
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: MyColors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      leading: GestureDetector(
-        onTap: () {
-          // Audio will be stopped in deactivate() automatically
-          // Just navigate back without blocking operations
-          if (mounted) {
-            Navigator.pop(context);
-          }
-        },
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: SvgPicture.asset(
-            'assets/icons/gerigelmeiconu.svg',
-            width: 13.w,
-            height: 13.w,
-            fit: BoxFit.contain,
-          ),
-        ),
-      ),
+        
       title: Text(
-        'Travel Vocabulary',
+        LocaleKeys.travel_vocabulary_title.tr(),
         style: TextStyle(
           fontSize: 20.sp,
           fontWeight: FontWeight.w700,
@@ -738,7 +312,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     );
   }
 
-  /// Search bar
   Widget _buildSearchBar() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -757,7 +330,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             color: MyColors.textPrimary,
           ),
           decoration: InputDecoration(
-            hintText: _isShowingWords ? 'Search words...' : 'Search phrases...',
+            hintText: _isShowingWords
+                ? LocaleKeys.travel_vocabulary_search_words.tr()
+                : LocaleKeys.travel_vocabulary_search_phrases.tr(),
             hintStyle: TextStyle(
               fontSize: 14.sp,
               fontFamily: 'Montserrat',
@@ -771,15 +346,11 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 12.h),
           ),
-          onChanged: (value) {
-            setState(() {});
-          },
         ),
       ),
     );
   }
 
-  /// Tab switcher - Words/Phrases toggle
   Widget _buildTabSwitcher() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -787,41 +358,22 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
         height: 40.h,
         padding: EdgeInsets.all(3.w),
         decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5),
+          color: const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(10.r),
         ),
         child: Row(
           children: [
-            // Words tab
             Expanded(
               child: GestureDetector(
-                onTap: () async {
-                  if (!mounted) return;
-
-                  // Stop audio and TTS before switching
-                  try {
-                    await _audioPlayer.stop();
-                    await _ttsService.stop();
-                  } catch (e) {
-                    print('Error stopping audio: $e');
+                onTap: () {
+                  if (_playingItemId != null) {
+                    _audioPlayer.stop().catchError((e) {});
+                    _ttsService.stop().catchError((e) {});
                   }
-
-                  if (!mounted) return;
-
                   setState(() {
                     _isShowingWords = true;
                     _playingItemId = null;
                   });
-
-                  // ✅ NO DELAY! Load immediately
-                  if (!mounted) return;
-
-                  // Load words for selected category
-                  _loadWords(
-                    _selectedCategory == 'All Topics'
-                        ? null
-                        : _selectedCategory,
-                  );
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -830,13 +382,13 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                   ),
                   child: Center(
                     child: Text(
-                      'Words',
+                      LocaleKeys.travel_vocabulary_tab_words.tr(),
                       style: TextStyle(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Montserrat',
                         color: _isShowingWords
-                            ? Color(0xFF4ECDC4)
+                            ? const Color(0xFF4ECDC4)
                             : MyColors.textSecondary,
                       ),
                     ),
@@ -844,38 +396,17 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                 ),
               ),
             ),
-            // Phrases tab
             Expanded(
               child: GestureDetector(
-                onTap: () async {
-                  if (!mounted) return;
-
-                  // Stop audio and TTS before switching
-                  try {
-                    await _audioPlayer.stop();
-                    await _ttsService.stop();
-                  } catch (e) {
-                    print('Error stopping audio: $e');
+                onTap: () {
+                  if (_playingItemId != null) {
+                    _audioPlayer.stop().catchError((e) {});
+                    _ttsService.stop().catchError((e) {});
                   }
-
-                  if (!mounted) return;
-
                   setState(() {
                     _isShowingWords = false;
                     _playingItemId = null;
                   });
-
-                  // ✅ NO DELAY! Load immediately
-                  if (!mounted) return;
-
-                  // Load phrases for selected category
-                  await ref
-                      .read(travelVocabularyControllerProvider.notifier)
-                      .filterByCategory(
-                        _selectedCategory == 'All Topics'
-                            ? null
-                            : _selectedCategory,
-                      );
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -884,13 +415,13 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                   ),
                   child: Center(
                     child: Text(
-                      'Phrases',
+                      LocaleKeys.travel_vocabulary_tab_phrases.tr(),
                       style: TextStyle(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Montserrat',
                         color: !_isShowingWords
-                            ? Color(0xFF4ECDC4)
+                            ? const Color(0xFF4ECDC4)
                             : MyColors.textSecondary,
                       ),
                     ),
@@ -904,24 +435,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     );
   }
 
-  /// Category filters
   Widget _buildCategoryFilters() {
-    final dictionaryState = ref.watch(dictionaryControllerProvider);
-
-    // Show loading if categories are being loaded
-    if (dictionaryState.isLoading) {
-      return SizedBox(
-        height: 44.h,
-        child: Center(
-          child: SizedBox(
-            width: 20.w,
-            height: 20.h,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-
     return SizedBox(
       height: 44.h,
       child: ListView.builder(
@@ -929,23 +443,28 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
         padding: EdgeInsets.symmetric(horizontal: 20.w),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
-          final category = _categories[index];
-          final isSelected = _selectedCategory == category['name'];
+          final categoryKey = _categories[index];
+          final isSelected = _selectedCategory == categoryKey;
+
+          final displayName =
+              categoryKey == LocaleKeys.travel_vocabulary_all_topics
+              ? LocaleKeys.travel_vocabulary_all_topics.tr()
+              : categoryKey.tr();
 
           return Padding(
             padding: EdgeInsets.only(right: 12.w),
             child: GestureDetector(
-              onTap: () => _onCategorySelected(category['name']),
+              onTap: () => _onCategorySelected(categoryKey),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? Color(0xFF4ECDC4) : MyColors.white,
+                  color: isSelected ? const Color(0xFF4ECDC4) : MyColors.white,
                   borderRadius: BorderRadius.circular(22.r),
                   border: Border.all(color: MyColors.border, width: 1),
                 ),
                 child: Center(
                   child: Text(
-                    category['name'],
+                    displayName,
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
@@ -962,282 +481,102 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     );
   }
 
-  /// Content - Conditional based on tab selection
   Widget _buildContent() {
-    return _isShowingWords ? _buildWordsContent() : _buildPhrasesContent();
-  }
+    final Map<String, List<String>> sourceData = _isShowingWords
+        ? LanguageDataManager.vocabularyData
+        : LanguageDataManager.sentencesData;
 
-  /// Words content - Backend'den geliyor! 🔥
-  Widget _buildWordsContent() {
-    if (_isLoadingWords) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
+    final String query = _searchController.text.trim().toLowerCase();
 
-    if (_wordsError != null) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Error: $_wordsError',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14.sp, color: Colors.red),
-              ),
-              SizedBox(height: 16.h),
-              ElevatedButton(
-                onPressed: () {
-                  _loadWords(
-                    _selectedCategory == 'All Topics'
-                        ? null
-                        : _selectedCategory,
-                  );
-                },
-                child: Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    // Sadece belirli kategoriyi göster
+    if (_selectedCategory != LocaleKeys.travel_vocabulary_all_topics) {
+      List<String> items = sourceData[_selectedCategory] ?? [];
 
-    if (_words.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Text(
-            'No words found for this category',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontFamily: 'Montserrat',
-              color: MyColors.textSecondary,
-            ),
-          ),
-        ),
-      );
-    }
-
-    // ✅ All Topics seçiliyse kategorilere göre gruplandır
-    if (_selectedCategory == 'All Topics') {
-      // Kelimeleri kategoriye göre grupla
-      final Map<String, List<dynamic>> groupedWords = {};
-      for (var word in _words) {
-        final categoryId = word.categoryId ?? 'unknown';
-        if (!groupedWords.containsKey(categoryId)) {
-          groupedWords[categoryId] = [];
-        }
-        groupedWords[categoryId]!.add(word);
+      if (query.isNotEmpty) {
+        items = items.where((key) {
+          final english = _getEnglishText(key).toLowerCase();
+          final translated = key.tr().toLowerCase();
+          return english.contains(query) || translated.contains(query);
+        }).toList();
       }
 
-      // Kategori bilgilerini al
-      final dictionaryState = ref.read(dictionaryControllerProvider);
+      if (items.isEmpty) {
+        return _buildEmptyState();
+      }
 
       return ListView.builder(
         padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
-        itemCount: groupedWords.length,
+        itemCount: items.length,
         itemBuilder: (context, index) {
-          final categoryId = groupedWords.keys.elementAt(index);
-          final categoryWords = groupedWords[categoryId]!;
-
-          // Kategori bilgisini bul
-          final category = dictionaryState.categories.firstWhere(
-            (cat) => cat.id == categoryId,
-            orElse: () => dictionaryState.categories.first,
-          );
-
-          return _buildCategoryGroup(
-            categoryName: category.name,
-            words: categoryWords,
-            isWords: true,
-          );
+          return _buildDynamicItemCard(items[index], _selectedCategory);
         },
       );
     }
 
-    // ✅ Belirli kategori seçiliyse düz liste
-    return ListView.builder(
+    // "All Topics" seçiliyse kategorilere göre gruplandır
+    final List<Widget> groupedWidgets = [];
+
+    for (String catKey in sourceData.keys) {
+      List<String> items = sourceData[catKey] ?? [];
+
+      if (query.isNotEmpty) {
+        items = items.where((key) {
+          final english = _getEnglishText(key).toLowerCase();
+          final translated = key.tr().toLowerCase();
+          return english.contains(query) || translated.contains(query);
+        }).toList();
+      }
+
+      if (items.isNotEmpty) {
+        groupedWidgets.add(
+          _buildCategoryGroup(categoryKey: catKey, items: items),
+        );
+      }
+    }
+
+    if (groupedWidgets.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
-      itemCount: _words.length,
-      itemBuilder: (context, index) {
-        final word = _words[index];
-        return _buildDynamicWordCard(word);
-      },
+      children: groupedWidgets,
     );
   }
 
-  /// Dynamic word card - Backend'den gelen kelimeler için! 🚀
-  Widget _buildDynamicWordCard(dynamic word) {
-    final id = word.id;
-    final isBookmarked = _bookmarkedItems.contains(id);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: EdgeInsets.only(bottom: 0),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-          decoration: BoxDecoration(
-            color: MyColors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // First row: Word + Buttons
-              Row(
-                children: [
-                  // Word text
-                  Expanded(
-                    child: Text(
-                      word.targetLanguage == 'en'
-                          ? word.word
-                          : word.translation,
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.textPrimary,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 8.w),
-
-                  // Play button
-                  GestureDetector(
-                    onTap: () => _playAudio(
-                      id,
-                      word.audioUrl,
-                      word.targetLanguage == 'en'
-                          ? word.word
-                          : word.translation,
-                      word.targetLanguage,
-                    ),
-                    child: Container(
-                      width: 36.w,
-                      height: 36.h,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFE0F7F4),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/travelvocabularyseslendirme.svg',
-                          width: 18.w,
-                          height: 18.h,
-                          colorFilter: ColorFilter.mode(
-                            Color(0xFF4ECDC4),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 6.w),
-
-                  // Bookmark button
-                  GestureDetector(
-                    onTap: () => _toggleBookmark(
-                      id,
-                      itemType: 'dictionary_word',
-                      category: _selectedCategory == 'All Topics'
-                          ? 'General'
-                          : _selectedCategory,
-                    ),
-                    child: Container(
-                      width: 36.w,
-                      height: 36.h,
-                      decoration: BoxDecoration(
-                        color: isBookmarked
-                            ? Color(0x3D2989E9)
-                            : Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/travelvocabularykaydet.svg',
-                          width: 18.w,
-                          height: 18.h,
-                          colorFilter: ColorFilter.mode(
-                            isBookmarked
-                                ? const Color(0xFF2989E9)
-                                : Color(0xFFB0B0B0),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 4.h),
-
-              // Translation on second line
-              Text(
-                word.targetLanguage == 'en' ? word.translation : word.word,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
-                ),
-              ),
-            ],
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Text(
+          LocaleKeys.travel_vocabulary_no_items.tr(),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontFamily: 'Montserrat',
+            color: MyColors.textSecondary,
           ),
         ),
-        // Progress bar at the bottom of the card
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          height: 3.h,
-          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 16.h),
-          decoration: BoxDecoration(
-            color: _playingItemId == id
-                ? Color(0xFF4ECDC4)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(2.r),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  /// Category group widget - Kategorilere göre gruplandırılmış kelime/cümle gösterimi
   Widget _buildCategoryGroup({
-    required String categoryName,
-    required List<dynamic> words,
-    required bool isWords,
+    required String categoryKey,
+    required List<String> items,
   }) {
-    // İlk 3 item göster, geri kalanını "Load More" ile
-    final displayCount = words.length > 3 ? 3 : words.length;
-    final hasMore = words.length > 3;
+    final displayCount = items.length > 3 ? 3 : items.length;
+    final hasMore = items.length > 3;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Kategori başlığı
         Padding(
           padding: EdgeInsets.only(top: 16.h, bottom: 12.h),
           child: Row(
             children: [
-              // Category name
               Text(
-                categoryName,
+                categoryKey.tr(),
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -1245,10 +584,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                   color: MyColors.textPrimary,
                 ),
               ),
-              Spacer(),
-              // Word count
+              const Spacer(),
               Text(
-                '${words.length} ${isWords ? "Words" : "Phrases"}',
+                '${items.length} ${_isShowingWords ? LocaleKeys.travel_vocabulary_tab_words.tr() : LocaleKeys.travel_vocabulary_tab_phrases.tr()}',
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
@@ -1259,26 +597,17 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             ],
           ),
         ),
-
-        // İlk 3 item
-        ...words.take(displayCount).map((item) {
-          return isWords
-              ? _buildDynamicWordCard(item)
-              : _buildDynamicPhraseCard(item);
-        }).toList(),
-
-        // Load More butonu (varsa)
+        ...items
+            .take(displayCount)
+            .map((key) => _buildDynamicItemCard(key, categoryKey)),
         if (hasMore)
           Padding(
             padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
             child: Center(
               child: TextButton(
-                onPressed: () {
-                  // Kategoriye göre filtrele
-                  _onCategorySelected(categoryName);
-                },
+                onPressed: () => _onCategorySelected(categoryKey),
                 child: Text(
-                  '+ Load More',
+                  LocaleKeys.travel_vocabulary_load_more.tr(),
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
@@ -1293,115 +622,10 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
     );
   }
 
-  /// Phrases content - TAMAMEN DİNAMİK! Backend'den geliyor 🔥
-  Widget _buildPhrasesContent() {
-    final vocabularyState = ref.watch(travelVocabularyControllerProvider);
-
-    if (vocabularyState.isLoading) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    if (vocabularyState.errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Error: ${vocabularyState.errorMessage}',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14.sp, color: Colors.red),
-              ),
-              SizedBox(height: 16.h),
-              ElevatedButton(
-                onPressed: () {
-                  ref.read(travelVocabularyControllerProvider.notifier).init();
-                },
-                child: Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final phrases = vocabularyState.phrases;
-
-    if (phrases.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Text(
-            'No phrases found for this category',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontFamily: 'Montserrat',
-              color: MyColors.textSecondary,
-            ),
-          ),
-        ),
-      );
-    }
-
-    // ✅ All Topics seçiliyse kategorilere göre gruplandır
-    if (_selectedCategory == 'All Topics') {
-      // Cümleleri kategoriye göre grupla
-      final Map<String, List<dynamic>> groupedPhrases = {};
-      for (var phrase in phrases) {
-        final category = phrase.category;
-        if (!groupedPhrases.containsKey(category)) {
-          groupedPhrases[category] = [];
-        }
-        groupedPhrases[category]!.add(phrase);
-      }
-
-      // Kategori bilgilerini al
-      final dictionaryState = ref.read(dictionaryControllerProvider);
-
-      return ListView.builder(
-        padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
-        itemCount: groupedPhrases.length,
-        itemBuilder: (context, index) {
-          final categoryName = groupedPhrases.keys.elementAt(index);
-          final categoryPhrases = groupedPhrases[categoryName]!;
-
-          // Kategori bilgisini bul
-          final category = dictionaryState.categories.firstWhere(
-            (cat) => cat.name == categoryName,
-            orElse: () => dictionaryState.categories.first,
-          );
-
-          return _buildCategoryGroup(
-            categoryName: category.name,
-            words: categoryPhrases,
-            isWords: false,
-          );
-        },
-      );
-    }
-
-    // ✅ Belirli kategori seçiliyse düz liste
-    return ListView.builder(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 100.h),
-      itemCount: phrases.length,
-      itemBuilder: (context, index) {
-        final phrase = phrases[index];
-        return _buildDynamicPhraseCard(phrase);
-      },
-    );
-  }
-
-  /// Dynamic phrase card - Backend'den gelen veriler için! 🚀
-  Widget _buildDynamicPhraseCard(dynamic phrase) {
-    final id = phrase.id;
-    final isBookmarked = _bookmarkedItems.contains(id);
+  Widget _buildDynamicItemCard(String itemKey, String categoryKey) {
+    final isBookmarked = _bookmarkedItems.contains(itemKey);
+    final englishText = _getEnglishText(itemKey);
+    final translatedText = itemKey.tr();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1416,22 +640,18 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
               BoxShadow(
                 color: Colors.black.withOpacity(0.08),
                 blurRadius: 12,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // First row: Phrase + Buttons
               Row(
                 children: [
-                  // Phrase text
                   Expanded(
                     child: Text(
-                      phrase.targetLanguage == 'en'
-                          ? phrase.englishText
-                          : phrase.translation,
+                      englishText,
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
@@ -1440,24 +660,14 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                       ),
                     ),
                   ),
-
                   SizedBox(width: 8.w),
-
-                  // Play button
                   GestureDetector(
-                    onTap: () => _playAudio(
-                      id,
-                      phrase.audioUrl,
-                      phrase.targetLanguage == 'en'
-                          ? phrase.englishText
-                          : phrase.translation,
-                      phrase.targetLanguage,
-                    ),
+                    onTap: () => _playAudio(itemKey, englishText),
                     child: Container(
                       width: 36.w,
                       height: 36.h,
                       decoration: BoxDecoration(
-                        color: Color(0xFFE0F7F4),
+                        color: const Color(0xFFE0F7F4),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
@@ -1465,7 +675,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                           'assets/icons/travelvocabularyseslendirme.svg',
                           width: 18.w,
                           height: 18.h,
-                          colorFilter: ColorFilter.mode(
+                          colorFilter: const ColorFilter.mode(
                             Color(0xFF4ECDC4),
                             BlendMode.srcIn,
                           ),
@@ -1473,23 +683,22 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                       ),
                     ),
                   ),
-
                   SizedBox(width: 6.w),
-
-                  // Bookmark button
                   GestureDetector(
                     onTap: () => _toggleBookmark(
-                      id,
-                      itemType: 'travel_phrase',
-                      category: phrase.category,
+                      itemKey,
+                      itemType: _isShowingWords
+                          ? 'dictionary_word'
+                          : 'travel_phrase',
+                      category: categoryKey,
                     ),
                     child: Container(
                       width: 36.w,
                       height: 36.h,
                       decoration: BoxDecoration(
                         color: isBookmarked
-                            ? Color(0x3D2989E9)
-                            : Color(0xFFF3F4F6),
+                            ? const Color(0x3D2989E9)
+                            : const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
@@ -1500,7 +709,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                           colorFilter: ColorFilter.mode(
                             isBookmarked
                                 ? const Color(0xFF2989E9)
-                                : Color(0xFFB0B0B0),
+                                : const Color(0xFFB0B0B0),
                             BlendMode.srcIn,
                           ),
                         ),
@@ -1509,14 +718,9 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                   ),
                 ],
               ),
-
               SizedBox(height: 4.h),
-
-              // Translation on second line
               Text(
-                phrase.targetLanguage == 'en'
-                    ? phrase.translation
-                    : phrase.englishText,
+                translatedText,
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w400,
@@ -1527,14 +731,13 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
             ],
           ),
         ),
-        // Progress bar at the bottom of the card
         AnimatedContainer(
-          duration: Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 300),
           height: 3.h,
           margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 16.h),
           decoration: BoxDecoration(
-            color: _playingItemId == id
-                ? Color(0xFF4ECDC4)
+            color: _playingItemId == itemKey
+                ? const Color(0xFF4ECDC4)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(2.r),
           ),

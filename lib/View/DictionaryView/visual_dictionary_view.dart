@@ -1,18 +1,20 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:audioplayers/audioplayers.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import 'package:lingola_travel/Core/Localization/app_localizations.dart';
-import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
-import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'dart:async';
-import '../../Services/tts_service.dart';
+import 'package:lingola_travel/Core/Utils/language_data.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../Repositories/library_repository.dart';
-import '../../Repositories/dictionary_repository.dart';
 import '../../Riverpod/Controllers/library_controller.dart';
-import '../../Models/dictionary_model.dart';
+import '../../Services/tts_service.dart';
 import 'dictionary_category_view.dart';
 
 class VisualDictionaryView extends ConsumerStatefulWidget {
@@ -26,125 +28,179 @@ class VisualDictionaryView extends ConsumerStatefulWidget {
 
 class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   final TextEditingController _searchController = TextEditingController();
-  List<String> _recentSearches = ['Accommodation', 'Airport'];
-  Set<String> _bookmarkedCategories = {};
-  Set<String> _bookmarkedWords = {};
+
+  static const String _recentSearchesKey = 'visual_dict_recent_searches';
+
+  List<Map<String, String>> _recentSearches = [];
+
+  final Set<String> _bookmarkedCategories = {};
+  final Set<String> _bookmarkedWords = {};
   String _searchQuery = '';
-  List<DictionaryWordModel> _searchResults = [];
+  List<Map<String, String>> _searchResults = [];
   bool _isSearching = false;
   Timer? _debounceTimer;
 
-  // Audio player
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? _playingCategory;
   String? _playingWordId;
   StreamSubscription? _audioCompletionSubscription;
 
-  // TTS Service
   late final TtsService _ttsService;
-
-  // STATIC categories - using localized names via getter
-  List<Map<String, dynamic>> get _staticCategories {
-    final l = AppLocalizations.of(ref.read(localeProvider));
-    return [
-      {
-        'id': 'dict-cat-011',
-        'name': l.catAirport,
-        'icon': 'assets/icons/airport.png',
-        'color': '#B8A7FF',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-002',
-        'name': l.catAccommodation,
-        'icon': 'assets/icons/accommodation.png',
-        'color': '#FF9F6A',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-003',
-        'name': l.catTransportation,
-        'icon': 'assets/icons/transportation.png',
-        'color': '#F9D26B',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-004',
-        'name': l.catFoodAndDrink,
-        'icon': 'assets/icons/food_drink.png',
-        'color': '#FF8FA5',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-005',
-        'name': l.catShopping,
-        'icon': 'assets/icons/shopping.png',
-        'color': '#8BDDCD',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-006',
-        'name': l.catCulture,
-        'icon': 'assets/icons/culture.png',
-        'color': '#B8D9FF',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-007',
-        'name': l.catMeeting,
-        'icon': 'assets/icons/meeting.png',
-        'color': '#FFB8B8',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-008',
-        'name': l.catSport,
-        'icon': 'assets/icons/sport.png',
-        'color': '#E4B3FF',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-009',
-        'name': l.catHealth,
-        'icon': 'assets/icons/health.png',
-        'color': '#B8FFC9',
-        'count': 20,
-      },
-      {
-        'id': 'dict-cat-010',
-        'name': l.catBusiness,
-        'icon': 'assets/icons/business.png',
-        'color': '#A4C8E1',
-        'count': 20,
-      },
-    ];
-  }
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize TTS service
+    _loadRecentSearches();
+
     _ttsService = TtsService();
     _ttsService
         .init()
         .then((_) {
-          print('✅ TTS initialized in visual_dictionary_view');
+          debugPrint('✅ TTS initialized in visual_dictionary_view');
         })
         .catchError((e) {
-          print('⚠️ Error initializing TTS: $e');
+          debugPrint('⚠️ Error initializing TTS: $e');
         });
 
-    // Setup audio completion listener
     _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
       event,
     ) {
       if (mounted) {
         setState(() {
           _playingCategory = null;
+          _playingWordId = null;
         });
       }
     });
+  }
+
+  Future<void> _loadRecentSearches() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? searchesJson = prefs.getString(_recentSearchesKey);
+
+      if (searchesJson != null) {
+        final List<dynamic> decodedList = jsonDecode(searchesJson);
+        if (mounted) {
+          setState(() {
+            _recentSearches = decodedList
+                .map((item) => Map<String, String>.from(item))
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Arama geçmişi yüklenirken hata oluştu: $e');
+    }
+  }
+
+  Future<void> _saveRecentSearches() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String encodedList = jsonEncode(_recentSearches);
+      await prefs.setString(_recentSearchesKey, encodedList);
+    } catch (e) {
+      debugPrint('Arama geçmişi kaydedilirken hata oluştu: $e');
+    }
+  }
+
+  // --- STATİK KATEGORİ LİSTESİ (GERÇEK KELİME SAYILARI İLE) ---
+  int _getWordCount(String categoryKey) {
+    return LanguageDataManager.vocabularyData[categoryKey]?.length ?? 0;
+  }
+
+  List<Map<String, dynamic>> get _staticCategories {
+    return [
+      {
+        'id': 'dict-cat-001',
+        'key': LocaleKeys.home_catGeneral, // Tıklama için orijinal key gerekli
+        'name': LocaleKeys.home_catGeneral.tr(),
+        'icon': 'assets/images/home/general.png',
+        'color': '#FFD166',
+        'count': _getWordCount(LocaleKeys.home_catGeneral),
+      },
+      {
+        'id': 'dict-cat-002',
+        'key': LocaleKeys.home_catTravel,
+        'name': LocaleKeys.home_catTravel.tr(),
+        'icon': 'assets/images/home/trip.png',
+        'color': '#B8A7FF',
+        'count': _getWordCount(LocaleKeys.home_catTravel),
+      },
+      {
+        'id': 'dict-cat-003',
+        'key': LocaleKeys.home_catAccommodation,
+        'name': LocaleKeys.home_catAccommodation.tr(),
+        'icon': 'assets/images/home/accomo.png',
+        'color': '#FF9F6A',
+        'count': _getWordCount(LocaleKeys.home_catAccommodation),
+      },
+      {
+        'id': 'dict-cat-004',
+        'key': LocaleKeys.home_catFoodAndDrink,
+        'name': LocaleKeys.home_catFoodAndDrink.tr(),
+        'icon': 'assets/images/home/food.png',
+        'color': '#FF8FA5',
+        'count': _getWordCount(LocaleKeys.home_catFoodAndDrink),
+      },
+      {
+        'id': 'dict-cat-005',
+        'key': LocaleKeys.home_catCulture,
+        'name': LocaleKeys.home_catCulture.tr(),
+        'icon': 'assets/images/home/culture.png',
+        'color': '#B8D9FF',
+        'count': _getWordCount(LocaleKeys.home_catCulture),
+      },
+      {
+        'id': 'dict-cat-006',
+        'key': LocaleKeys.home_catShop,
+        'name': LocaleKeys.home_catShop.tr(),
+        'icon': 'assets/images/home/shope.png',
+        'color': '#8BDDCD',
+        'count': _getWordCount(LocaleKeys.home_catShop),
+      },
+      {
+        'id': 'dict-cat-007',
+        'key': LocaleKeys.home_catDirection,
+        'name': LocaleKeys.home_catDirection.tr(),
+        'icon': 'assets/images/home/direction.png',
+        'color': '#F9D26B',
+        'count': _getWordCount(LocaleKeys.home_catDirection),
+      },
+      {
+        'id': 'dict-cat-008',
+        'key': LocaleKeys.home_catSport,
+        'name': LocaleKeys.home_catSport.tr(),
+        'icon': 'assets/images/home/sport.png',
+        'color': '#E4B3FF',
+        'count': _getWordCount(LocaleKeys.home_catSport),
+      },
+      {
+        'id': 'dict-cat-009',
+        'key': LocaleKeys.home_catHealth,
+        'name': LocaleKeys.home_catHealth.tr(),
+        'icon': 'assets/images/home/health.png',
+        'color': '#B8FFC9',
+        'count': _getWordCount(LocaleKeys.home_catHealth),
+      },
+      {
+        'id': 'dict-cat-010',
+        'key': LocaleKeys.home_catBusiness,
+        'name': LocaleKeys.home_catBusiness.tr(),
+        'icon': 'assets/images/home/bussines.png',
+        'color': '#A4C8E1',
+        'count': _getWordCount(LocaleKeys.home_catBusiness),
+      },
+      {
+        'id': 'dict-cat-011',
+        'key': LocaleKeys.home_catEmergency,
+        'name': LocaleKeys.home_catEmergency.tr(),
+        'icon': 'assets/images/home/emergency.png',
+        'color': '#FF6B6B',
+        'count': _getWordCount(LocaleKeys.home_catEmergency),
+      },
+    ];
   }
 
   @override
@@ -156,47 +212,50 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     super.dispose();
   }
 
-  // Perform word search with debounce
-  Future<void> _performSearch(String query) async {
-    if (query.trim().length < 2) {
-      setState(() {
-        _searchResults = [];
-        _isSearching = false;
-      });
-      return;
-    }
+  // İngilizce kelimeyi formatlama (camelCase düzeltici)
+  String _formatEnglishWord(String key) {
+    final lastPart = key.split('.').last;
+    if (lastPart == 'oneMomentPlease') return 'One moment, please';
 
-    setState(() {
-      _isSearching = true;
-    });
+    final RegExp exp = RegExp(r'(?<=[a-z])(?=[A-Z])');
+    final parts = lastPart.split(exp);
 
-    try {
-      final response = await DictionaryRepository().searchWords(
-        query: query.trim(),
-        limit: 50,
-      );
+    String formatted = parts.map((p) => p.toLowerCase()).join(' ');
+    formatted = formatted[0].toUpperCase() + formatted.substring(1);
 
-      if (response.success && response.data != null) {
-        setState(() {
-          _searchResults = response.data!;
-          _isSearching = false;
-        });
-      } else {
-        setState(() {
-          _searchResults = [];
-          _isSearching = false;
-        });
-      }
-    } catch (e) {
-      print('Search error: $e');
-      setState(() {
-        _searchResults = [];
-        _isSearching = false;
-      });
-    }
+    return formatted;
   }
 
-  // Filter categories based on search query
+  void _performSearch(String query) {
+    final String q = query.toLowerCase();
+    final List<Map<String, String>> results = [];
+
+    // Taramayı statik LanguageDataManager üzerinden yap
+    LanguageDataManager.vocabularyData.forEach((catKey, words) {
+      for (var wordKey in words) {
+        String englishWord = _formatEnglishWord(wordKey);
+        String translated = wordKey.tr();
+
+        if (englishWord.toLowerCase().contains(q) ||
+            translated.toLowerCase().contains(q)) {
+          results.add({
+            'id': wordKey, // Kelimenin orjinal anahtarı
+            'word': englishWord,
+            'translation': translated,
+            'categoryName': catKey, // Kategori anahtarı
+          });
+
+          if (results.length >= 50) break;
+        }
+      }
+    });
+
+    setState(() {
+      _searchResults = results;
+      _isSearching = false; // Arama tamamlandı
+    });
+  }
+
   List<Map<String, dynamic>> get _filteredCategories {
     if (_searchQuery.isEmpty) {
       return _staticCategories;
@@ -209,43 +268,51 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     }).toList();
   }
 
-  void _toggleBookmark(String categoryName) async {
+  void _addWordToRecentSearches(Map<String, String> word) {
+    if (!mounted) return;
+    setState(() {
+      _recentSearches.removeWhere((item) => item['id'] == word['id']);
+      _recentSearches.insert(0, word);
+
+      if (_recentSearches.length > 5) {
+        _recentSearches = _recentSearches.sublist(0, 5);
+      }
+    });
+
+    _saveRecentSearches();
+  }
+
+  void _toggleBookmark(String categoryKey) async {
     try {
-      final isCurrentlyBookmarked = _bookmarkedCategories.contains(
-        categoryName,
-      );
+      final isCurrentlyBookmarked = _bookmarkedCategories.contains(categoryKey);
 
       if (isCurrentlyBookmarked) {
-        // Remove from library
         await LibraryRepository().removeBookmarkByItem(
           itemType: 'dictionary_category',
-          itemId: categoryName,
+          itemId: categoryKey,
         );
         setState(() {
-          _bookmarkedCategories.remove(categoryName);
+          _bookmarkedCategories.remove(categoryKey);
         });
       } else {
-        // Save to library
         await LibraryRepository().addBookmark(
           itemType: 'dictionary_category',
-          itemId: categoryName,
+          itemId: categoryKey,
           category: 'Dictionary',
         );
         setState(() {
-          _bookmarkedCategories.add(categoryName);
+          _bookmarkedCategories.add(categoryKey);
         });
-        // Refresh library folders
         ref.read(libraryControllerProvider.notifier).loadFolders();
       }
     } catch (e) {
-      print('Error toggling bookmark: $e');
+      debugPrint('Error toggling bookmark: $e');
     }
   }
 
-  Future<void> _playAudio(String categoryName) async {
+  Future<void> _playAudio(String textToSpeak) async {
     try {
-      // If same category is playing, stop it
-      if (_playingCategory == categoryName) {
+      if (_playingCategory == textToSpeak) {
         await _audioPlayer.stop();
         await _ttsService.stop();
         setState(() {
@@ -254,28 +321,21 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         return;
       }
 
-      // Stop any current playback
       await _audioPlayer.stop();
       await _ttsService.stop();
 
-      // Play new audio using TTS
       setState(() {
-        _playingCategory = categoryName;
+        _playingCategory = textToSpeak;
       });
 
-      print('🔊 Playing category name: "$categoryName"');
       _ttsService
-          .speak(categoryName, languageCode: 'en')
-          .then((_) {
-            print('✅ TTS completed for: $categoryName');
-          })
+          .speak(textToSpeak, languageCode: context.locale.languageCode)
           .catchError((e) {
-            print('❌ TTS error: $e');
+            debugPrint('❌ TTS error: $e');
           });
 
-      // Reset playing state after estimated TTS duration
-      Future.delayed(Duration(seconds: 2), () {
-        if (mounted && _playingCategory == categoryName) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted && _playingCategory == textToSpeak) {
           setState(() {
             _playingCategory = null;
           });
@@ -285,15 +345,12 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
       setState(() {
         _playingCategory = null;
       });
-      print('Error playing audio: $e');
+      debugPrint('Error playing audio: $e');
     }
   }
 
-  Future<void> _playWordAudio(DictionaryWordModel word) async {
+  Future<void> _playWordAudio(String wordId, String englishWord) async {
     try {
-      final wordId = word.id.toString();
-
-      // If same word is playing, stop it
       if (_playingWordId == wordId) {
         await _audioPlayer.stop();
         await _ttsService.stop();
@@ -303,7 +360,6 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         return;
       }
 
-      // Stop any current playback
       await _audioPlayer.stop();
       await _ttsService.stop();
 
@@ -312,35 +368,11 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         _playingCategory = null;
       });
 
-      final targetWord = word.targetLanguage == 'en'
-          ? word.word
-          : word.translation;
-      final languageCode = word.targetLanguage ?? 'en';
+      _ttsService.speak(englishWord, languageCode: 'en').catchError((e) {
+        debugPrint('❌ TTS error: $e');
+      });
 
-      print('🔊 Playing word: "$targetWord" ($languageCode)');
-
-      // Try audio URL first, fallback to TTS
-      if (word.audioUrl != null && word.audioUrl!.isNotEmpty) {
-        try {
-          await _audioPlayer.play(UrlSource(word.audioUrl!));
-          return;
-        } catch (e) {
-          print('Audio URL failed, using TTS: $e');
-        }
-      }
-
-      // Use TTS
-      _ttsService
-          .speak(targetWord, languageCode: languageCode)
-          .then((_) {
-            print('✅ TTS completed for: $targetWord');
-          })
-          .catchError((e) {
-            print('❌ TTS error: $e');
-          });
-
-      // Reset playing state
-      Future.delayed(Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 3), () {
         if (mounted && _playingWordId == wordId) {
           setState(() {
             _playingWordId = null;
@@ -351,13 +383,13 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
       setState(() {
         _playingWordId = null;
       });
-      print('Error playing word audio: $e');
+      debugPrint('Error playing word audio: $e');
     }
   }
 
-  void _toggleWordBookmark(DictionaryWordModel word) async {
+  void _toggleWordBookmark(String wordId, String categoryName) async {
     try {
-      final wordId = word.id.toString();
+      setState(() => _bookmarkedWords.remove(wordId));
       final isCurrentlyBookmarked = _bookmarkedWords.contains(wordId);
 
       if (isCurrentlyBookmarked) {
@@ -365,22 +397,17 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           itemType: 'dictionary_word',
           itemId: wordId,
         );
-        setState(() {
-          _bookmarkedWords.remove(wordId);
-        });
       } else {
+        setState(() => _bookmarkedWords.add(wordId));
         await LibraryRepository().addBookmark(
           itemType: 'dictionary_word',
           itemId: wordId,
-          category: 'Dictionary',
+          category: categoryName,
         );
-        setState(() {
-          _bookmarkedWords.add(wordId);
-        });
         ref.read(libraryControllerProvider.notifier).loadFolders();
       }
     } catch (e) {
-      print('Error toggling word bookmark: $e');
+      debugPrint('Error toggling word bookmark: $e');
     }
   }
 
@@ -388,24 +415,16 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     setState(() {
       _recentSearches.clear();
     });
+    _saveRecentSearches();
   }
 
-  void _navigateToCategory(String categoryName, String categoryId) {
-    // Add to recent searches
-    setState(() {
-      _recentSearches.remove(categoryName);
-      _recentSearches.insert(0, categoryName);
-      if (_recentSearches.length > 5) {
-        _recentSearches = _recentSearches.sublist(0, 5);
-      }
-    });
-
+  void _navigateToCategory(String categoryKey) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => DictionaryCategoryView(
-          categoryName: categoryName,
-          categoryId: categoryId,
+          categoryName: categoryKey, // Tıklananın gerçek key'i aktarılır
+          categoryId: categoryKey,
           isPremium: widget.isPremium,
         ),
       ),
@@ -416,83 +435,71 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: MyColors.background,
+      appBar: AppBar(
+        backgroundColor: MyColors.background,
+        elevation: 0,
+        centerTitle: true,
+        forceMaterialTransparency: true,
+        leading: InkWell(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            alignment: Alignment.center,
+            child: SvgPicture.asset(
+              'assets/icons/gerigelmeiconu.svg',
+              width: 16.w,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        title: Text(
+          LocaleKeys.home_visualDictionary.tr(),
+          style: TextStyle(
+            fontSize: 20.sp,
+            letterSpacing: 20.sp * -0.05,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Montserrat',
+            color: MyColors.textPrimary,
+          ),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
-        child: Stack(
-          children: [
-            // Main scrollable content
-            _searchQuery.trim().length >= 2
-                ? _buildSearchResults()
-                : SingleChildScrollView(
-                    physics: BouncingScrollPhysics(),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 16.h),
-
-                          // Header with back button and title
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: SvgPicture.asset(
-                                  'assets/icons/gerigelmeiconu.svg',
-                                  width: 13.w,
-                                  height: 13.w,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Text(
-                                AppLocalizations.of(
-                                  ref.watch(localeProvider),
-                                ).visualDictionary,
-                                style: TextStyle(
-                                  fontSize: 20.sp,
-                                  fontWeight: FontWeight.w700,
-                                  fontFamily: 'Montserrat',
-                                  color: MyColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 20.h),
-
-                          // Search bar
-                          _buildSearchBar(),
-
-                          SizedBox(height: 24.h),
-
-                          // Category grid - STATIC categories
-                          _buildCategoryGrid(),
-
-                          SizedBox(height: 16.h),
-
-                          // Recent Search (only show when not searching)
-                          if (_recentSearches.isNotEmpty) _buildRecentSearch(),
-
-                          SizedBox(height: 100.h), // Space for bottom nav
-                        ],
-                      ),
-                    ),
-                  ),
-
-            // Floating bottom navigation
-            CustomBottomNavBar(
-              key: ValueKey('bottom_nav_dictionary'), // Unique key
-              currentIndex: 2,
-              isPremium: widget.isPremium,
+        top: false,
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 20.h),
+                _buildSearchBar(),
+                SizedBox(height: 16.h),
+                if (_searchQuery.trim().length >= 2)
+                  _buildSearchResults()
+                else
+                  _buildDefaultContent(),
+                SizedBox(height: 100.h),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  /// Search bar
+  Widget _buildDefaultContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 8.h),
+        _buildCategoryGrid(),
+        SizedBox(height: 16.h),
+        if (_recentSearches.isNotEmpty) _buildRecentSearch(),
+      ],
+    );
+  }
+
   Widget _buildSearchBar() {
     return Container(
       height: 48.h,
@@ -506,18 +513,18 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         onChanged: (value) {
           setState(() {
             _searchQuery = value;
-          });
-
-          // Debounce search
-          _debounceTimer?.cancel();
-          if (value.trim().length >= 2) {
-            _debounceTimer = Timer(Duration(milliseconds: 500), () {
-              _performSearch(value);
-            });
-          } else {
-            setState(() {
+            if (value.trim().length >= 2) {
+              _isSearching = true;
+            } else {
               _searchResults = [];
               _isSearching = false;
+            }
+          });
+
+          _debounceTimer?.cancel();
+          if (value.trim().length >= 2) {
+            _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+              _performSearch(value);
             });
           }
         },
@@ -527,18 +534,24 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           color: MyColors.textPrimary,
         ),
         decoration: InputDecoration(
-          hintText: AppLocalizations.of(
-            ref.watch(localeProvider),
-          ).searchWordsOrPhrases,
+          hintText: LocaleKeys.search_placeholder.tr(),
           hintStyle: TextStyle(
             fontSize: 14.sp,
             fontFamily: 'Montserrat',
             color: MyColors.textSecondary,
           ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: MyColors.textSecondary,
-            size: 20.sp,
+          prefixIconConstraints: BoxConstraints(
+            minWidth: 40.w,
+            maxHeight: 24.h,
+          ),
+          prefixIcon: Padding(
+            padding: EdgeInsets.only(left: 12.w, right: 8.w),
+            child: SvgPicture.asset(
+              'assets/icons/scope.svg',
+              width: 18.w,
+              height: 18.h,
+              fit: BoxFit.contain,
+            ),
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -561,57 +574,21 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 12.h),
         ),
+        cursorColor: MyColors.lingolaPrimaryColor,
       ),
     );
   }
 
-  /// Category grid - STATIC with search filtering
   Widget _buildCategoryGrid() {
     final categories = _filteredCategories;
 
     if (categories.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 40.h),
-          child: Column(
-            children: [
-              Icon(
-                Icons.search_off,
-                size: 64.sp,
-                color: MyColors.textSecondary.withOpacity(0.5),
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                AppLocalizations.of(
-                  ref.watch(localeProvider),
-                ).noCategoriesFound,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                AppLocalizations.of(
-                  ref.watch(localeProvider),
-                ).tryDifferentKeywords,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary.withOpacity(0.7),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return GridView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16.w,
@@ -626,37 +603,35 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     );
   }
 
-  /// Category card - STATIC data
   Widget _buildCategoryCard(Map<String, dynamic> category) {
-    // Parse color from string
     Color bgColor;
     try {
       final colorStr = category['color'].replaceAll('#', '');
       final colorInt = int.parse('FF$colorStr', radix: 16);
       bgColor = Color(colorInt).withOpacity(0.2);
     } catch (e) {
-      bgColor = Color(0xFF4ECDC4).withOpacity(0.2);
+      bgColor = const Color(0xFF4ECDC4).withOpacity(0.2);
     }
 
     return GestureDetector(
-      onTap: () => _navigateToCategory(category['name'], category['id']),
+      onTap: () => _navigateToCategory(category['key']), // KEY aktarılıyor
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: MyColors.white,
-          borderRadius: BorderRadius.circular(16.r),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: Offset(0, 4),
+              color: const Color(0xFFC2D6E1).withOpacity(0.60),
+              offset: const Offset(0, 2),
+              blurRadius: 4,
+              spreadRadius: 0,
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon
             Container(
               width: 48.w,
               height: 48.h,
@@ -666,7 +641,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               ),
               child: Center(
                 child: Image.asset(
-                  category['icon'], // Direct static icon path
+                  category['icon'],
                   width: 20.w,
                   height: 20.h,
                   fit: BoxFit.contain,
@@ -681,12 +656,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                 ),
               ),
             ),
-
-            Spacer(),
-
-            // Category name
+            const Spacer(),
             Text(
-              category['name'],
+              category['name'], // Ekrana çevrilmiş isim yazılır
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
@@ -696,15 +668,12 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-
             SizedBox(height: 4.h),
-
-            // Item count
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    '${AppLocalizations.of(ref.watch(localeProvider)).itemsCount(category['count'] as int)}',
+                    '${category['count']} ${LocaleKeys.library_library_items.tr()}',
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w400,
@@ -726,17 +695,15 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     );
   }
 
-  /// Recent Search section
   Widget _buildRecentSearch() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              AppLocalizations.of(ref.watch(localeProvider)).recentSearch,
+              LocaleKeys.search_recent.tr(),
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w700,
@@ -747,434 +714,223 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
             TextButton(
               onPressed: _clearRecentSearches,
               child: Text(
-                AppLocalizations.of(ref.watch(localeProvider)).clearText,
+                LocaleKeys.search_clear.tr(),
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'Montserrat',
-                  color: Color(0xFF4ECDC4),
+                  color: const Color(0xFF4ECDC4),
                 ),
               ),
             ),
           ],
         ),
-
         SizedBox(height: 12.h),
-
-        // Recent items
-        ..._recentSearches
-            .map((search) => _buildRecentSearchItem(search))
-            .toList(),
+        ..._recentSearches.map((word) => _buildSearchWordCard(word)),
       ],
     );
   }
 
-  /// Recent search item
-  Widget _buildRecentSearchItem(String categoryName) {
-    final isBookmarked = _bookmarkedCategories.contains(categoryName);
-    final isPlaying = _playingCategory == categoryName;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: EdgeInsets.only(bottom: 0),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-          decoration: BoxDecoration(
-            color: MyColors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // First row: Category name + Buttons
-              Row(
-                children: [
-                  // History icon
-                  Icon(
-                    Icons.history,
-                    size: 20.sp,
-                    color: MyColors.textSecondary,
-                  ),
-
-                  SizedBox(width: 8.w),
-
-                  // Category name
-                  Expanded(
-                    child: Text(
-                      categoryName,
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.textPrimary,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 8.w),
-
-                  // Audio button
-                  GestureDetector(
-                    onTap: () => _playAudio(categoryName),
-                    child: Container(
-                      width: 36.w,
-                      height: 36.h,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFE0F7F4),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/travelvocabularyseslendirme.svg',
-                          width: 18.w,
-                          height: 18.h,
-                          colorFilter: ColorFilter.mode(
-                            Color(0xFF4ECDC4),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 6.w),
-
-                  // Bookmark button
-                  GestureDetector(
-                    onTap: () => _toggleBookmark(categoryName),
-                    child: Container(
-                      width: 36.w,
-                      height: 36.h,
-                      decoration: BoxDecoration(
-                        color: isBookmarked
-                            ? Color(0x3D2989E9)
-                            : Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/travelvocabularykaydet.svg',
-                          width: 18.w,
-                          height: 18.h,
-                          colorFilter: ColorFilter.mode(
-                            isBookmarked
-                                ? const Color(0xFF2989E9)
-                                : Color(0xFF9CA3AF),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 4.h),
-
-              // Recent item label on second line
-              Padding(
-                padding: EdgeInsets.only(left: 28.w),
-                child: Text(
-                  AppLocalizations.of(ref.watch(localeProvider)).recentItem,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Progress bar at the bottom of the card
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          height: 3.h,
-          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 16.h),
-          decoration: BoxDecoration(
-            color: isPlaying ? Color(0xFF4ECDC4) : Colors.transparent,
-            borderRadius: BorderRadius.circular(2.r),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Search results list
   Widget _buildSearchResults() {
-    return SingleChildScrollView(
-      physics: BouncingScrollPhysics(),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 16.h),
+    if (_isSearching) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(40.h),
+          child: const CircularProgressIndicator(color: Color(0xFF4ECDC4)),
+        ),
+      );
+    }
 
-            // Header with back button and title
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: SvgPicture.asset(
-                    'assets/icons/gerigelmeiconu.svg',
-                    width: 13.w,
-                    height: 13.w,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Text(
-                  AppLocalizations.of(
-                    ref.watch(localeProvider),
-                  ).visualDictionary,
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 20.h),
-
-            // Search bar
-            _buildSearchBar(),
-
-            SizedBox(height: 16.h),
-
-            // Loading indicator
-            if (_isSearching)
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40.h),
-                  child: CircularProgressIndicator(color: Color(0xFF4ECDC4)),
-                ),
-              )
-            // No results
-            else if (_searchResults.isEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 60.h),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.search_off,
-                      size: 64.sp,
-                      color: MyColors.textSecondary.withOpacity(0.5),
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      AppLocalizations.of(
-                        ref.watch(localeProvider),
-                      ).noWordsFound,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.textSecondary,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      AppLocalizations.of(
-                        ref.watch(localeProvider),
-                      ).tryDifferentKeywords,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.textSecondary.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            // Search results
-            else ...[
-              // Result count
+    if (_searchResults.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 60.h),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.search_off,
+                size: 64.sp,
+                color: MyColors.textSecondary.withOpacity(0.5),
+              ),
+              SizedBox(height: 16.h),
               Text(
-                '${_searchResults.length} results found',
+                LocaleKeys.search_not_found.tr(),
                 style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
                   fontFamily: 'Montserrat',
                   color: MyColors.textSecondary,
                 ),
               ),
-              SizedBox(height: 12.h),
-
-              // Word list
-              for (var word in _searchResults) _buildSearchWordCard(word),
+              SizedBox(height: 8.h),
+              Text(
+                LocaleKeys.search_try_different.tr(),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: 'Montserrat',
+                  color: MyColors.textSecondary.withOpacity(0.7),
+                ),
+              ),
             ],
-
-            SizedBox(height: 100.h), // Space for bottom nav
-          ],
+          ),
         ),
-      ),
-    );
-  }
-
-  /// Search word card
-  Widget _buildSearchWordCard(DictionaryWordModel word) {
-    final wordId = word.id.toString();
-    final isBookmarked = _bookmarkedWords.contains(wordId);
-    final isPlaying = _playingWordId == wordId;
-
-    final displayWord = word.targetLanguage == 'en'
-        ? word.word
-        : word.translation;
-    final translation = word.targetLanguage == 'en'
-        ? word.translation
-        : word.word;
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          margin: EdgeInsets.only(bottom: 0),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-          decoration: BoxDecoration(
-            color: MyColors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // First row: Word + Buttons
-              Row(
-                children: [
-                  // Word text
-                  Expanded(
-                    child: Text(
-                      displayWord,
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.textPrimary,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 8.w),
-
-                  // Audio button
-                  GestureDetector(
-                    onTap: () => _playWordAudio(word),
-                    child: Container(
-                      width: 36.w,
-                      height: 36.h,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFE0F7F4),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/travelvocabularyseslendirme.svg',
-                          width: 18.w,
-                          height: 18.h,
-                          colorFilter: ColorFilter.mode(
-                            Color(0xFF4ECDC4),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 6.w),
-
-                  // Bookmark button
-                  GestureDetector(
-                    onTap: () => _toggleWordBookmark(word),
-                    child: Container(
-                      width: 36.w,
-                      height: 36.h,
-                      decoration: BoxDecoration(
-                        color: isBookmarked
-                            ? Color(0x3D2989E9)
-                            : Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/travelvocabularykaydet.svg',
-                          width: 18.w,
-                          height: 18.h,
-                          colorFilter: ColorFilter.mode(
-                            isBookmarked
-                                ? const Color(0xFF2989E9)
-                                : Color(0xFF9CA3AF),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 4.h),
-
-              // Translation and category on second line
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    translation,
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                      color: MyColors.textSecondary,
-                    ),
-                  ),
-                  if (word.categoryName != null) ...[
-                    SizedBox(height: 2.h),
-                    Text(
-                      word.categoryName!,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF4ECDC4),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
+        Text(
+          '${_searchResults.length} ${LocaleKeys.library_library_items.tr()}',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w400,
+            fontFamily: 'Montserrat',
+            color: MyColors.textSecondary,
           ),
         ),
-        // Progress bar at the bottom of the card
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          height: 3.h,
-          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 16.h),
-          decoration: BoxDecoration(
-            color: isPlaying ? Color(0xFF4ECDC4) : Colors.transparent,
-            borderRadius: BorderRadius.circular(2.r),
-          ),
-        ),
+        SizedBox(height: 12.h),
+        for (var word in _searchResults) _buildSearchWordCard(word),
       ],
+    );
+  }
+
+  Widget _buildSearchWordCard(Map<String, String> word) {
+    final wordId = word['id']!;
+    final isBookmarked = _bookmarkedWords.contains(wordId);
+    final isPlaying = _playingWordId == wordId;
+
+    return GestureDetector(
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+        _addWordToRecentSearches(word);
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10.r),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFC2D6E1).withOpacity(0.60),
+                  offset: const Offset(0, 2),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  height: 40.w,
+                  width: 40.w,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F7F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.history),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        word['word']!,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          letterSpacing: 12.sp * -0.05,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Montserrat',
+                          color: MyColors.textPrimary,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            word['translation']!,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              letterSpacing: 10.sp * -0.05,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Montserrat',
+                              color: const Color(0xFF96A4B9),
+                            ),
+                          ),
+                          Text(
+                            " • ${word['categoryName']!.tr()}",
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Montserrat',
+                              color: const Color(0xFF4ECDC4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                GestureDetector(
+                  onTap: () {
+                    _addWordToRecentSearches(word);
+                    _playWordAudio(wordId, word['word']!);
+                  },
+                  child: SvgPicture.asset(
+                    'assets/icons/visualdictionaryses.svg',
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                GestureDetector(
+                  onTap: () {
+                    _addWordToRecentSearches(word);
+                    _toggleWordBookmark(wordId, word['categoryName']!);
+                  },
+                  child: Container(
+                    width: 30.w,
+                    height: 30.h,
+                    decoration: BoxDecoration(
+                      color: isBookmarked
+                          ? const Color(0xFF2989E9).withOpacity(0.2)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(5.r),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'assets/icons/visualdictionarysaved.svg',
+                        width: 12.w,
+                        height: 12.h,
+                        colorFilter: ColorFilter.mode(
+                          isBookmarked
+                              ? const Color(0xFF2989E9)
+                              : const Color(0xFFCBD5E1),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: 3.h,
+            margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 12.h),
+            decoration: BoxDecoration(
+              color: isPlaying ? const Color(0xFF4ECDC4) : Colors.transparent,
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

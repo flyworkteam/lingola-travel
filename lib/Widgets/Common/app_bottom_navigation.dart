@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../Core/Theme/my_colors.dart';
-import '../../View/HomeView/premium_home_view.dart';
-import '../../View/VocabularyView/travel_vocabulary_view.dart';
 import '../../View/CourseView/course_view.dart';
 import '../../View/HomeView/home_view.dart';
+import '../../View/VocabularyView/travel_vocabulary_view.dart';
 
 /// Standardized Bottom Navigation Bar for the app
 /// Used across all main screens to ensure consistency
@@ -128,10 +128,7 @@ class AppBottomNavigation extends StatelessWidget {
     switch (index) {
       case 0: // Home
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) =>
-                isPremium ? const PremiumHomeView() : const HomeView(),
-          ),
+          MaterialPageRoute(builder: (context) => const HomeView()),
           (route) => false,
         );
         break;

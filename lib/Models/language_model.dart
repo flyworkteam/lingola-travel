@@ -1,29 +1,48 @@
-class Language {
-  final String code;
-  final String name; // English name
-  final String nativeName; // Name in the language's native script
-  final String flag;
+import 'package:easy_localization/easy_localization.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
 
-  Language({
+class Language {
+  final String code; // Örn: 'en'
+  final String countryCode; // Örn: 'US'
+  final String flagAsset; // Örn: 'assets/images/englishflag.png'
+  final String
+  nativeName; // Dilin kendi ana dilindeki adı (Örn: 'Türkçe', 'English')
+
+  const Language({
     required this.code,
-    required this.name,
+    required this.countryCode,
+    required this.flagAsset,
     required this.nativeName,
-    required this.flag,
   });
 
-  static List<Language> getAllLanguages() {
-    return [
-      Language(code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧'),
-      Language(code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪'),
-      Language(code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹'),
-      Language(code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷'),
-      Language(code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵'),
-      Language(code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸'),
-      Language(code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺'),
-      Language(code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷'),
-      Language(code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷'),
-      Language(code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳'),
-      Language(code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹'),
-    ];
+  // Uygulamanın o anki diline göre çevrilmiş ismi getirir
+  // Örn: Uygulama Türkçeyse 'İngilizce', İngilizceyse 'English' döner.
+  String getTranslatedName() {
+    switch (code) {
+      case 'en':
+        return LocaleKeys.lang_english.tr();
+      case 'tr':
+        return LocaleKeys.lang_turkish.tr();
+      case 'de':
+        return LocaleKeys.lang_german.tr();
+      case 'es':
+        return LocaleKeys.lang_spanish.tr();
+      case 'fr':
+        return LocaleKeys.lang_french.tr();
+      case 'hi':
+        return LocaleKeys.lang_hindi.tr();
+      case 'it':
+        return LocaleKeys.lang_italian.tr();
+      case 'ja':
+        return LocaleKeys.lang_japanese.tr();
+      case 'ko':
+        return LocaleKeys.lang_korean.tr();
+      case 'pt':
+        return LocaleKeys.lang_portuguese.tr();
+      case 'ru':
+        return LocaleKeys.lang_russian.tr();
+      default:
+        return nativeName;
+    }
   }
 }

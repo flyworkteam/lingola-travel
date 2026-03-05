@@ -1,8 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/notification_model.dart';
 import 'package:lingola_travel/Repositories/notification_repository.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
 
 class NotificationsView extends StatefulWidget {
   final bool isPremiumUser;
@@ -44,13 +47,14 @@ class _NotificationsViewState extends State<NotificationsView> {
       } else {
         setState(() {
           _errorMessage =
-              response.error?.toString() ?? 'Failed to load notifications';
+              response.error?.toString() ??
+              LocaleKeys.notifications_load_failed.tr();
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error: $e';
+        _errorMessage = '${LocaleKeys.error_occurred.tr()}: $e';
         _isLoading = false;
       });
     }
@@ -68,8 +72,11 @@ class _NotificationsViewState extends State<NotificationsView> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response.error?.toString() ?? 'Failed to delete'),
-              duration: Duration(seconds: 2),
+              content: Text(
+                response.error?.toString() ??
+                    LocaleKeys.notifications_delete_failed.tr(),
+              ),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -77,7 +84,10 @@ class _NotificationsViewState extends State<NotificationsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), duration: Duration(seconds: 2)),
+          SnackBar(
+            content: Text('${LocaleKeys.error_occurred.tr()}: $e'),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     }
@@ -89,19 +99,17 @@ class _NotificationsViewState extends State<NotificationsView> {
 
       if (response.success) {
         setState(() {
-          if (widget.isPremiumUser) {
-            _notifications.clear();
-          } else {
-            // Keep premium promo notifications for free users
-            _notifications.removeWhere((n) => !n.isPremiumPromo);
-          }
+          _notifications.clear();
         });
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response.error?.toString() ?? 'Failed to delete'),
-              duration: Duration(seconds: 2),
+              content: Text(
+                response.error?.toString() ??
+                    LocaleKeys.notifications_delete_failed.tr(),
+              ),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -109,7 +117,10 @@ class _NotificationsViewState extends State<NotificationsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), duration: Duration(seconds: 2)),
+          SnackBar(
+            content: Text('${LocaleKeys.error_occurred.tr()}: $e'),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     }
@@ -134,16 +145,15 @@ class _NotificationsViewState extends State<NotificationsView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Trash icon with effect
                 Container(
                   width: 64.w,
                   height: 64.h,
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFEBEE), // Light red
+                    color: const Color(0xFFFFEBEE),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Color(0xFFE53935).withOpacity(0.3),
+                        color: const Color(0xFFE53935).withOpacity(0.3),
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
@@ -155,12 +165,9 @@ class _NotificationsViewState extends State<NotificationsView> {
                     height: 32.h,
                   ),
                 ),
-
                 SizedBox(height: 20.h),
-
-                // Title
                 Text(
-                  'Delete All Notifications?',
+                  LocaleKeys.notifications_delete_all_confirm_title.tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.sp,
@@ -171,29 +178,22 @@ class _NotificationsViewState extends State<NotificationsView> {
                     letterSpacing: -0.3,
                   ),
                 ),
-
                 SizedBox(height: 10.h),
-
-                // Description
                 Text(
-                  'Are you sure you want to delete all\nyour notifications? This action\ncannot be undone',
+                  LocaleKeys.notifications_delete_all_confirm_subtitle.tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13.sp,
                     letterSpacing: -0.3,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w300,
                     fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
+                    color: MyColors.textPrimary,
                     height: 1.4,
                   ),
                 ),
-
                 SizedBox(height: 24.h),
-
-                // Buttons
                 Row(
                   children: [
-                    // Cancel button
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -202,12 +202,12 @@ class _NotificationsViewState extends State<NotificationsView> {
                         child: Container(
                           height: 48.h,
                           decoration: BoxDecoration(
-                            color: Color(0xFFE0E0E0), // Light gray
-                            borderRadius: BorderRadius.circular(16.r),
+                            color: const Color(0xFFE0E0E0),
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              LocaleKeys.notifications_cancel_btn.tr(),
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
@@ -219,10 +219,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                         ),
                       ),
                     ),
-
                     SizedBox(width: 16.w),
-
-                    // Delete button
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -232,12 +229,12 @@ class _NotificationsViewState extends State<NotificationsView> {
                         child: Container(
                           height: 48.h,
                           decoration: BoxDecoration(
-                            color: Color(0xFFE53935), // Red
-                            borderRadius: BorderRadius.circular(16.r),
+                            color: const Color(0xFFE53935),
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
                           child: Center(
                             child: Text(
-                              'Delete',
+                              LocaleKeys.notifications_delete_btn.tr(),
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
@@ -261,6 +258,12 @@ class _NotificationsViewState extends State<NotificationsView> {
 
   @override
   Widget build(BuildContext context) {
+    final normalNotifications = _notifications
+        .where((n) => !n.isPremiumPromo)
+        .toList();
+
+    final bool showPremiumPromo = !widget.isPremiumUser;
+
     return Scaffold(
       backgroundColor: MyColors.background,
       appBar: AppBar(
@@ -268,18 +271,20 @@ class _NotificationsViewState extends State<NotificationsView> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: MyColors.textPrimary,
-            size: 24.sp,
+        leadingWidth: 48,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 24.0),
+          child: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: SvgPicture.asset(
+              width: 13,
+              'assets/icons/gerigelmeiconu.svg',
+              fit: BoxFit.contain,
+            ),
           ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
         ),
         title: Text(
-          'Notifications',
+          LocaleKeys.notifications_title.tr(),
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.w700,
@@ -289,15 +294,31 @@ class _NotificationsViewState extends State<NotificationsView> {
         ),
         centerTitle: true,
         actions: [
-          if (!_isLoading && _notifications.isNotEmpty)
-            PopupMenuButton<String>(
+          Theme(
+            data: Theme.of(context).copyWith(
+              // Sağ tık menüsünün Material 3 tasarımlarındaki renklenmesini engeller
+              popupMenuTheme: PopupMenuThemeData(
+                color: Colors.white,
+                surfaceTintColor: Colors.white,
+              ),
+            ),
+            child: PopupMenuButton<String>(
               icon: Icon(
                 Icons.more_vert,
                 color: MyColors.textPrimary,
                 size: 24.sp,
               ),
+              color: Colors.white,
+              surfaceTintColor: Colors.white, // Tam bembeyaz olması için kritik
+              elevation: 6, // Tasarımdaki o hafif gölgeyi verir
+              offset: const Offset(
+                0,
+                45,
+              ), // Butonun tam altına hizalanmasını sağlar
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(
+                  16.r,
+                ), // Tasarımdaki yumuşak köşeler
               ),
               onSelected: (value) {
                 if (value == 'delete_all') {
@@ -307,17 +328,30 @@ class _NotificationsViewState extends State<NotificationsView> {
               itemBuilder: (BuildContext context) => [
                 PopupMenuItem<String>(
                   value: 'delete_all',
+                  height: 40.h, // Daha sıkı bir yükseklik
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: Row(
+                    mainAxisSize:
+                        MainAxisSize.min, // Sadece gerektiği kadar yer kapla
                     children: [
-                      Icon(Icons.delete_outline, color: Color(0xFFE53935)),
-                      SizedBox(width: 12.w),
+                      SvgPicture.asset(
+                        'assets/icons/cop.svg',
+                        width: 20.w, // İkon boyutu
+                        height: 20.w,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFFE53935),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
                       Text(
-                        'Delete All',
+                        LocaleKeys.notifications_delete_all_btn.tr(),
                         style: TextStyle(
                           fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
+                          fontWeight:
+                              FontWeight.w600, // Tasarımdaki gibi biraz kalın
                           fontFamily: 'Montserrat',
-                          color: Color(0xFFE53935),
+                          color: const Color(0xFFE53935),
                         ),
                       ),
                     ],
@@ -325,10 +359,13 @@ class _NotificationsViewState extends State<NotificationsView> {
                 ),
               ],
             ),
+          ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF4ECDC4)),
+            )
           : _errorMessage != null
           ? Center(
               child: Column(
@@ -344,12 +381,12 @@ class _NotificationsViewState extends State<NotificationsView> {
                   SizedBox(height: 16.h),
                   ElevatedButton(
                     onPressed: _loadNotifications,
-                    child: Text('Retry'),
+                    child: Text(LocaleKeys.notifications_retry_btn.tr()),
                   ),
                 ],
               ),
             )
-          : _notifications.isEmpty
+          : (!showPremiumPromo && normalNotifications.isEmpty)
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -361,7 +398,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'No notifications',
+                    LocaleKeys.notifications_no_notifications.tr(),
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
@@ -374,26 +411,18 @@ class _NotificationsViewState extends State<NotificationsView> {
             )
           : RefreshIndicator(
               onRefresh: _loadNotifications,
-              color: Color(0xFF4ECDC4),
-              child: ListView.builder(
+              color: const Color(0xFF4ECDC4),
+              child: ListView(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                itemCount: _notifications.length,
-                itemBuilder: (context, index) {
-                  final notification = _notifications[index];
-
-                  // Premium promo notification (sticky, highlighted)
-                  if (notification.isPremiumPromo) {
-                    return Container(
-                      margin: EdgeInsets.only(bottom: 12.h),
-                      child: _buildPremiumNotificationCard(notification),
-                    );
-                  }
-
-                  // Regular notification (dismissible)
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 12.h),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16.r),
+                children: [
+                  if (showPremiumPromo)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
+                      child: _buildStaticPremiumPromoCard(),
+                    ),
+                  ...normalNotifications.map((notification) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
                       child: Dismissible(
                         key: Key(notification.id),
                         direction: DismissDirection.endToStart,
@@ -403,7 +432,10 @@ class _NotificationsViewState extends State<NotificationsView> {
                         background: Container(
                           alignment: Alignment.centerRight,
                           padding: EdgeInsets.only(right: 20.w),
-                          color: Color(0xFFE53935),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE53935),
+                            borderRadius: BorderRadius.circular(22.r),
+                          ),
                           child: Icon(
                             Icons.delete_outline,
                             color: Colors.white,
@@ -412,44 +444,40 @@ class _NotificationsViewState extends State<NotificationsView> {
                         ),
                         child: _buildNotificationCard(notification),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  }),
+                ],
               ),
             ),
     );
   }
 
-  // Premium notification card (sticky, highlighted)
-  Widget _buildPremiumNotificationCard(NotificationModel notification) {
+  Widget _buildStaticPremiumPromoCard() {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF4ECDC4), Color(0xFF44B3AC)],
-        ),
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
+        color: MyColors.lingolaPrimaryColor,
+        borderRadius: BorderRadius.circular(22.r),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
+            color: Color(0xFFDCE1EC),
+            blurRadius: 4,
             offset: Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(notification.icon, style: TextStyle(fontSize: 24.sp)),
+          Text('🥇', style: TextStyle(fontSize: 24.sp)),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  notification.title,
+                  LocaleKeys.notifications_premium_promo_title.tr(),
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
@@ -459,7 +487,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  notification.message,
+                  LocaleKeys.notifications_premium_promo_subtitle.tr(),
                   style: TextStyle(
                     fontSize: 13.sp,
                     letterSpacing: -0.5,
@@ -469,16 +497,6 @@ class _NotificationsViewState extends State<NotificationsView> {
                   ),
                 ),
               ],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Text(
-            notification.getFormattedTime(),
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w400,
-              fontFamily: 'Montserrat',
-              color: Colors.white.withOpacity(0.8),
             ),
           ),
         ],
@@ -491,11 +509,13 @@ class _NotificationsViewState extends State<NotificationsView> {
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: notification.isRead ? MyColors.grey100 : Colors.white,
-        boxShadow: [
+        borderRadius: BorderRadius.circular(22.r),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
+            color: Color(0xFFDCE1EC),
+            blurRadius: 4,
             offset: Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),

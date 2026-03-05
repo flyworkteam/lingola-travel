@@ -1,11 +1,16 @@
 import 'dart:async';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lingola_travel/Core/Routes/app_routes.dart';
+import 'package:lingola_travel/Services/secure_storage_service.dart'; // EKLENDİ
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+import 'package:lingola_travel/main.dart';
+
 import '../../Core/Theme/my_colors.dart';
 
-/// Splash Page View - Onboarding Slider
-/// Features: Auto-scroll, Manual swipe, Smooth page indicator, Crossfade animations
 class SplashPageView extends StatefulWidget {
   const SplashPageView({super.key});
 
@@ -14,27 +19,25 @@ class SplashPageView extends StatefulWidget {
 }
 
 class _SplashPageViewState extends State<SplashPageView> {
+  final SecureStorageService _secureStorage = SecureStorageService(); // EKLENDİ
   int _currentPage = 0;
   Timer? _autoScrollTimer;
 
   final List<Map<String, String>> _splashData = [
     {
       'image': 'assets/images/splash2.png',
-      'title': 'English is no longer difficult when traveling',
-      'description':
-          'Learn the most commonly used words at the airport, hotel, restaurant, and for transportation.',
+      'title': LocaleKeys.splash1_title.tr(),
+      'description': LocaleKeys.splash1_desc.tr(),
     },
     {
       'image': 'assets/images/splash3.png',
-      'title': 'Real travel scenarios',
-      'description':
-          'Practice with words and phrases you\'ll actually need while traveling.',
+      'title': LocaleKeys.splash2_title.tr(),
+      'description': LocaleKeys.splash2_desc.tr(),
     },
     {
       'image': 'assets/images/splash4.png',
-      'title': 'Learn on the go, travel comfortably',
-      'description':
-          'Learn English words in just a few minutes, focus on your trip.',
+      'title': LocaleKeys.splash3_title.tr(),
+      'description': LocaleKeys.splash3_desc.tr(),
     },
   ];
 
@@ -52,25 +55,20 @@ class _SplashPageViewState extends State<SplashPageView> {
 
   void _startAutoScroll() {
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      setState(() {
-        if (_currentPage < _splashData.length - 1) {
-          _currentPage++;
-        } else {
-          // Loop back to the first page
-          _currentPage = 0;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _currentPage = (_currentPage + 1) % _splashData.length;
+        });
+      }
     });
   }
 
-  void _nextPage() {
-    if (_currentPage < _splashData.length - 1) {
-      setState(() {
-        _currentPage++;
-      });
-    } else {
-      // Navigate to Sign In (Onboarding)
-      Navigator.pushReplacementNamed(context, '/onboarding');
+  void _nextPage() async {
+    // Tanıtımın görüldüğünü kaydet
+    await _secureStorage.setFirstTimeCompleted();
+
+    if (mounted) {
+      navigatorKey.currentState?.pushReplacementNamed(AppRoutes.signIn);
     }
   }
 
@@ -80,19 +78,18 @@ class _SplashPageViewState extends State<SplashPageView> {
       backgroundColor: MyColors.white,
       body: Column(
         children: [
-          // Image Section with CrossFade Effect
           Expanded(
-            flex: 3,
+            flex: 4,
             child: Padding(
-              padding: EdgeInsets.all(8.w),
+              padding: EdgeInsets.only(top: 10.w, left: 10.w, right: 10.w),
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 600),
+                duration: const Duration(milliseconds: 300),
                 transitionBuilder: (Widget child, Animation<double> animation) {
                   return FadeTransition(opacity: animation, child: child);
                 },
                 child: ClipRRect(
                   key: ValueKey<int>(_currentPage),
-                  borderRadius: BorderRadius.circular(28.r),
+                  borderRadius: BorderRadius.circular(32.r),
                   child: Image.asset(
                     _splashData[_currentPage]['image']!,
                     fit: BoxFit.cover,
@@ -103,8 +100,6 @@ class _SplashPageViewState extends State<SplashPageView> {
               ),
             ),
           ),
-
-          // Content Section
           SafeArea(
             top: false,
             child: Padding(
@@ -114,30 +109,20 @@ class _SplashPageViewState extends State<SplashPageView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(height: 32.h),
-
-                  // Progress Indicator - Match image width, thinner bars
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8.w),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        // Calculate available width (same as image container)
                         final totalWidth = constraints.maxWidth;
-                        // Total spacing between indicators (2 gaps × 6.w each)
                         final totalSpacing = 12.w;
-                        // Width for each indicator
                         final indicatorWidth =
                             (totalWidth - totalSpacing) / _splashData.length;
-
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: List.generate(
                             _splashData.length,
                             (index) => GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _currentPage = index;
-                                });
-                              },
+                              onTap: () => setState(() => _currentPage = index),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 300),
                                 width: indicatorWidth,
@@ -155,17 +140,11 @@ class _SplashPageViewState extends State<SplashPageView> {
                       },
                     ),
                   ),
-
-                  SizedBox(height: 24.h),
-
-                  // Small header text (ince)
+                  SizedBox(height: 20.h),
                   SizedBox(
                     height: 28.h,
                     child: Text(
                       _splashData[_currentPage]['title']!,
-                      textAlign: TextAlign.left,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.montserrat(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w400,
@@ -175,17 +154,11 @@ class _SplashPageViewState extends State<SplashPageView> {
                       ),
                     ),
                   ),
-
                   SizedBox(height: 14.h),
-
-                  // Main title (kalın) - Sabit yükseklik
                   SizedBox(
                     height: 110.h,
                     child: Text(
                       _splashData[_currentPage]['description']!,
-                      textAlign: TextAlign.left,
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.montserrat(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
@@ -195,10 +168,6 @@ class _SplashPageViewState extends State<SplashPageView> {
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 30.h),
-
-                  // Get Started / Next Button - Sabit pozisyon
                   SizedBox(
                     width: double.infinity,
                     height: 54.h,
@@ -212,9 +181,7 @@ class _SplashPageViewState extends State<SplashPageView> {
                         elevation: 0,
                       ),
                       child: Text(
-                        _currentPage == _splashData.length - 1
-                            ? 'Get Started'
-                            : 'Next',
+                        LocaleKeys.get_started.tr(),
                         style: GoogleFonts.montserrat(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w600,
@@ -223,9 +190,7 @@ class _SplashPageViewState extends State<SplashPageView> {
                       ),
                     ),
                   ),
-
-                  // Bottom spacing
-                  SizedBox(height: 48.h),
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),

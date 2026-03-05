@@ -1,16 +1,21 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:lingola_travel/Core/Localization/app_localizations.dart';
+import 'package:lingola_travel/Core/Localization/localization_manager.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
+import 'package:lingola_travel/Core/Utils/language_data.dart';
 import 'package:lingola_travel/Models/language.dart';
-import 'package:lingola_travel/Riverpod/Providers/locale_provider.dart';
+import 'package:lingola_travel/Models/language_model.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../Models/travel_phrase_model.dart';
 import '../../Repositories/profile_repository.dart';
-import '../../Repositories/travel_phrase_repository.dart';
 import '../../Riverpod/Controllers/dictionary_controller.dart';
 import '../../Riverpod/Controllers/home_view_controller.dart';
 import '../CourseView/course_detail_view.dart';
@@ -29,103 +34,236 @@ class HomeView extends ConsumerStatefulWidget {
 }
 
 class _HomeViewState extends ConsumerState<HomeView> {
-  // NOTE: _selectedLanguage drives the home page language picker chip.
-  // It is always synced with localeProvider in build().
   Language _selectedLanguage = AppLanguages.all.first;
-  final int _selectedCategoryIndex = 0; // Track selected phrasebook category
-  final Map<int, double> _swipeProgressMap =
-      {}; // Track swipe progress for each feature card
-  bool _isNavigating = false; // Prevent double navigation
+  int _selectedCategoryIndex = 0; // Kategori filtrelemesi için tıklanan index
+  final Map<int, double> _swipeProgressMap = {};
+  bool _isNavigating = false;
   String _userName = 'Guest';
-  List<TravelPhraseModel> _phrases = [];
-  final Set<String> _bookmarkedPhrases = {}; // Track bookmarked phrase IDs
+  bool _isPremium = false;
+
+  // Yerel Bookmark Set'i ve SharedPreferences Anahtarı
+  Set<String> _bookmarkedPhrases = {};
+  static const String _localBookmarksKey = 'lingola_local_bookmarks';
+
   final ProfileRepository _profileRepository = ProfileRepository();
-  final TravelPhraseRepository _travelPhraseRepository =
-      TravelPhraseRepository();
+
+  // --- STATİK KATEGORİ LİSTESİ (EMOJİ + SVG KARIŞIK) ---
+  final List<Map<String, dynamic>> _staticCategories = [
+    {
+      'id': 'dict-cat-001',
+      'nameKey': LocaleKeys.home_catGeneral,
+      'icon': '🌍',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-002',
+      'nameKey': LocaleKeys.home_catTravel,
+      'icon': '✈️',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-003',
+      'nameKey': LocaleKeys.home_catAccommodation,
+      'icon': '🏨',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-004',
+      'nameKey': LocaleKeys.home_catFoodAndDrink,
+      'icon': '🍕',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-005',
+      'nameKey': LocaleKeys.home_catCulture,
+      'icon': '⛰️',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-006',
+      'nameKey': LocaleKeys.home_catShop,
+      'icon': '🛍️',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-007',
+      'nameKey': LocaleKeys.home_catDirection,
+      'icon': 'assets/images/home/d.svg', // BURASI SVG OLACAK
+      'isEmoji': false,
+    },
+    {
+      'id': 'dict-cat-008',
+      'nameKey': LocaleKeys.home_catSport,
+      'icon': '⚽',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-009',
+      'nameKey': LocaleKeys.home_catHealth,
+      'icon': '🏥',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-010',
+      'nameKey': LocaleKeys.home_catBusiness,
+      'icon': '💼',
+      'isEmoji': true,
+    },
+    {
+      'id': 'dict-cat-011',
+      'nameKey': LocaleKeys.home_catEmergency,
+      'icon': '🚨',
+      'isEmoji': true,
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
-    // Always reload to show latest progress
+    _loadLocalBookmarks();
+
     Future.microtask(() async {
       try {
-        print('📚 Loading courses (always fresh)...');
         await ref.read(homeViewControllerProvider.notifier).init();
-
-        // Small delay before loading dictionary
-        await Future.delayed(Duration(milliseconds: 100));
-
-        // Check if dictionary categories already loaded
+        await Future.delayed(const Duration(milliseconds: 100));
         if (mounted) {
           final dictState = ref.read(dictionaryControllerProvider);
           if (dictState.categories.isEmpty && !dictState.isLoading) {
-            print('📖 Loading dictionary categories for first time...');
             await ref.read(dictionaryControllerProvider.notifier).init();
-          } else {
-            print('📖 Dictionary categories already loaded, skipping init');
           }
         }
       } catch (e) {
-        print('❌ Home init error: $e');
+        debugPrint('❌ Home init error: $e');
       }
     });
   }
 
-  /// Load user profile from backend
   Future<void> _loadUserProfile() async {
     try {
       final response = await _profileRepository.getProfile();
       if (response.success && response.data != null) {
         final userData = response.data['user'];
-
-        // Set user name
         if (mounted && userData['name'] != null) {
           setState(() {
             _userName = userData['name'];
+            _isPremium = userData['is_premium'];
           });
         }
-
-        // Load phrases for user's target language
-        await _loadPhrases();
       }
     } catch (e) {
-      print('Error loading profile: $e');
+      debugPrint('Error loading profile: $e');
     }
   }
 
-  /// Load travel phrases for selected language
-  Future<void> _loadPhrases() async {
+  // --- %100 YEREL (LOCAL) BOOKMARK YÜKLEME ---
+  Future<void> _loadLocalBookmarks() async {
     try {
-      final response = await _travelPhraseRepository.getPhrasesByCategory(null);
-      if (response.success && response.data != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final String? bookmarksJson = prefs.getString(_localBookmarksKey);
+
+      if (bookmarksJson != null) {
+        final List<dynamic> decoded = jsonDecode(bookmarksJson);
         if (mounted) {
           setState(() {
-            _phrases = response.data!.take(2).toList();
+            _bookmarkedPhrases = decoded.cast<String>().toSet();
           });
         }
       }
     } catch (e) {
-      print('Error loading phrases: $e');
+      debugPrint('❌ Yerel favoriler yüklenirken hata: $e');
     }
+  }
+
+  // --- %100 YEREL (LOCAL) BOOKMARK KAYDETME/SİLME ---
+  Future<void> _toggleBookmark(String itemId) async {
+    setState(() {
+      if (_bookmarkedPhrases.contains(itemId)) {
+        _bookmarkedPhrases.remove(itemId);
+      } else {
+        _bookmarkedPhrases.add(itemId);
+      }
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String encoded = jsonEncode(_bookmarkedPhrases.toList());
+      await prefs.setString(_localBookmarksKey, encoded);
+    } catch (e) {
+      debugPrint('❌ Yerel favoriler kaydedilirken hata: $e');
+    }
+  }
+
+  // İngilizce kelimeyi formatlama (camelCase düzeltici)
+  String _getEnglishText(String key) {
+    final lastPart = key.split('.').last;
+    if (lastPart == 'oneMomentPlease') return 'One moment, please';
+
+    final RegExp exp = RegExp(r'(?<=[a-z])(?=[A-Z])');
+    final parts = lastPart.split(exp);
+
+    String formatted = parts.map((p) => p.toLowerCase()).join(' ');
+    formatted = formatted[0].toUpperCase() + formatted.substring(1);
+
+    // Kısmaltmaları düzelt
+    formatted = formatted.replaceAll("I dont ", "I don't ");
+    formatted = formatted.replaceAll("Im ", "I'm ");
+    formatted = formatted.replaceAll("Youre ", "You're ");
+    formatted = formatted.replaceAll("Cant ", "Can't ");
+    formatted = formatted.replaceAll("Lets ", "Let's ");
+
+    // Soru cümlelerine soru işareti ekle
+    final lower = formatted.toLowerCase();
+    if (lower.startsWith('can ') ||
+        lower.startsWith('where ') ||
+        lower.startsWith('what ') ||
+        lower.startsWith('is ') ||
+        lower.startsWith('do ') ||
+        lower.startsWith('how ') ||
+        lower.startsWith('which ') ||
+        lower.startsWith('will ') ||
+        lower.startsWith('are ') ||
+        lower.startsWith('should ')) {
+      formatted += '?';
+    }
+
+    return formatted;
+  }
+
+  // Seçilen kategoriye göre LanguageDataManager'dan ilk 2 cümleyi getirir
+  List<Map<String, String>> _getFilteredSentences() {
+    final selectedCategoryKey =
+        _staticCategories[_selectedCategoryIndex]['nameKey'] as String;
+
+    // Verileri lokal dosyadan çek
+    final sentences =
+        LanguageDataManager.sentencesData[selectedCategoryKey] ?? [];
+
+    // Sadece ilk 2 cümleyi göster
+    return sentences.take(2).map((key) {
+      return {
+        'id': key,
+        'englishText': _getEnglishText(key),
+        'translationText': key.tr(),
+      };
+    }).toList();
   }
 
   @override
   void dispose() {
-    // Clear swipe progress map to prevent memory leaks
     _swipeProgressMap.clear();
-    // Reset navigation flag
     _isNavigating = false;
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Keep _selectedLanguage in sync with localeProvider
-    final langCode = ref.watch(localeProvider);
-    final syncedLanguage = AppLanguages.getByCode(langCode);
+    ref.watch(localizationManagerProvider);
+
+    final currentLocale = context.locale;
+    final syncedLanguage = AppLanguages.getByCode(currentLocale.languageCode);
+
     if (_selectedLanguage.code != syncedLanguage.code) {
-      // Use post-frame to avoid setState during build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
@@ -134,7 +272,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
         }
       });
     }
-    final l = AppLocalizations.of(langCode);
 
     return Scaffold(
       backgroundColor: MyColors.background,
@@ -142,65 +279,43 @@ class _HomeViewState extends ConsumerState<HomeView> {
         top: false,
         bottom: false,
         child: Stack(
-          key: ValueKey('home_stack'), // Unique key to force rebuild
+          key: const ValueKey('home_stack'),
           children: [
-            // Main scrollable content
             SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   _buildHeader(),
-
-                  SizedBox(height: 16.h),
-
-                  // Greeting
                   _buildGreeting(),
-
-                  SizedBox(height: 16.h),
-
-                  // Quick Phrasebook
-                  _buildQuickPhrasebook(l),
-
+                  SizedBox(height: 24.h),
+                  _buildQuickPhrasebook(),
                   SizedBox(height: 4.h),
-
-                  // Questions
-                  _buildQuestions(),
-
-                  // Features
-                  _buildFeatures(l),
-
+                  _buildQuestions(), // Artık lokalize ve dinamik
                   SizedBox(height: 16.h),
-
-                  // Quick Actions
+                  _buildFeatures(),
+                  SizedBox(height: 16.h),
                   _buildQuickActions(),
-
                   SizedBox(height: 16.h),
-
-                  // Course Cards
                   _buildCourseCards(),
-
                   SizedBox(height: 16.h),
-
-                  // Premium Membership Card
-                  _buildPremiumCard(),
-
-                  SizedBox(height: 16.h),
-
-                  // Visual Dictionary Card
+                  Visibility(
+                    visible: !_isPremium,
+                    child: Column(
+                      children: [
+                        _buildPremiumCard(),
+                        SizedBox(height: 16.h),
+                      ],
+                    ),
+                  ),
                   _buildVisualDictionaryCard(),
-
                   SizedBox(height: 20.h),
-
-                  // Bottom padding for floating nav
                   SizedBox(height: 100.h),
                 ],
               ),
             ),
-
-            // Floating bottom navigation
-            CustomBottomNavBar(
-              key: ValueKey('bottom_nav_home'), // Unique key
+            const CustomBottomNavBar(
+              key: ValueKey('bottom_nav_home'),
               currentIndex: 0,
             ),
           ],
@@ -209,7 +324,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Header with language selector, notification, and profile
   Widget _buildHeader() {
     return Container(
       padding: EdgeInsets.only(
@@ -221,17 +335,20 @@ class _HomeViewState extends ConsumerState<HomeView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Language Selector
           _buildLanguageSelector(),
-
-          // Right side: Notification + Profile
           Row(
             children: [
-              // Notification Icon
+              Visibility(
+                visible: _isPremium,
+                child: Row(
+                  children: [
+                    _buildPremiumBadge(),
+                    SizedBox(width: 12.w),
+                  ],
+                ),
+              ),
               _buildNotificationIcon(),
               SizedBox(width: 12.w),
-
-              // Profile Avatar
               _buildProfileAvatar(),
             ],
           ),
@@ -240,7 +357,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Language selector dropdown
   Widget _buildLanguageSelector() {
     return GestureDetector(
       onTap: _showLanguageSelector,
@@ -254,7 +370,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Flag image
             ClipRRect(
               borderRadius: BorderRadius.circular(4.r),
               child: Image.asset(
@@ -266,7 +381,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ),
             SizedBox(width: 8.w),
             Text(
-              _selectedLanguage.getLocalizedName(_selectedLanguage.code),
+              _selectedLanguage.getTranslatedName(),
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
@@ -275,9 +390,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ),
             ),
             SizedBox(width: 4.w),
-            Icon(
+            const Icon(
               Icons.keyboard_arrow_down_rounded,
-              size: 20.sp,
+              size: 20,
               color: MyColors.textSecondary,
             ),
           ],
@@ -286,7 +401,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Show language selector bottom sheet
   void _showLanguageSelector() {
     showModalBottomSheet(
       context: context,
@@ -302,7 +416,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               margin: EdgeInsets.only(top: 12.h),
               width: 40.w,
@@ -312,11 +425,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
-
             Padding(
               padding: EdgeInsets.symmetric(vertical: 16.h),
               child: Text(
-                AppLocalizations.of(ref.read(localeProvider)).selectLanguage,
+                LocaleKeys.home_selectLanguage.tr(),
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
@@ -324,25 +436,24 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ),
             ),
-
-            // Language list
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: AppLanguages.all.length,
                 itemBuilder: (context, index) {
                   final language = AppLanguages.all[index];
-                  final isSelected = language.code == _selectedLanguage.code;
+                  final isSelected =
+                      language.code == context.locale.languageCode;
 
                   return InkWell(
                     onTap: () {
-                      setState(() {
-                        _selectedLanguage = language;
-                      });
-                      // Persist via localeProvider
+                      final newLocale = Locale(
+                        language.code,
+                        language.countryCode,
+                      );
                       ref
-                          .read(localeProvider.notifier)
-                          .setLocale(language.code);
+                          .read(localizationManagerProvider.notifier)
+                          .changeLanguage(context, newLocale);
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -357,7 +468,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       ),
                       child: Row(
                         children: [
-                          // Flag
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4.r),
                             child: Image.asset(
@@ -368,11 +478,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                             ),
                           ),
                           SizedBox(width: 12.w),
-
-                          // Language name - localized
                           Expanded(
                             child: Text(
-                              language.getLocalizedName(_selectedLanguage.code),
+                              language.getTranslatedName(),
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: isSelected
@@ -384,13 +492,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               ),
                             ),
                           ),
-
-                          // Checkmark
                           if (isSelected)
-                            Icon(
+                            const Icon(
                               Icons.check_circle,
                               color: MyColors.lingolaPrimaryColor,
-                              size: 24.sp,
+                              size: 24,
                             ),
                         ],
                       ),
@@ -399,24 +505,20 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 },
               ),
             ),
-
-            SizedBox(height: 20.h),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  /// Notification icon
   Widget _buildNotificationIcon() {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const NotificationsView(
-              isPremiumUser: false, // Free user
-            ),
+            builder: (context) => NotificationsView(isPremiumUser: _isPremium),
           ),
         );
       },
@@ -439,37 +541,48 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Greeting section
+  Widget _buildPremiumBadge() {
+    return Container(
+      width: 44.w,
+      height: 44.h,
+      decoration: BoxDecoration(
+        color: MyColors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: MyColors.border, width: 1),
+      ),
+      child: Center(
+        child: SvgPicture.asset(
+          'assets/images/premiumlogo.svg',
+          width: 24.w,
+          height: 24.h,
+        ),
+      ),
+    );
+  }
+
   Widget _buildGreeting() {
-    final langCode = ref.read(localeProvider);
-    final l = AppLocalizations.of(langCode);
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Greeting text
           Text(
             'Hey, $_userName 👋',
             style: TextStyle(
               fontSize: 16.sp,
-              letterSpacing: -0.5,
               fontWeight: FontWeight.w400,
               fontFamily: 'Montserrat',
               color: MyColors.textSecondary,
             ),
           ),
-
-          SizedBox(height: 8.h),
-
-          // Main title
+          SizedBox(height: 2.h),
           Text(
-            l.homeTitle,
+            LocaleKeys.home_homeTitle.tr(),
             style: TextStyle(
-              fontSize: 26.sp,
+              fontSize: 28.sp,
+              letterSpacing: 28.sp * -0.05,
               fontWeight: FontWeight.w700,
               fontFamily: 'Montserrat',
-              letterSpacing: -0.5,
               color: MyColors.textPrimary,
               height: 1.2,
             ),
@@ -479,43 +592,29 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Quick Phrasebook section - TAMAMEN DİNAMİK! Backend'den isim + icon 🚀🔥
-  Widget _buildQuickPhrasebook(AppLocalizations l) {
-    final dictionaryState = ref.watch(dictionaryControllerProvider);
-    final langCode = ref.read(localeProvider);
-    final l = AppLocalizations.of(langCode);
-
+  Widget _buildQuickPhrasebook() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with padding
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                l.quickPhrasebook,
+                LocaleKeys.home_quickPhrasebook.tr(),
                 style: TextStyle(
                   fontSize: 14.sp,
-                  letterSpacing: -0.5,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 14.sp * -0.05,
                   fontFamily: 'Montserrat',
                   color: MyColors.textPrimary,
                 ),
               ),
               GestureDetector(
                 onTap: () async {
-                  // Prevent double navigation
-                  if (_isNavigating) {
-                    print('⏳ Already navigating...');
-                    return;
-                  }
-
-                  setState(() {
-                    _isNavigating = true;
-                  });
-
+                  if (_isNavigating) return;
+                  setState(() => _isNavigating = true);
                   try {
                     await Navigator.push(
                       context,
@@ -524,21 +623,16 @@ class _HomeViewState extends ConsumerState<HomeView> {
                             const TravelVocabularyView(isPremium: false),
                       ),
                     );
-                  } catch (e) {
-                    print('❌ Navigation error: $e');
                   } finally {
-                    if (mounted) {
-                      setState(() {
-                        _isNavigating = false;
-                      });
-                    }
+                    if (mounted) setState(() => _isNavigating = false);
                   }
                 },
                 child: Text(
-                  l.seeAll,
+                  LocaleKeys.home_seeAll.tr(),
                   style: TextStyle(
                     fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
+                    letterSpacing: 12.sp * -0.05,
+
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
                   ),
@@ -547,171 +641,49 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ],
           ),
         ),
-
         SizedBox(height: 12.h),
-
-        // Dynamic categories from backend with STATIC ICONS!
         SizedBox(
           height: 100.h,
-          child: dictionaryState.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : dictionaryState.categories.isEmpty
-              ? Center(
-                  child: Text(
-                    l.categoriesNotFound,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: MyColors.textSecondary,
-                    ),
-                  ),
-                )
-              : ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  // ✅ CRITICAL: Explicit physics for smooth scrolling
-                  physics: const ClampingScrollPhysics(),
-                  padding: EdgeInsets.only(left: 16.w),
-                  itemCount: dictionaryState.categories.length,
-                  // ✅ PERFORMANCE: Optimize rendering
-                  cacheExtent: 500, // Pre-render nearby items
-                  addAutomaticKeepAlives:
-                      true, // Keep items alive when scrolling
-                  addRepaintBoundaries: true, // Prevent unnecessary repaints
-                  itemBuilder: (context, index) {
-                    final category = dictionaryState.categories[index];
-                    final isSelected = _selectedCategoryIndex == index;
-
-                    return Padding(
-                      padding: EdgeInsets.only(right: 16.w),
-                      child: _buildPhrasebookCategory(
-                        iconPath: category.iconPath, // DİREKT BACKEND'TEN! 🔥
-                        label: _getLocalizedCategoryName(category.name, l),
-                        isSelected: isSelected,
-                        onTap: () async {
-                          // Prevent navigation if still loading or already navigating
-                          if (dictionaryState.isLoading || _isNavigating) {
-                            print('⏳ Still loading or navigating...');
-                            return;
-                          }
-
-                          // Set navigation flag
-                          // Ultra paranoid checks before navigation
-                          if (!mounted) {
-                            print('❌ Widget not mounted, canceling navigation');
-                            return;
-                          }
-
-                          final navigator = Navigator.of(context);
-                          if (!navigator.mounted) {
-                            print('❌ Navigator not mounted');
-                            return;
-                          }
-
-                          setState(() {
-                            _isNavigating = true;
-                          });
-
-                          try {
-                            // ✅ NO DELAY! Navigate immediately
-                            if (!mounted) {
-                              print('❌ Widget disposed before navigation');
-                              return;
-                            }
-
-                            print(
-                              '🚀 ULTRA SAFE Navigation to: ${category.name}',
-                            );
-
-                            // Navigate to Travel Vocabulary View with selected category - SUPER SAFE
-                            await navigator.push(
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) {
-                                      return TravelVocabularyView(
-                                        isPremium: false,
-                                        initialCategory: category.name,
-                                      );
-                                    },
-                                transitionDuration: Duration(milliseconds: 150),
-                                transitionsBuilder:
-                                    (
-                                      context,
-                                      animation,
-                                      secondaryAnimation,
-                                      child,
-                                    ) {
-                                      return SlideTransition(
-                                        position:
-                                            Tween<Offset>(
-                                              begin: const Offset(1.0, 0.0),
-                                              end: Offset.zero,
-                                            ).animate(
-                                              CurvedAnimation(
-                                                parent: animation,
-                                                curve: Curves.easeOut,
-                                              ),
-                                            ),
-                                        child: child,
-                                      );
-                                    },
-                              ),
-                            );
-
-                            print('✅ Navigation completed successfully');
-                          } catch (e, stackTrace) {
-                            print('❌ CRITICAL Navigation error: $e');
-                            print('📍 Stack trace: $stackTrace');
-
-                            // Try fallback simple navigation if widget still mounted
-                            if (mounted && navigator.mounted) {
-                              try {
-                                await navigator.push(
-                                  MaterialPageRoute(
-                                    builder: (context) => TravelVocabularyView(
-                                      isPremium: false,
-                                      initialCategory: category.name,
-                                    ),
-                                  ),
-                                );
-                                print('✅ Fallback navigation succeeded');
-                              } catch (e2) {
-                                print('❌ Fallback navigation also failed: $e2');
-                              }
-                            }
-                          } finally {
-                            // Reset navigation flag when returning - ULTRA SAFE
-                            if (mounted) {
-                              setState(() {
-                                _isNavigating = false;
-                              });
-                            }
-                          }
-                        },
-                      ),
-                    );
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.only(left: 16.w),
+            itemCount: _staticCategories.length,
+            itemBuilder: (context, index) {
+              final category = _staticCategories[index];
+              return Padding(
+                padding: EdgeInsets.only(right: 16.w),
+                child: _buildPhrasebookCategory(
+                  iconOrPath: category['icon']!,
+                  isEmoji: category['isEmoji'] as bool,
+                  label: category['nameKey']!.toString().tr(),
+                  isSelected: _selectedCategoryIndex == index,
+                  onTap: () {
+                    // Tıklanan kategoriyi seçili yap ve altındaki cümleleri güncelle
+                    setState(() {
+                      _selectedCategoryIndex = index;
+                    });
                   },
                 ),
+              );
+            },
+          ),
         ),
       ],
     );
   }
 
-  /// Single phrasebook category item
   Widget _buildPhrasebookCategory({
-    required String iconPath,
+    required String iconOrPath,
+    required bool isEmoji,
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    // ✅ CRITICAL FIX: InkWell instead of GestureDetector
-    // This allows scroll gestures to pass through properly
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      // ✅ Transparent to allow scroll gestures
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
       child: Column(
         children: [
-          // Icon container
           Container(
             width: 56.w,
             height: 56.h,
@@ -728,46 +700,28 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.06),
                   blurRadius: 8,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: Center(
-              child: Image.asset(
-                iconPath,
-                width: 28.w,
-                height: 28.h,
-                fit: BoxFit.contain,
-                // ✅ CRITICAL FIX: Add errorBuilder to prevent crash
-                errorBuilder: (context, error, stackTrace) {
-                  print('❌ Failed to load icon: $iconPath - Error: $error');
-                  // Show fallback icon
-                  return Icon(
-                    Icons.image_not_supported,
-                    size: 28.w,
-                    color: MyColors.textSecondary,
-                  );
-                },
-              ),
+              child: isEmoji
+                  ? Text(iconOrPath, style: TextStyle(fontSize: 26.sp))
+                  : SvgPicture.asset(iconOrPath, width: 26.w, height: 26.h),
             ),
           ),
-
           SizedBox(height: 6.h),
-
-          // Label
           SizedBox(
             width: 56.w,
             child: Text(
               label,
               textAlign: TextAlign.center,
               maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: 11.sp,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Montserrat',
                 color: MyColors.textPrimary,
-                height: 1.2,
+                letterSpacing: 11.sp * -0.009,
               ),
             ),
           ),
@@ -776,40 +730,26 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Questions section - Dynamic from backend
+  // LOKALDEN ÇEKİLEN VERİLERLE DİNAMİK CÜMLE LİSTESİ
   Widget _buildQuestions() {
-    // Show loading or empty state if no phrases
-    if (_phrases.isEmpty) {
-      return const CircularProgressIndicator.adaptive();
-    }
+    final filteredSentences = _getFilteredSentences();
+
+    if (filteredSentences.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: _phrases
+        children: filteredSentences
             .map(
               (phrase) => Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
+                padding: EdgeInsets.only(bottom: 8.h),
                 child: _buildQuestionCard(
-                  // For English: englishText is target, translation is Turkish
-                  // For others: translation is target, englishText is Turkish
-                  targetLanguageText: phrase.targetLanguage == 'en'
-                      ? phrase.englishText
-                      : phrase.translation,
-                  turkishText: phrase.targetLanguage == 'en'
-                      ? phrase.translation
-                      : phrase.englishText,
-                  isBookmarked: _bookmarkedPhrases.contains(phrase.id),
-                  onBookmarkToggle: () {
-                    setState(() {
-                      if (_bookmarkedPhrases.contains(phrase.id)) {
-                        _bookmarkedPhrases.remove(phrase.id);
-                      } else {
-                        _bookmarkedPhrases.add(phrase.id);
-                      }
-                    });
-                  },
+                  targetLanguageText:
+                      phrase['englishText']!, // Her zaman ana dili (en) üstte gösteriyoruz
+                  turkishText:
+                      phrase['translationText']!, // Çeviriyi altta gösteriyoruz
+                  isBookmarked: _bookmarkedPhrases.contains(phrase['id']),
+                  onBookmarkToggle: () => _toggleBookmark(phrase['id']!),
                 ),
               ),
             )
@@ -818,7 +758,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Single question card
   Widget _buildQuestionCard({
     required String targetLanguageText,
     required String turkishText,
@@ -827,88 +766,72 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(16.r),
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(15.r),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: Offset(0, 6),
+          const BoxShadow(
+            color: Color(0xFFDCE1EC),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Stack(
         children: [
-          // Background SVG
           Positioned.fill(
             child: SvgPicture.asset(
               'assets/images/ceviriarkaplan.svg',
               fit: BoxFit.cover,
             ),
           ),
-
-          // Content
           Padding(
-            padding: EdgeInsets.only(right: 40.w), // Space for bookmark button
+            padding: EdgeInsets.only(right: 40.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Target language text (bold, primary)
                 Text(
                   targetLanguageText,
                   style: TextStyle(
                     fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
+                    letterSpacing: 16.sp * -0.05,
+                    fontWeight: FontWeight.w600,
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
-                    height: 1.3,
                   ),
                 ),
-
-                SizedBox(height: 8.h),
-
-                // Turkish text (normal, secondary)
+                SizedBox(height: 2.h),
                 Text(
                   turkishText,
                   style: TextStyle(
                     fontSize: 13.sp,
-                    letterSpacing: -0.5,
-                    fontWeight: FontWeight.w400,
+                    letterSpacing: 13.sp * -0.05,
+                    fontWeight: FontWeight.w300,
                     fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
-                    height: 1.3,
+                    color: MyColors.textPrimary,
                   ),
                 ),
               ],
             ),
           ),
-
-          // Bookmark button
           Positioned(
-            top: 0,
             right: 0,
+            top: 0,
             child: GestureDetector(
               onTap: onBookmarkToggle,
               child: Container(
-                width: 30.w,
-                height: 30.h,
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isBookmarked
-                      ? const Color(0xFFE3F2FD)
-                      : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(5.r),
+                  borderRadius: BorderRadius.circular(5),
+                  color: const Color(0xFFF4F7F9),
                 ),
-                child: Center(
-                  child: Icon(
-                    Icons.bookmark,
-                    color: isBookmarked
-                        ? const Color(0xFF2196F3)
-                        : const Color(0xFF9CA3AF),
-                    size: 20.sp,
-                  ),
+                child: Icon(
+                  Icons.bookmark,
+                  color: isBookmarked
+                      ? const Color(0xFF2196F3)
+                      : const Color(0xFFCBD5E1),
+                  size: 24.sp,
                 ),
               ),
             ),
@@ -918,97 +841,81 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Features section
-  Widget _buildFeatures(AppLocalizations l) {
-    final langCode = ref.read(localeProvider);
-    final l = AppLocalizations.of(langCode);
+  Widget _buildFeatures() {
     final features = [
       {
-        'title': l.featureLearnSentence,
-        'subtitle': l.featureDailyConversation,
-        'gradient': [Color(0xFF7B68EE), Color(0xFF9D8FFF)],
+        'title': LocaleKeys.home_featureLearnSentence.tr(),
+        'subtitle': LocaleKeys.home_featureDailyConversation.tr(),
+        'gradient': [
+          const Color(0xFF6366F1),
+          const Color(0xFF6366FF),
+        ], // Tasarımdaki mor tonları
         'icon': 'assets/images/messagebox.png',
         'isIconSvg': false,
       },
       {
-        'title': l.featureLearnWords,
-        'subtitle': l.featureQuickLearn,
-        'gradient': [Color(0xFF4A90E2), Color(0xFF5BA3F5)], // Blue gradient
+        'title': LocaleKeys.home_featureLearnWords.tr(),
+        'subtitle': LocaleKeys.home_featureQuickLearn.tr(),
+        'gradient': [
+          const Color(0xFF1D73F6),
+          const Color(0xFF1D73FF),
+        ], // Tasarımdaki mavi tonları
         'icon': 'assets/icons/learnnewword.svg',
         'isIconSvg': true,
       },
     ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with padding
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Features',
+                LocaleKeys.home_features.tr(),
                 style: TextStyle(
                   fontSize: 14.sp,
-                  letterSpacing: -0.5,
+                  letterSpacing: 14.sp * -0.05,
                   fontWeight: FontWeight.w700,
-                  fontFamily: 'Montserrat',
                   color: MyColors.textPrimary,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  // TODO: Navigate to all features
-                  print('Tapped on See All - Features');
-                },
-                child: Text(
-                  'See All',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    letterSpacing: -0.5,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
-                  ),
+              Text(
+                LocaleKeys.home_seeAll.tr(),
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: MyColors.textSecondary,
+                  letterSpacing: 12.sp * -0.05,
                 ),
               ),
             ],
           ),
         ),
-
-        SizedBox(height: 16.h),
-
-        // Horizontal scrollable feature cards - full width
+        SizedBox(height: 12.h),
         SizedBox(
-          height: 275.h,
+          height: 280.h, // Kart boyutu tasarıma göre biraz büyütüldü
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.only(left: 16.w),
+            padding: EdgeInsets.only(left: 12.w),
             itemCount: features.length,
-            itemBuilder: (context, index) {
-              final feature = features[index];
-
-              return Padding(
-                padding: EdgeInsets.only(right: 16.w),
-                child: _buildFeatureCard(
-                  title: feature['title'] as String,
-                  subtitle: feature['subtitle'] as String,
-                  gradientColors: feature['gradient'] as List<Color>,
-                  cardIndex: index,
-                  iconPath: feature['icon'] as String,
-                  isIconSvg: feature['isIconSvg'] as bool,
-                ),
-              );
-            },
+            itemBuilder: (context, index) => Padding(
+              padding: EdgeInsets.only(right: 16.w),
+              child: _buildFeatureCard(
+                title: features[index]['title'] as String,
+                subtitle: features[index]['subtitle'] as String,
+                gradientColors: features[index]['gradient'] as List<Color>,
+                cardIndex: index,
+                iconPath: features[index]['icon'] as String,
+                isIconSvg: features[index]['isIconSvg'] as bool,
+              ),
+            ),
           ),
         ),
       ],
     );
   }
 
-  /// Single feature card
   Widget _buildFeatureCard({
     required String title,
     required String subtitle,
@@ -1018,450 +925,339 @@ class _HomeViewState extends ConsumerState<HomeView> {
     required bool isIconSvg,
   }) {
     return Container(
-      width: 240.w,
-      height: 300.h,
+      width: 230.w,
       decoration: BoxDecoration(
         gradient: LinearGradient(
+          colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: gradientColors,
         ),
         borderRadius: BorderRadius.circular(20.r),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // Decorative circles
+          // Arka plandaki dekoratif yuvarlak desenler
           Positioned(
             bottom: -30.h,
-            right: -20.w,
+            left: 30.w,
+            child: Container(
+              width: 140.w,
+              height: 140.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -80.h,
+            left: 10.w,
+            child: Container(
+              width: 200.w,
+              height: 200.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -40.h,
+            right: -40.w,
             child: Container(
               width: 150.w,
-              height: 150.h,
+              height: 150.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 40.h,
-            right: 60.w,
-            child: Container(
-              width: 80.w,
-              height: 80.h,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 100.h,
-            left: -40.w,
-            child: Container(
-              width: 120.w,
-              height: 120.h,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withOpacity(0.05),
               ),
             ),
           ),
 
-          // Content
+          // İçerikler
           Padding(
-            padding: EdgeInsets.all(20.w),
+            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon
+                // Sol üstteki ikon
                 Container(
-                  width: 40.w,
-                  height: 40.h,
+                  width: 48.w,
+                  height: 48.w,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(10.r),
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(14.r),
                   ),
                   child: Center(
                     child: isIconSvg
                         ? SvgPicture.asset(
                             iconPath,
-                            width: 26.w,
-                            height: 26.h,
-                            colorFilter: ColorFilter.mode(
+                            width: 24.w,
+                            height: 24.w,
+                            colorFilter: const ColorFilter.mode(
                               Colors.white,
                               BlendMode.srcIn,
                             ),
                           )
                         : Image.asset(
                             iconPath,
-                            width: 48.w,
-                            height: 48.h,
+                            width: 24.w,
+                            height: 24.w,
                             color: Colors.white,
                           ),
                   ),
                 ),
+                SizedBox(height: 12.h),
 
-                SizedBox(height: 20.h),
-
-                // Title
+                // Başlık (Learn New Sentence)
                 Text(
                   title,
                   style: TextStyle(
                     fontSize: 24.sp,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.5,
+                    fontWeight: FontWeight.w700, // Bold
+                    letterSpacing: 24.sp * -0.04,
                     fontFamily: 'Montserrat',
                     color: Colors.white,
-                    height: 1.2,
+                    height: 1.1, // Satır arası boşluk sıkılaştırıldı
                   ),
                 ),
-
                 SizedBox(height: 8.h),
 
-                // Subtitle
+                // Alt Başlık (Daily Conversation)
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 10.sp,
-                    letterSpacing: -0.5,
-                    height: 1.2,
-                    fontWeight: FontWeight.w400,
+                    fontSize: 13.sp,
                     fontFamily: 'Montserrat',
                     color: Colors.white.withOpacity(0.9),
+                    letterSpacing: 13.sp * -0.02,
                   ),
                 ),
 
-                Spacer(),
-
-                // Swipe to start button - SlideAction style
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final currentProgress = _swipeProgressMap[cardIndex] ?? 0.0;
-                    return GestureDetector(
-                      onHorizontalDragUpdate: (details) {
-                        if (!mounted) return; // Safety check
-
-                        try {
-                          setState(() {
-                            // ✅ CRITICAL FIX: Read current value from map INSIDE setState
-                            // This prevents using stale captured value
-                            final actualProgress =
-                                _swipeProgressMap[cardIndex] ?? 0.0;
-                            final newProgress =
-                                actualProgress + details.delta.dx;
-                            _swipeProgressMap[cardIndex] = newProgress.clamp(
-                              0.0,
-                              constraints.maxWidth - 60.w,
-                            );
-                          });
-                        } catch (e) {
-                          print('⚠️ Swipe update error: $e');
-                        }
-                      },
-                      onHorizontalDragEnd: (details) {
-                        if (!mounted) return; // Safety check
-
-                        try {
-                          // ✅ CRITICAL FIX: Read current value from map at drag end
-                          final finalProgress =
-                              _swipeProgressMap[cardIndex] ?? 0.0;
-                          if (finalProgress > constraints.maxWidth * 0.7) {
-                            // Success - Navigate based on cardIndex (language-independent)
-                            if (cardIndex == 0) {
-                              // Learn New Sentence -> Travel Vocabulary (Phrases tab)
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const TravelVocabularyView(
-                                        isPremium: false,
-                                      ),
-                                ),
-                              );
-                            } else if (cardIndex == 1) {
-                              // Learn New Words -> Visual Dictionary
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const VisualDictionaryView(
-                                        isPremium: false,
-                                      ),
-                                ),
-                              );
-                            }
-                          }
-                          setState(() {
-                            _swipeProgressMap[cardIndex] = 0;
-                          });
-                        } catch (e) {
-                          print('⚠️ Swipe end error: $e');
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        height: 56.h,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(28.r),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.4),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            // Background progress
-                            if (currentProgress > 0)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Container(
-                                  width: currentProgress + 48.w,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.35),
-                                    borderRadius: BorderRadius.circular(28.r),
-                                  ),
-                                ),
-                              ),
-                            // Slider button
-                            Positioned(
-                              left: currentProgress,
-                              top: 8.h,
-                              bottom: 8.h,
-                              child: Container(
-                                width: 40.w,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward,
-                                  color: gradientColors[0],
-                                  size: 20.sp,
-                                ),
-                              ),
-                            ),
-                            // Text - Aligned to left to avoid being hidden by button
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 50.w),
-                                child: Text(
-                                  AppLocalizations.of(
-                                    ref.watch(localeProvider),
-                                  ).swipeToStart,
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Montserrat',
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                // Swipe Butonu
               ],
             ),
+          ),
+          Positioned(
+            bottom: 24,
+            left: 8,
+            right: 8,
+            child: _buildSwipeButton(cardIndex, gradientColors[0]),
           ),
         ],
       ),
     );
   }
 
-  /// Quick Actions section
+  Widget _buildSwipeButton(int cardIndex, Color iconColor) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final currentProgress = _swipeProgressMap[cardIndex] ?? 0.0;
+        final maxDrag =
+            constraints.maxWidth -
+            56.w; // 56w = ikon genişliği + kenar boşlukları
+
+        return Container(
+          width: double.infinity,
+          height: 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.25), // Yarı saydam arka plan
+            borderRadius: BorderRadius.circular(50.r),
+            border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+          ),
+          child: Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              // Ortadaki "SWIPE TO START" yazısı ve sağdaki çift oklar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 50.w,
+                  ), // İkonun kapladığı alanı dengelemek için offset
+                  Text(
+                    LocaleKeys.home_swipeToStart.tr().toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Montserrat',
+                      letterSpacing: 10.sp * -0.05,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 2.w),
+                  Icon(
+                    Icons.keyboard_arrow_right_rounded,
+                    color: Colors.white.withOpacity(0.7),
+                    size: 16.sp,
+                  ),
+                  Transform.translate(
+                    offset: const Offset(
+                      -8,
+                      0,
+                    ), // Okları birbirine yaklaştırmak için
+                    child: Icon(
+                      Icons.keyboard_arrow_right_rounded,
+                      color: Colors.white.withOpacity(0.3),
+                      size: 16.sp,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Sürüklenen beyaz yuvarlak buton
+              Positioned(
+                left: currentProgress,
+                child: GestureDetector(
+                  onHorizontalDragUpdate: (details) {
+                    setState(() {
+                      _swipeProgressMap[cardIndex] =
+                          (currentProgress + details.delta.dx).clamp(
+                            0.0,
+                            maxDrag,
+                          );
+                    });
+                  },
+                  onHorizontalDragEnd: (_) {
+                    if (currentProgress > maxDrag * 0.75) {
+                      // Kaydırma başarılıysa butonu tamamen sağa daya
+                      setState(() => _swipeProgressMap[cardIndex] = maxDrag);
+
+                      // Ufak bir animasyon gecikmesi ile sayfaya geçiş yap
+                      Future.delayed(const Duration(milliseconds: 150), () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => cardIndex == 0
+                                ? const TravelVocabularyView(isPremium: false)
+                                : const VisualDictionaryView(isPremium: false),
+                          ),
+                        ).then((_) {
+                          // Sayfadan geri dönüldüğünde butonu sıfırla
+                          if (mounted) {
+                            setState(() => _swipeProgressMap[cardIndex] = 0);
+                          }
+                        });
+                      });
+                    } else {
+                      // Yeterince kaydırılmadıysa geri yaylan
+                      setState(() => _swipeProgressMap[cardIndex] = 0);
+                    }
+                  },
+                  child: Container(
+                    margin: EdgeInsets.all(4.w),
+                    width: 48.w,
+                    height: 48.h,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      color: iconColor, // Kartın kendi rengi oka verilir
+                      size: 24.sp,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildQuickActions() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Text(
-            'Quick Actions',
+            LocaleKeys.home_quickActions.tr(),
             style: TextStyle(
               fontSize: 14.sp,
-              letterSpacing: -0.5,
               fontWeight: FontWeight.w700,
-              fontFamily: 'Montserrat',
               color: MyColors.textPrimary,
             ),
           ),
-
-          SizedBox(height: 20.h),
-
-          // Current Course Card
+          SizedBox(height: 12.h),
           _buildCurrentCourseCard(),
         ],
       ),
     );
   }
 
-  /// Current course card - DİNAMİK (Backend'den aktif kurs - FREE USER!)
   Widget _buildCurrentCourseCard() {
     final homeState = ref.watch(homeViewControllerProvider);
-
     if (homeState.courses.isEmpty) return const SizedBox.shrink();
-
-    // Show the first in-progress course (0 < progress < 100)
-    // Fallback 1: first incomplete course, Fallback 2: very first course
-    final currentCourse = homeState.courses.firstWhere(
-      (c) => c.progressPercentage > 0 && c.progressPercentage < 100,
-      orElse: () => homeState.courses.firstWhere(
-        (c) => c.progressPercentage < 100,
-        orElse: () => homeState.courses.first,
-      ),
-    );
-
-    final progress = currentCourse.progressPercentage / 100.0;
-    final completedLessons = currentCourse.lessonsCompleted;
-    final totalLessons = currentCourse.totalLessons;
-
+    final currentCourse = homeState.courses.first;
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CourseView(isPremium: false)),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CourseView(isPremium: false),
+        ),
+      ),
       child: Container(
-        width: double.infinity,
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF4ECDC4), // Turquoise
-              Color(0xFF44B3AC),
-            ],
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4ECDC4), Color(0xFF44B3AC)],
           ),
           borderRadius: BorderRadius.circular(24.r),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF4ECDC4).withOpacity(0.3),
-              blurRadius: 16,
-              offset: Offset(0, 8),
+              color: const Color(0xFFC2D6E1).withOpacity(0.25),
+              offset: const Offset(0, 4),
+              blurRadius: 4,
             ),
           ],
         ),
         child: Row(
           children: [
-            // Left content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Label
                   Text(
-                    'CURRENT COURSE',
+                    LocaleKeys.home_currentCourse.tr().toUpperCase(),
                     style: TextStyle(
                       fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Montserrat',
                       color: Colors.white.withOpacity(0.9),
-                      letterSpacing: 1.2,
                     ),
                   ),
-
-                  SizedBox(height: 12.h),
-
-                  // Course title (Backend'den!)
                   Text(
                     currentCourse.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
-                      fontFamily: 'Montserrat',
                       color: Colors.white,
-                      height: 1.2,
                     ),
                   ),
-
-                  SizedBox(height: 20.h),
-
-                  // Progress info (Backend'den!)
-                  Row(
-                    children: [
-                      Text(
-                        '${(progress * 100).toInt()}% Progress',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Montserrat',
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Text(
-                        '$completedLessons/$totalLessons Lessons',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: 'Montserrat',
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-
                   SizedBox(height: 12.h),
-
-                  // Progress bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10.r),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 8.h,
-                      backgroundColor: Colors.white.withOpacity(0.3),
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+                  LinearProgressIndicator(
+                    value: currentCourse.progressPercentage / 100,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    valueColor: const AlwaysStoppedAnimation(Colors.white),
                   ),
                 ],
               ),
             ),
-
-            SizedBox(width: 16.w),
-
-            // Play button
             Container(
-              width: 64.w,
-              height: 64.h,
-              decoration: BoxDecoration(
-                color: Colors.white,
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                color: Colors.white,
               ),
-              child: Icon(
-                Icons.play_arrow_rounded,
-                color: Color(0xFF4ECDC4),
-                size: 36.sp,
-              ),
+              child: SvgPicture.asset('assets/icons/pl.svg', width: 24.w),
             ),
           ],
         ),
@@ -1469,102 +1265,40 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Course Cards section - DİNAMİK (FREE USER - Backend'den geliyor!)
   Widget _buildCourseCards() {
     final homeState = ref.watch(homeViewControllerProvider);
-
-    // Loading state
-    if (homeState.isLoading) {
-      return Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
-        child: SizedBox(
-          height: 180.h,
-          child: const Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-
-    // Error state
-    if (homeState.errorMessage != null) {
-      return Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
-        child: SizedBox(
-          height: 180.h,
-          child: Center(
-            child: Text(
-              'Kurslar yüklenemedi\n${homeState.errorMessage}',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14.sp, color: Colors.red),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Empty state
-    if (homeState.courses.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
-        child: SizedBox(
-          height: 180.h,
-          child: Center(
-            child: Text(
-              'Henüz kurs bulunmuyor',
-              style: TextStyle(fontSize: 14.sp, color: MyColors.textSecondary),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Backend'den gelen FREE kurslar (is_free = true)
-    final freeCourses = homeState.courses
-        .where((c) => c.isFree)
-        .take(2)
-        .toList();
-
-    // Eğer ücretsiz kurs yoksa ilk 2'yi göster
-    final courses = freeCourses.isEmpty
-        ? homeState.courses.take(2).toList()
-        : freeCourses;
-
+    if (homeState.isLoading)
+      return const Center(child: CircularProgressIndicator());
+    final courses = homeState.courses.take(2).toList();
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: SizedBox(
-        height: 180.h,
-        child: Row(
-          children: [
-            if (courses.isNotEmpty)
-              Expanded(
+      child: Row(
+        children: [
+          for (int i = 0; i < courses.length; i++)
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
                 child: _buildCourseCard(
-                  courseData: courses[0].toJson(),
-                  title: courses[0].title,
-                  subtitle: '${courses[0].totalLessons} lessons',
-                  iconPath: 'assets/icons/englishfortravel.svg',
-                  iconBgColor: const Color(0xFFE3F2FD),
-                  arrowColor: const Color(0xFF4A90E2),
+                  courseData: courses[i].toJson(),
+                  title: courses[i].title,
+                  subtitle: LocaleKeys.home_startCourse.tr(),
+                  iconPath: i == 0
+                      ? 'assets/icons/englishfortravel.svg'
+                      : 'assets/icons/englishforhealth.svg',
+                  iconBgColor: i == 0
+                      ? const Color(0xFF2563EB).withOpacity(0.2)
+                      : const Color(0xFF8F1BE9).withOpacity(0.2),
+                  arrowColor: i == 0
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFF8F1BE9),
                 ),
               ),
-            if (courses.length > 1) ...[
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _buildCourseCard(
-                  courseData: courses[1].toJson(),
-                  title: courses[1].title,
-                  subtitle: '${courses[1].totalLessons} lessons',
-                  iconPath: 'assets/icons/englishforhealth.svg',
-                  iconBgColor: const Color(0xFFF3E5F5),
-                  arrowColor: const Color(0xFF9C27B0),
-                ),
-              ),
-            ],
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
 
-  /// Single course card
   Widget _buildCourseCard({
     required Map<String, dynamic> courseData,
     required String title,
@@ -1574,89 +1308,71 @@ class _HomeViewState extends ConsumerState<HomeView> {
     required Color arrowColor,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                CourseDetailView(courseData: courseData, isPremium: false),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              CourseDetailView(courseData: courseData, isPremium: false),
+        ),
+      ),
       child: Container(
-        padding: EdgeInsets.all(14.w),
+        padding: EdgeInsets.all(16.w),
+        height: 180.h,
         decoration: BoxDecoration(
-          color: MyColors.white,
-          borderRadius: BorderRadius.circular(20.r),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: Offset(0, 4),
+              color: const Color(0xFFC2D6E1).withOpacity(0.25),
+              offset: const Offset(0, 4),
+              blurRadius: 4,
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon
             Container(
-              width: 48.w,
-              height: 48.h,
+              width: 44.w,
+              height: 44.h,
               decoration: BoxDecoration(
                 color: iconBgColor,
-                borderRadius: BorderRadius.circular(14.r),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               child: Center(
-                child: SvgPicture.asset(iconPath, width: 28.w, height: 28.h),
+                child: SvgPicture.asset(
+                  iconPath,
+                  width: 24.w,
+                  colorFilter: ColorFilter.mode(arrowColor, BlendMode.srcIn),
+                ),
               ),
             ),
-
             SizedBox(height: 16.h),
-
-            // Title (Backend'den!)
             Text(
               title,
               maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 14.sp,
+                fontSize: 15.sp,
                 fontWeight: FontWeight.w700,
-                fontFamily: 'Montserrat',
-                color: MyColors.textPrimary,
                 height: 1.2,
               ),
             ),
-
-            SizedBox(height: 4.h),
-
-            // Subtitle (Backend'den!)
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Montserrat',
-                color: MyColors.textSecondary,
-              ),
-            ),
-
             const Spacer(),
-
-            // Start Course button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Start Course',
+                  subtitle,
                   style: TextStyle(
-                    fontSize: 11.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
-                    fontFamily: 'Montserrat',
-                    color: MyColors.textSecondary,
                   ),
                 ),
-                Icon(Icons.arrow_forward, color: arrowColor, size: 20.sp),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  color: arrowColor,
+                  size: 22.sp,
+                ),
               ],
             ),
           ],
@@ -1665,242 +1381,144 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Premium Membership Card
   Widget _buildPremiumCard() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: GestureDetector(
-        onTap: () {
-          // TODO: Navigate to premium subscription page
-          print('Tapped on Premium Membership');
-        },
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(20.w),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF1A2332), // Dark navy
-                Color(0xFF2D3A4F),
+      child: Container(
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          gradient: const RadialGradient(
+            center: Alignment.bottomRight,
+            radius: 1.45,
+            colors: [Color(0xFF49463B), Color(0xFF10182B)],
+            stops: [0.1, 0.9],
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFA726),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    LocaleKeys.home_proMembership.tr().toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 0.05,
+                    ),
+                  ),
+                ),
+                SvgPicture.asset('assets/images/premiumlogo.svg', width: 30),
               ],
             ),
-            borderRadius: BorderRadius.circular(24.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 20,
-                offset: Offset(0, 10),
+            SizedBox(height: 12.h),
+            Text(
+              LocaleKeys.home_unlimitedAccess.tr(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                letterSpacing: 20 * -0.05,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row with badge and premium logo
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // PRO MEMBERSHIP badge
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFFFA726), // Orange
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      'PRO MEMBERSHIP',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-
-                  // Premium logo
-                  SvgPicture.asset(
-                    'assets/images/premiumlogo.svg',
-                    width: 40.w,
-                    height: 40.h,
-                  ),
-                ],
+            ),
+            Text(
+              LocaleKeys.home_premiumDesc.tr(),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+            SizedBox(height: 16.h),
+            ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PremiumView()),
               ),
-
-              SizedBox(height: 16.h),
-
-              // Title
-              Text(
-                'Unlimited Access',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  letterSpacing: -0.5,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Montserrat',
-                  color: Colors.white,
-                  height: 1.2,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(double.infinity, 40),
+              ),
+              child: Text(
+                LocaleKeys.home_upgradeNow.tr().toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
-              SizedBox(height: 6.h),
-
-              // Description
-              Text(
-                'Unlock live translator and all\ncity guides worldwide.',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Montserrat',
-                  letterSpacing: -0.5,
-                  color: Colors.white.withOpacity(0.85),
-                  height: 1.4,
-                ),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // UPGRADE NOW button
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PremiumView(),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.2),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      'UPGRADE NOW',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        letterSpacing: -0.5,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A2332),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// Visual Dictionary Card
   Widget _buildVisualDictionaryCard() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  const VisualDictionaryView(isPremium: false),
-            ),
-          );
-        },
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const VisualDictionaryView(isPremium: false),
+          ),
+        ),
         child: Container(
-          width: double.infinity,
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: MyColors.white,
-            borderRadius: BorderRadius.circular(20.r),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 12,
-                offset: Offset(0, 4),
+                color: const Color(0xFFC2D6E1).withOpacity(0.25),
+                offset: const Offset(0, 4),
+                blurRadius: 4,
               ),
             ],
           ),
           child: Row(
             children: [
-              // Book icon
               Container(
-                width: 64.w,
-                height: 64.h,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
-                  color: Color(0xFFE0F7F4), // Light turquoise
-                  borderRadius: BorderRadius.circular(16.r),
+                  color: const Color(0xFFE0F7F4),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/book.png',
-                    width: 36.w,
-                    height: 36.h,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                child: Image.asset('assets/images/book.png'),
               ),
-
               SizedBox(width: 16.w),
-
-              // Text content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(
-                        ref.watch(localeProvider),
-                      ).visualDictionary,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        letterSpacing: -0.5,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: MyColors.textPrimary,
-                      ),
+                      LocaleKeys.home_visualDictionary.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 4.h),
                     Text(
-                      AppLocalizations.of(
-                        ref.watch(localeProvider),
-                      ).translatedItemsCount,
+                      LocaleKeys.home_translatedItemsCount.tr(),
                       style: TextStyle(
-                        fontSize: 12.sp,
-                        letterSpacing: -0.5,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'Montserrat',
                         color: MyColors.textSecondary,
+                        fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Arrow icon
-              Icon(
-                Icons.arrow_forward_ios,
-                color: MyColors.textSecondary,
-                size: 20.sp,
-              ),
+              const Icon(Icons.arrow_forward_ios, size: 16),
             ],
           ),
         ),
@@ -1908,73 +1526,23 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  /// Profile avatar
   Widget _buildProfileAvatar() {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ProfileView(isPremium: false),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfileView(isPremium: false),
+        ),
+      ),
       child: Container(
         width: 44.w,
         height: 44.h,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: MyColors.lingolaPrimaryColor.withOpacity(0.1),
           border: Border.all(color: MyColors.lingolaPrimaryColor, width: 2),
         ),
-        child: Icon(
-          Icons.person,
-          size: 24.sp,
-          color: MyColors.lingolaPrimaryColor,
-        ),
+        child: const Icon(Icons.person, color: MyColors.lingolaPrimaryColor),
       ),
     );
   }
-
-  /// Get localized category name based on backend category
-  String _getLocalizedCategoryName(String backendName, AppLocalizations l) {
-    switch (backendName.toLowerCase()) {
-      case 'general':
-        return l.catGeneral;
-      case 'trip':
-        return l.catTrip;
-      case 'airport':
-        return l.catAirport;
-      case 'accommodation':
-        return l.catAccommodation;
-      case 'transportation':
-        return l.catTransportation;
-      case 'food & drink':
-      case 'food and drink':
-        return l.catFoodAndDrink;
-      case 'shopping':
-      case 'shop':
-        return l.catShop;
-      case 'culture':
-        return l.catCulture;
-      case 'meeting':
-        return l.catMeeting;
-      case 'sport':
-        return l.catSport;
-      case 'health':
-        return l.catHealth;
-      case 'business':
-        return l.catBusiness;
-      case 'direction & navigation':
-      case 'direction':
-      case 'navigation':
-        return l.catDirection;
-      case 'emergency':
-        return l.catEmergency;
-      default:
-        return backendName; // Fallback to original name
-    }
-  }
-
-  /// Bottom Navigation Bar - Floating with oval background
 }

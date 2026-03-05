@@ -1,11 +1,11 @@
+import 'package:easy_localization/easy_localization.dart'; // easy_localization eklendi
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../Core/Localization/app_localizations.dart';
+
 import '../../Core/Theme/my_colors.dart';
 import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 import 'profession_selection_view.dart';
 
 class LanguageSelectionView extends ConsumerStatefulWidget {
@@ -17,32 +17,113 @@ class LanguageSelectionView extends ConsumerStatefulWidget {
 }
 
 class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
-  String? selectedLanguage;
+  // Artık seçilen dilin adını değil, JSON'daki key değerini (örn: 'lang_english') tutuyoruz
+  String? selectedLanguageKey;
 
-  final List<Map<String, String>> languages = [
-    {'name': 'English', 'flag': 'assets/images/englishflag.png'},
-    {'name': 'German', 'flag': 'assets/images/germanflag.png'},
-    {'name': 'Italian', 'flag': 'assets/images/italianflag.png'},
-    {'name': 'French', 'flag': 'assets/images/frenchflag.png'},
-    {'name': 'Japanese', 'flag': 'assets/images/japaneseflag.png'},
-    {'name': 'Spanish', 'flag': 'assets/images/spanishflag.png'},
-    {'name': 'Russian', 'flag': 'assets/images/russianflag.png'},
-    {'name': 'Turkish', 'flag': 'assets/images/turkishflag.png'},
-    {'name': 'Korean', 'flag': 'assets/images/koreanflag.png'},
-    {'name': 'Hindi', 'flag': 'assets/images/hindiflag.png'},
-    {'name': 'Portuguese', 'flag': 'assets/images/portugalflag.png'},
-  ];
+  Widget _buildProgressBar(int currentStep, int totalSteps) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'step_${currentStep}_of_$totalSteps'.tr(), // "STEP 1 OF 4"
+          style: GoogleFonts.montserrat(
+            fontSize: 11.sp,
+            fontWeight: FontWeight.bold, // Tasarımda biraz daha kalın duruyor
+            color: MyColors.lingolaPrimaryColor,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Row(
+          children: List.generate(totalSteps, (index) {
+            bool isActive = index < currentStep;
+            return Expanded(
+              child: Container(
+                height: 4.h, // Çizgi kalınlığı
+                margin: EdgeInsets.only(
+                  right: index == totalSteps - 1 ? 0 : 8.w,
+                ), // Aradaki boşluklar
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? MyColors.lingolaPrimaryColor
+                      : MyColors.grey200,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final appLocale = ref.watch(localeProvider);
-    final l = AppLocalizations.of(appLocale);
+    // Dil listesini build metodu içinde tanımlıyoruz ki dil değiştiğinde isimler güncellensin
+    final List<Map<String, String>> languages = [
+      {
+        'key': 'lang_english',
+        'name': 'lang_english'.tr(),
+        'flag': 'assets/images/englishflag.png',
+      },
+      {
+        'key': 'lang_german',
+        'name': 'lang_german'.tr(),
+        'flag': 'assets/images/germanflag.png',
+      },
+      {
+        'key': 'lang_italian',
+        'name': 'lang_italian'.tr(),
+        'flag': 'assets/images/italianflag.png',
+      },
+      {
+        'key': 'lang_french',
+        'name': 'lang_french'.tr(),
+        'flag': 'assets/images/frenchflag.png',
+      },
+      {
+        'key': 'lang_japanese',
+        'name': 'lang_japanese'.tr(),
+        'flag': 'assets/images/japaneseflag.png',
+      },
+      {
+        'key': 'lang_spanish',
+        'name': 'lang_spanish'.tr(),
+        'flag': 'assets/images/spanishflag.png',
+      },
+      {
+        'key': 'lang_russian',
+        'name': 'lang_russian'.tr(),
+        'flag': 'assets/images/russianflag.png',
+      },
+      {
+        'key': 'lang_turkish',
+        'name': 'lang_turkish'.tr(),
+        'flag': 'assets/images/turkishflag.png',
+      },
+      {
+        'key': 'lang_korean',
+        'name': 'lang_korean'.tr(),
+        'flag': 'assets/images/koreanflag.png',
+      },
+      {
+        'key': 'lang_hindi',
+        'name': 'lang_hindi'.tr(),
+        'flag': 'assets/images/hindiflag.png',
+      },
+      {
+        'key': 'lang_portuguese',
+        'name': 'lang_portuguese'.tr(),
+        'flag': 'assets/images/portugalflag.png',
+      },
+    ];
 
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
-        bottom: false, // 🔥 ALT BOŞLUK KALKTI
+        bottom: false,
+        top: false,
         child: CustomScrollView(
+          physics: ClampingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -50,31 +131,28 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: 40.h),
+                    _buildProgressBar(1, 4),
+                    SizedBox(height: 8.h),
                     Text(
-                      l.step1of4,
+                      'select_language_title'.tr(),
                       style: GoogleFonts.montserrat(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: MyColors.lingolaPrimaryColor,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      l.step1Title,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 28.sp,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 32.sp,
+                        letterSpacing: 32.sp * -0.05,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      l.step1Subtitle,
+                      'select_language_subtitle'.tr(),
                       style: GoogleFonts.montserrat(
-                        fontSize: 14.sp,
+                        fontSize: 16.sp,
+                        letterSpacing: 16.sp * -0.05,
                         color: MyColors.textSecondary,
+                        fontWeight: FontWeight.w300,
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 4.h),
                   ],
                 ),
               ),
@@ -85,14 +163,14 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final language = languages[index];
-                  final isSelected = selectedLanguage == language['name'];
+                  final isSelected = selectedLanguageKey == language['key'];
 
                   return Padding(
                     padding: EdgeInsets.only(bottom: 12.h),
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
-                          selectedLanguage = language['name'];
+                          selectedLanguageKey = language['key'];
                         });
                       },
                       child: Container(
@@ -142,17 +220,17 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                 child: SizedBox(
                   height: 56.h,
                   child: ElevatedButton(
-                    onPressed: selectedLanguage != null
+                    onPressed: selectedLanguageKey != null
                         ? () {
                             ref
                                 .read(onboardingControllerProvider.notifier)
-                                .setTargetLanguage(selectedLanguage!);
+                                .setTargetLanguage(selectedLanguageKey!);
 
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ProfessionSelectionView(
-                                  selectedLanguage: selectedLanguage,
+                                  selectedLanguage: selectedLanguageKey,
                                 ),
                               ),
                             );
@@ -167,7 +245,7 @@ class _LanguageSelectionViewState extends ConsumerState<LanguageSelectionView> {
                       elevation: 0,
                     ),
                     child: Text(
-                      l.continueBtn,
+                      'continue_btn'.tr(),
                       style: GoogleFonts.montserrat(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,

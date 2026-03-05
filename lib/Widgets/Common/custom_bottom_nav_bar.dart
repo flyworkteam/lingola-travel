@@ -3,10 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/View/HomeView/home_view.dart';
-import 'package:lingola_travel/View/HomeView/premium_home_view.dart';
-import 'package:lingola_travel/View/VocabularyView/travel_vocabulary_view.dart';
 import 'package:lingola_travel/View/LibraryView/library_view.dart';
 import 'package:lingola_travel/View/ProfileView/profile_view.dart';
+import 'package:lingola_travel/View/VocabularyView/travel_vocabulary_view.dart';
 
 /// Global Bottom Navigation Bar Widget
 /// Used across all main screens for consistent navigation
@@ -35,7 +34,7 @@ class CustomBottomNavBar extends StatelessWidget {
     Widget destination;
     switch (index) {
       case 0:
-        destination = isPremium ? const PremiumHomeView() : const HomeView();
+        destination = const HomeView();
         break;
       case 1:
         destination = TravelVocabularyView(isPremium: isPremium);

@@ -1,13 +1,14 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../Core/Localization/app_localizations.dart';
-import '../../Core/Theme/my_colors.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+
 import '../../Core/Routes/app_routes.dart';
+import '../../Core/Theme/my_colors.dart';
 import '../../Riverpod/Controllers/OnboardingController/onboarding_controller.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 
 /// Step 4 of 4 - Daily Goal Selection View
 class DailyGoalSelectionView extends ConsumerStatefulWidget {
@@ -22,6 +23,31 @@ class _DailyGoalSelectionViewState
     extends ConsumerState<DailyGoalSelectionView> {
   String? _selectedGoal;
 
+  // Hedef datalarını ve dinamik dakikaları içeren liste
+  final List<Map<String, dynamic>> _goalsData = [
+    {
+      'id': 'casual',
+      'title': LocaleKeys.goal_casual_title,
+      'duration': LocaleKeys.goal_casual_desc,
+      'minutes': 5,
+      'icon': 'assets/icons/hafif.svg',
+    },
+    {
+      'id': 'regular',
+      'title': LocaleKeys.goal_regular_title,
+      'duration': LocaleKeys.goal_regular_desc,
+      'minutes': 15,
+      'icon': 'assets/icons/normal.svg',
+    },
+    {
+      'id': 'serious',
+      'title': LocaleKeys.goal_serious_title,
+      'duration': LocaleKeys.goal_serious_desc,
+      'minutes': 30,
+      'icon': 'assets/icons/ciddili.svg',
+    },
+  ];
+
   void _onGoalSelected(String goalId) {
     setState(() {
       _selectedGoal = goalId;
@@ -30,24 +56,17 @@ class _DailyGoalSelectionViewState
 
   void _onContinue() {
     if (_selectedGoal != null) {
-      int dailyGoalMinutes = _getGoalMinutes(_selectedGoal!);
+      // Seçilen ID'ye göre listeden dakika değerini dinamik olarak çekiyoruz
+      final selectedData = _goalsData.firstWhere(
+        (goal) => goal['id'] == _selectedGoal,
+      );
+      final int dailyGoalMinutes = selectedData['minutes'] as int;
+
       ref
           .read(onboardingControllerProvider.notifier)
           .setDailyGoal(_selectedGoal!, dailyGoalMinutes);
-      Navigator.pushNamed(context, AppRoutes.creatingPlan);
-    }
-  }
 
-  int _getGoalMinutes(String goalId) {
-    switch (goalId) {
-      case 'casual':
-        return 5;
-      case 'regular':
-        return 15;
-      case 'serious':
-        return 30;
-      default:
-        return 15;
+      Navigator.pushNamed(context, AppRoutes.creatingPlan);
     }
   }
 
@@ -55,31 +74,6 @@ class _DailyGoalSelectionViewState
 
   @override
   Widget build(BuildContext context) {
-    // Use system language for onboarding
-    final appLocale = ref.watch(localeProvider);
-    final l = AppLocalizations.of(appLocale);
-
-    final goals = [
-      {
-        'id': 'casual',
-        'title': l.goalCasual,
-        'duration': l.goalCasualDuration,
-        'icon': 'assets/icons/hafif.svg',
-      },
-      {
-        'id': 'regular',
-        'title': l.goalRegular,
-        'duration': l.goalRegularDuration,
-        'icon': 'assets/icons/normal.svg',
-      },
-      {
-        'id': 'serious',
-        'title': l.goalSerious,
-        'duration': l.goalSeriousDuration,
-        'icon': 'assets/icons/ciddili.svg',
-      },
-    ];
-
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
@@ -89,50 +83,76 @@ class _DailyGoalSelectionViewState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 20.h),
-              _buildProgressBar(l),
-              SizedBox(height: 28.h),
 
-              // Title
+              // Progress Bar (Step 4 of 4)
               Text(
-                l.step4Title,
+                LocaleKeys.step_4_of_4.tr(),
                 style: GoogleFonts.montserrat(
-                  letterSpacing: -0.5,
-                  fontSize: 28.sp,
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w700,
-                  color: MyColors.black,
-                  height: 1.2,
+                  color: MyColors.lingolaPrimaryColor,
+                  letterSpacing: 0.5,
                 ),
               ),
-
-              SizedBox(height: 10.h),
-
-              // Subtitle
-              Text(
-                l.step4Subtitle,
-                style: GoogleFonts.montserrat(
-                  letterSpacing: -0.5,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: MyColors.grey600,
-                  height: 1.3,
-                ),
+              SizedBox(height: 12.h),
+              Row(
+                children: List.generate(4, (index) {
+                  return Expanded(
+                    child: Container(
+                      height: 4.h,
+                      margin: EdgeInsets.only(right: index == 3 ? 0 : 8.w),
+                      decoration: BoxDecoration(
+                        color: MyColors.lingolaPrimaryColor,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  );
+                }),
               ),
 
               SizedBox(height: 24.h),
 
+              // Title
+              Text(
+                LocaleKeys.goal_title.tr(),
+                style: GoogleFonts.montserrat(
+                  fontSize: 32.sp,
+                  fontWeight: FontWeight.w700,
+                  color: MyColors.black,
+                  letterSpacing: 32.sp * -0.05,
+                  height: 1.1,
+                ),
+              ),
+
+              SizedBox(height: 8.h),
+
+              // Subtitle
+              Text(
+                LocaleKeys.goal_subtitle.tr(),
+                style: GoogleFonts.montserrat(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.black,
+                  letterSpacing: 15.sp * -0.05,
+                  decorationColor: MyColors.lingolaPrimaryColor,
+                ),
+              ),
+
+              SizedBox(height: 20.h),
+
               // Goal Cards
               Expanded(
                 child: ListView.separated(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: goals.length,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _goalsData.length,
                   separatorBuilder: (context, index) => SizedBox(height: 12.h),
                   itemBuilder: (context, index) {
-                    final goal = goals[index];
+                    final goal = _goalsData[index];
                     final isSelected = _selectedGoal == goal['id'];
                     return _buildGoalCard(
                       goal: goal,
                       isSelected: isSelected,
-                      onTap: () => _onGoalSelected(goal['id']!),
+                      onTap: () => _onGoalSelected(goal['id'] as String),
                     );
                   },
                 ),
@@ -143,6 +163,7 @@ class _DailyGoalSelectionViewState
               // Bottom Buttons
               Row(
                 children: [
+                  // Back Button
                   Expanded(
                     flex: 2,
                     child: SizedBox(
@@ -150,87 +171,66 @@ class _DailyGoalSelectionViewState
                       child: ElevatedButton(
                         onPressed: _onBack,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD1D5DB),
+                          backgroundColor: MyColors.grey300,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              width: 40.w,
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_back,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
-                              ),
+                            Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 20.sp,
                             ),
+                            const Spacer(),
                             Text(
-                              l.back,
+                              LocaleKeys.btn_back.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                                 color: MyColors.white,
                               ),
                             ),
-                            SizedBox(width: 20.w),
+                            const Spacer(),
                           ],
                         ),
                       ),
                     ),
                   ),
                   SizedBox(width: 12.w),
+                  // Continue Button
                   Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: SizedBox(
                       height: 50.h,
                       child: ElevatedButton(
                         onPressed: _selectedGoal != null ? _onContinue : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2EC4B6),
-                          disabledBackgroundColor: const Color(0xFFD1D5DB),
+                          backgroundColor: MyColors.lingolaPrimaryColor,
+                          disabledBackgroundColor: MyColors.grey300,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SizedBox(width: 20.w),
+                            const Spacer(),
                             Text(
-                              l.continueBtn,
+                              LocaleKeys.continue_btn.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                                 color: MyColors.white,
                               ),
                             ),
-                            Container(
-                              width: 40.w,
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_forward,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
-                              ),
+                            const Spacer(),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 20.sp,
                             ),
                           ],
                         ),
@@ -240,7 +240,7 @@ class _DailyGoalSelectionViewState
                 ],
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: 12.h),
             ],
           ),
         ),
@@ -248,43 +248,8 @@ class _DailyGoalSelectionViewState
     );
   }
 
-  Widget _buildProgressBar(AppLocalizations l) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l.step4of4,
-          style: GoogleFonts.montserrat(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-            color: MyColors.lingolaPrimaryColor,
-            letterSpacing: 1.2,
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          children: List.generate(
-            4,
-            (i) => [
-              Expanded(
-                child: Container(
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: MyColors.lingolaPrimaryColor,
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                ),
-              ),
-              if (i < 3) SizedBox(width: 8.w),
-            ],
-          ).expand((e) => e).toList(),
-        ),
-      ],
-    );
-  }
-
   Widget _buildGoalCard({
-    required Map<String, String> goal,
+    required Map<String, dynamic> goal,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -292,77 +257,73 @@ class _DailyGoalSelectionViewState
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
         decoration: BoxDecoration(
-          color: isSelected
-              ? MyColors.lingolaPrimaryColor.withOpacity(0.1)
-              : MyColors.white,
+          color: isSelected ? const Color(0xFFE0F7F5) : MyColors.white,
           border: Border.all(
-            color: isSelected ? MyColors.lingolaPrimaryColor : MyColors.grey300,
-            width: isSelected ? 2.w : 1.w,
+            color: isSelected
+                ? MyColors.lingolaPrimaryColor
+                : Colors.transparent,
+            width: isSelected ? 1.5.w : 0,
           ),
-          borderRadius: BorderRadius.circular(14.r),
+          borderRadius: BorderRadius.circular(10.r), // Radius: 10px
           boxShadow: [
             BoxShadow(
-              color: MyColors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+              color: const Color(
+                0xFF303030,
+              ).withOpacity(0.25), // #303030 %25 opacity
+              offset: const Offset(0, 2), // X:0, Y:2
+              blurRadius: 4, // Blur 4
+              spreadRadius: 0, // Spread 0
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 48.w,
-              height: 48.w,
+              width: 44.w,
+              height: 44.w,
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF2EC4B6)
-                    : const Color(0xFF2EC4B6).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12.r),
+                    ? const Color(0xFF5ABCB2)
+                    : const Color(0xFFD6EBE9),
+                borderRadius: BorderRadius.circular(8.r),
               ),
-              child: goal['icon']!.endsWith('.svg')
-                  ? SvgPicture.asset(
-                      goal['icon']!,
-                      width: 28.w,
-                      height: 28.w,
-                      fit: BoxFit.contain,
-                      colorFilter: isSelected
-                          ? ColorFilter.mode(MyColors.white, BlendMode.srcIn)
-                          : null,
-                    )
-                  : Image.asset(
-                      goal['icon']!,
-                      width: 28.w,
-                      height: 28.w,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
-                      color: isSelected ? MyColors.white : null,
-                    ),
+              child: SvgPicture.asset(
+                goal['icon'] as String,
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
             ),
             SizedBox(width: 16.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  goal['title']!,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                    color: MyColors.black,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    (goal['title'] as String).tr(),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: MyColors.black,
+                    ),
                   ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  goal['duration']!,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w400,
-                    color: MyColors.grey600,
+                  SizedBox(height: 4.h),
+                  Text(
+                    (goal['duration'] as String).tr(),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      color: MyColors.black,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

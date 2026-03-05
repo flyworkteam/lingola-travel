@@ -1,12 +1,13 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../Core/Localization/app_localizations.dart';
-import '../../Core/Theme/my_colors.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+
 import '../../Core/Routes/app_routes.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
+import '../../Core/Theme/my_colors.dart';
 
 /// Step 3 of 4 - English Level Selection View
 class EnglishLevelSelectionView extends ConsumerStatefulWidget {
@@ -39,34 +40,31 @@ class _EnglishLevelSelectionViewState
 
   @override
   Widget build(BuildContext context) {
-    // Use system language for onboarding
-    final appLocale = ref.watch(localeProvider);
-    final l = AppLocalizations.of(appLocale);
-
+    // Localization anahtarlarını liste içinde tanımlıyoruz
     final levels = [
       {
         'id': 'beginner',
-        'title': l.levelBeginner,
-        'description': l.levelBeginnerDesc,
+        'title': LocaleKeys.level_beginner_title.tr(),
+        'description': LocaleKeys.level_beginner_desc.tr(),
         'icon': 'assets/images/beginner.svg',
       },
       {
         'id': 'elementary',
-        'title': l.levelElementary,
-        'description': l.levelElementaryDesc,
+        'title': LocaleKeys.level_elementary_title.tr(),
+        'description': LocaleKeys.level_elementary_desc.tr(),
         'icon': 'assets/images/elementary.svg',
       },
       {
         'id': 'intermediate',
-        'title': l.levelIntermediate,
-        'description': l.levelIntermediateDesc,
+        'title': LocaleKeys.level_intermediate_title.tr(),
+        'description': LocaleKeys.level_intermediate_desc.tr(),
         'icon': 'assets/images/intermediate.svg',
       },
       {
         'id': 'upper-intermediate',
-        'title': l.levelUpperIntermediate,
-        'description': l.levelUpperIntermediateDesc,
-        'icon': 'assets/icons/briefcase.svg',
+        'title': LocaleKeys.level_upper_intermediate_title.tr(),
+        'description': LocaleKeys.level_upper_intermediate_desc.tr(),
+        'icon': 'assets/icons/briefcase.svg', // Briefcase ikonunu koruduk
       },
     ];
 
@@ -79,32 +77,62 @@ class _EnglishLevelSelectionViewState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 20.h),
-              _buildProgressBar(l),
-              SizedBox(height: 28.h),
+
+              // Progress Bar (Step 3 of 4)
+              Text(
+                LocaleKeys.step_3_of_4.tr(),
+                style: GoogleFonts.montserrat(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w700,
+                  color: MyColors.lingolaPrimaryColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                children: List.generate(4, (index) {
+                  // İlk üç çubuk aktif (Step 3 olduğu için)
+                  bool isActive = index < 3;
+                  return Expanded(
+                    child: Container(
+                      height: 4.h,
+                      margin: EdgeInsets.only(right: index == 3 ? 0 : 8.w),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? MyColors.lingolaPrimaryColor
+                            : MyColors.grey200,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+
+              SizedBox(height: 24.h),
 
               // Title
               Text(
-                '${widget.selectedLanguage ?? ''}\n${l.step3Title}',
+                LocaleKeys.level_title.tr(),
                 style: GoogleFonts.montserrat(
-                  fontSize: 28.sp,
+                  fontSize: 32.sp,
                   fontWeight: FontWeight.w700,
                   color: MyColors.black,
-                  letterSpacing: -0.5,
-                  height: 1.2,
+                  letterSpacing: 32.sp * -0.05,
+                  height: 1.1,
                 ),
               ),
 
-              SizedBox(height: 10.h),
+              SizedBox(height: 8.h),
 
               // Subtitle
               Text(
-                l.step3Subtitle,
+                LocaleKeys.level_subtitle.tr(),
                 style: GoogleFonts.montserrat(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: MyColors.grey600,
-                  letterSpacing: -0.5,
-                  height: 1.3,
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.black,
+                  letterSpacing: 15.sp * -0.05,
+                  height: 1.4,
                 ),
               ),
 
@@ -113,9 +141,9 @@ class _EnglishLevelSelectionViewState
               // Level Cards
               Expanded(
                 child: ListView.separated(
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: const BouncingScrollPhysics(),
                   itemCount: levels.length,
-                  separatorBuilder: (context, index) => SizedBox(height: 10.h),
+                  separatorBuilder: (context, index) => SizedBox(height: 12.h),
                   itemBuilder: (context, index) {
                     final level = levels[index];
                     final isSelected = _selectedLevel == level['id'];
@@ -133,6 +161,7 @@ class _EnglishLevelSelectionViewState
               // Bottom Buttons
               Row(
                 children: [
+                  // Back Button
                   Expanded(
                     flex: 2,
                     child: SizedBox(
@@ -140,87 +169,66 @@ class _EnglishLevelSelectionViewState
                       child: ElevatedButton(
                         onPressed: _onBack,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD1D5DB),
+                          backgroundColor: MyColors.grey300,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              width: 40.w,
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_back,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
-                              ),
+                            Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 20.sp,
                             ),
+                            const Spacer(),
                             Text(
-                              l.back,
+                              LocaleKeys.btn_back.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                                 color: MyColors.white,
                               ),
                             ),
-                            SizedBox(width: 20.w),
+                            const Spacer(),
                           ],
                         ),
                       ),
                     ),
                   ),
                   SizedBox(width: 12.w),
+                  // Continue Button
                   Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: SizedBox(
                       height: 50.h,
                       child: ElevatedButton(
                         onPressed: _selectedLevel != null ? _onContinue : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2EC4B6),
-                          disabledBackgroundColor: const Color(0xFFD1D5DB),
+                          backgroundColor: MyColors.lingolaPrimaryColor,
+                          disabledBackgroundColor: MyColors.grey300,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SizedBox(width: 20.w),
+                            const Spacer(),
                             Text(
-                              l.continueBtn,
+                              LocaleKeys.continue_btn.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                                 color: MyColors.white,
                               ),
                             ),
-                            Container(
-                              width: 40.w,
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_forward,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
-                              ),
+                            const Spacer(),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 20.sp,
                             ),
                           ],
                         ),
@@ -230,72 +238,11 @@ class _EnglishLevelSelectionViewState
                 ],
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: 12.h),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildProgressBar(AppLocalizations l) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l.step3of4,
-          style: GoogleFonts.montserrat(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-            color: MyColors.lingolaPrimaryColor,
-            letterSpacing: 1.2,
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.lingolaPrimaryColor,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: MyColors.grey300,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
@@ -308,21 +255,23 @@ class _EnglishLevelSelectionViewState
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.all(14.w),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: isSelected
-              ? MyColors.lingolaPrimaryColor.withOpacity(0.1)
-              : MyColors.white,
+              ? const Color(0xFFE0F7F5)
+              : MyColors.white, // Seçili durum rengini ekledik
           border: Border.all(
-            color: isSelected ? MyColors.lingolaPrimaryColor : MyColors.grey300,
-            width: isSelected ? 2.w : 1.w,
+            color: isSelected ? MyColors.lingolaPrimaryColor : MyColors.grey200,
+            width: isSelected ? 2.w : 1.5.w,
           ),
-          borderRadius: BorderRadius.circular(14.r),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
+            // Gölge buraya eklendi
             BoxShadow(
-              color: MyColors.black.withOpacity(0.04),
-              blurRadius: 6,
+              color: const Color(0xFF303030).withOpacity(0.3), // %30 Opaklık
               offset: const Offset(0, 2),
+              blurRadius: 4,
+              spreadRadius: 0,
             ),
           ],
         ),
@@ -331,25 +280,16 @@ class _EnglishLevelSelectionViewState
             level['icon']!.endsWith('.svg')
                 ? SvgPicture.asset(
                     level['icon']!,
-                    width: 40.w,
-                    height: 40.w,
                     fit: BoxFit.contain,
-                    colorFilter: isSelected
-                        ? ColorFilter.mode(
-                            MyColors.lingolaPrimaryColor,
-                            BlendMode.srcIn,
-                          )
-                        : null,
+                    colorFilter: ColorFilter.mode(
+                      isSelected
+                          ? MyColors.lingolaPrimaryColor
+                          : MyColors.grey600,
+                      BlendMode.srcIn,
+                    ),
                   )
-                : Image.asset(
-                    level['icon']!,
-                    width: 40.w,
-                    height: 40.w,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
-                    color: isSelected ? MyColors.lingolaPrimaryColor : null,
-                  ),
-            SizedBox(width: 12.w),
+                : Image.asset(level['icon']!, fit: BoxFit.contain),
+            SizedBox(width: 16.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,17 +302,15 @@ class _EnglishLevelSelectionViewState
                       color: MyColors.black,
                     ),
                   ),
-                  SizedBox(height: 2.h),
+                  SizedBox(height: 4.h),
                   Text(
                     level['description']!,
                     style: GoogleFonts.montserrat(
-                      fontSize: 12.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w400,
-                      color: MyColors.grey600,
-                      height: 1.3,
+                      color: MyColors.textSecondary,
+                      height: 1.2,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

@@ -1,4 +1,5 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,6 +7,7 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Models/course_model.dart';
 import 'package:lingola_travel/Repositories/course_repository.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
+
 import '../LessonView/lesson_detail_view.dart';
 
 class CourseDetailView extends StatefulWidget {
@@ -423,11 +425,6 @@ class _CourseDetailViewState extends State<CourseDetailView> {
     final isCompleted = lesson.userStatus == 'completed';
     final isInProgress = lesson.userStatus == 'in_progress' || isCurrentLesson;
     final isLocked = lesson.userStatus == 'locked';
-
-    // Debug print
-    print(
-      '🔍 Lesson ${lesson.title}: status=${lesson.userStatus}, isCompleted=$isCompleted, isInProgress=$isInProgress, isLocked=$isLocked, isCurrentLesson=$isCurrentLesson',
-    );
 
     Color bgColor;
     Widget iconWidget;

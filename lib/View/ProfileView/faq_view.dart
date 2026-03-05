@@ -1,6 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
 
 class FaqView extends StatefulWidget {
   const FaqView({super.key});
@@ -31,23 +34,20 @@ class _FaqViewState extends State<FaqView> {
               // Header
               Row(
                 children: [
-                  GestureDetector(
+                  InkWell(
                     onTap: () => Navigator.pop(context),
                     child: SvgPicture.asset(
                       'assets/icons/gerigelmeiconu.svg',
-                      width: 13.w,
-                      height: 13.w,
                       fit: BoxFit.contain,
                     ),
                   ),
                   SizedBox(width: 12.w),
                   Text(
-                    'F.A.Q.',
-                    style: TextStyle(
+                    LocaleKeys.faq_faq_header.tr(),
+                    style: GoogleFonts.montserrat(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF1A1A1A),
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
                 ],
@@ -55,101 +55,72 @@ class _FaqViewState extends State<FaqView> {
 
               SizedBox(height: 24.h),
 
-              // Genel Section
-              _buildSectionTitle('Genel'),
+              _buildSectionTitle(LocaleKeys.faq_faq_section_general.tr()),
               SizedBox(height: 16.h),
 
               _buildFaqItem(
                 index: 0,
-                question: 'Lingola Travel nedir?',
-                answer:
-                    'Lingola Travel, seyahat sırasında ihtiyaç duyulan İngilizce kelime ve ifadeleri pratik şekilde öğreten bir dil öğrenme uygulamasıdır.',
+                question: LocaleKeys.faq_faq_q1.tr(),
+                answer: LocaleKeys.faq_faq_a1.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 1,
-                question: 'Lingola Travel kimler için uygundur?',
-                answer:
-                    'Yurt dışına çıkan, tatil yapan veya seyahat sırasında İngilizceyi daha rahat kullanmak isteyen herkes için uygundur.',
+                question: LocaleKeys.faq_faq_q2.tr(),
+                answer: LocaleKeys.faq_faq_a2.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 2,
-                question: 'Lingola Travel genel İngilizce mi öğretir?',
-                answer:
-                    'Hayır. Lingola Travel, seyahatte en sık karşılaşılan durumlara özel kelime ve ifadelere odaklanır.',
+                question: LocaleKeys.faq_faq_q3.tr(),
+                answer: LocaleKeys.faq_faq_a3.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 3,
-                question: 'Hangi konular yer alıyor?',
-                answer:
-                    'Havaalanı, otel, restoran, ulaşım, alışveriş ve acil durumlar gibi temel seyahat konuları yer alır.',
+                question: LocaleKeys.faq_faq_q4.tr(),
+                answer: LocaleKeys.faq_faq_a4.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 4,
-                question: 'Yeni başlayanlar için uygun mu?',
-                answer:
-                    'Evet. Lingola Travel, İngilizceye yeni başlayanlar için bile kolay anlaşılır içerikler sunar.',
+                question: LocaleKeys.faq_faq_q5.tr(),
+                answer: LocaleKeys.faq_faq_a5.tr(),
               ),
 
               SizedBox(height: 32.h),
 
-              // Kullanım Section
-              _buildSectionTitle('Kullanım'),
+              _buildSectionTitle(LocaleKeys.faq_faq_section_usage.tr()),
               SizedBox(height: 16.h),
 
               _buildFaqItem(
                 index: 5,
-                question: 'Günlük ne kadar zaman ayırmam gerekir?',
-                answer:
-                    'Günde sadece birkaç dakika ayırarak kelime ve ifadeleri hızlıca öğrenebilirsin.',
+                question: LocaleKeys.faq_faq_q6.tr(),
+                answer: LocaleKeys.faq_faq_a6.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 6,
-                question: 'Kelimeler nasıl öğretiliyor?',
-                answer:
-                    'Kelimeler kısa açıklamalar ve gerçek seyahat senaryolarına uygun örneklerle sunulur.',
+                question: LocaleKeys.faq_faq_q7.tr(),
+                answer: LocaleKeys.faq_faq_a7.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 7,
-                question: 'İnternet bağlantısı olmadan kullanılabilir mi?',
-                answer:
-                    'Bazı içerikler çevrimdışı kullanılabilir; tam deneyim için internet bağlantısı önerilir.',
+                question: LocaleKeys.faq_faq_q8.tr(),
+                answer: LocaleKeys.faq_faq_a8.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 8,
-                question:
-                    'Öğrendiklerimi seyahatte gerçekten kullanabilir miyim?',
-                answer:
-                    'Evet. İçerikler, seyahat sırasında birebir ihtiyaç duyulan gerçek kullanım durumlarına göre hazırlanmıştır.',
+                question: LocaleKeys.faq_faq_q9.tr(),
+                answer: LocaleKeys.faq_faq_a9.tr(),
               ),
-
               SizedBox(height: 12.h),
-
               _buildFaqItem(
                 index: 9,
-                question: 'Lingola Travel ücretsiz mi?',
-                answer:
-                    'Uygulama ücretsiz olarak kullanılabilir, ek özellikler ve içerikler için premium seçenekler sunulabilir.',
+                question: LocaleKeys.faq_faq_q10.tr(),
+                answer: LocaleKeys.faq_faq_a10.tr(),
               ),
 
               SizedBox(height: 40.h),
@@ -167,18 +138,18 @@ class _FaqViewState extends State<FaqView> {
           width: 6.w,
           height: 24.h,
           decoration: BoxDecoration(
-            color: Color(0xFF1B8A6B),
+            color: const Color(0xFF1B8A6B),
             borderRadius: BorderRadius.circular(2.r),
           ),
         ),
         SizedBox(width: 12.w),
         Text(
           title,
-          style: TextStyle(
-            fontSize: 18.sp,
+          style: GoogleFonts.montserrat(
+            fontSize: 16.sp,
+            letterSpacing: 16.sp * -0.03,
             fontWeight: FontWeight.w700,
-            fontFamily: 'Montserrat',
-            color: Color(0xFF1A1A1A),
+            color: const Color(0xFF1A1A1A),
           ),
         ),
       ],
@@ -195,26 +166,29 @@ class _FaqViewState extends State<FaqView> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
+        borderRadius: BorderRadius.circular(15.r), // Figma: Corner radius 15
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: const Color(0xFFDCE1EC), // Figma: Shadow color #DCE1EC
+            blurRadius: 4, // Figma: Blur 4
+            offset: const Offset(
+              0,
+              0,
+            ), // Figma: X:0, Y:0 (veya görseldeki gibi çok hafif aşağıysa 0, 1 yapabilirsiniz)
+            spreadRadius: 0,
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14.r),
+        borderRadius: BorderRadius.circular(15.r),
         child: Theme(
           data: Theme.of(context).copyWith(
             dividerColor: Colors.transparent,
-            splashColor: Color(0xFF4ECDC4).withOpacity(0.05),
-            highlightColor: Color(0xFF4ECDC4).withOpacity(0.03),
+            splashColor: const Color(0xFF4ECDC4).withOpacity(0.05),
+            highlightColor: const Color(0xFF4ECDC4).withOpacity(0.03),
           ),
           child: ExpansionTile(
-            tilePadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+            tilePadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
             childrenPadding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
             onExpansionChanged: (expanded) {
               setState(() {
@@ -224,31 +198,32 @@ class _FaqViewState extends State<FaqView> {
             initiallyExpanded: isExpanded,
             title: Text(
               question,
-              style: TextStyle(
+              style: GoogleFonts.montserrat(
                 fontSize: 15.sp,
+                letterSpacing: 15.sp * -0.03,
                 fontWeight: FontWeight.w600,
-                fontFamily: 'Montserrat',
-                color: Color(0xFF1A1A1A),
+                color: const Color(0xFF1A1A1A),
               ),
             ),
             trailing: AnimatedRotation(
-              duration: Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 200),
               turns: isExpanded ? 0.5 : 0,
-              child: Icon(
+              child: const Icon(
                 Icons.keyboard_arrow_down_rounded,
-                size: 24.sp,
+                size: 24,
                 color: Color(0xFF6B7280),
               ),
             ),
             children: [
               Text(
                 answer,
-                style: TextStyle(
-                  fontSize: 14.sp,
+                style: GoogleFonts.montserrat(
+                  fontSize: 13.sp, // Okunabilirlik için bir tık büyütüldü
                   fontWeight: FontWeight.w400,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF6B7280),
-                  height: 1.6,
+                  color: const Color(
+                    0xFF4B5563,
+                  ), // Biraz daha koyu bir gri tonu
+                  height: 1.5,
                 ),
               ),
             ],

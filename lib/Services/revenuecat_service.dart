@@ -71,7 +71,9 @@ class RevenueCatService {
   }
 
   /// Displays the RevenueCat Paywall if the user does not have a specific entitlement
-  Future<void> showPaywallIfNeeded(String entitlementId) async {
+  Future<void> showPaywallIfNeeded({
+    String entitlementId = 'Lingola Travel Pro',
+  }) async {
     try {
       await RevenueCatUI.presentPaywallIfNeeded(entitlementId);
     } on PlatformException catch (e) {
@@ -95,8 +97,8 @@ class RevenueCatService {
   Future<bool> isPremium() async {
     try {
       CustomerInfo customerInfo = await Purchases.getCustomerInfo();
-      // Replace 'premium' with your entitlement ID configured in RevenueCat dashboard
-      return customerInfo.entitlements.active.containsKey('premium');
+      // Yeni entitlement ID ile kontrol ediyoruz
+      return customerInfo.entitlements.active.containsKey('Lingola Travel Pro');
     } on PlatformException catch (e) {
       print('❌ Error checking premium status: $e');
       return false;

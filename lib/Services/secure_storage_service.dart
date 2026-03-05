@@ -64,6 +64,15 @@ class SecureStorageService {
     await _storage.delete(key: AppConfig.keyRefreshToken);
   }
 
+  Future<bool> isFirstTime() async {
+    String? result = await _storage.read(key: 'is_first_time');
+    return result == null; // Eğer veri yoksa ilk kez açıyordur
+  }
+
+  Future<void> setFirstTimeCompleted() async {
+    await _storage.write(key: 'is_first_time', value: 'false');
+  }
+
   // User Data
   Future<void> saveUserId(String userId) async {
     await _storage.write(key: AppConfig.keyUserId, value: userId);

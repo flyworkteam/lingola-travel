@@ -11,10 +11,8 @@ class AppConfig {
   // API Configuration
   // Backend URL is now managed by EnvironmentConfig
   static String get baseUrl => EnvironmentConfig.baseUrl;
-  static String get apiVersion =>
-      EnvironmentConfig.apiVersion; // Use environment config
-  static String get apiTimeout =>
-      EnvironmentConfig.apiTimeout; // Use environment config
+  static String get apiVersion => EnvironmentConfig.apiVersion;
+  static String get apiTimeout => EnvironmentConfig.apiTimeout;
 
   // ScreenUtil Design Size (from Figma)
   static const double designWidth = 393;

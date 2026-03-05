@@ -1,7 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart'; // Eklendi
+import 'package:lingola_travel/generated/locale_keys.g.dart'; // Eklendi
 
 class ShareFriendView extends StatelessWidget {
   const ShareFriendView({super.key});
@@ -18,23 +21,20 @@ class ShareFriendView extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
               child: Row(
                 children: [
-                  GestureDetector(
+                  InkWell(
                     onTap: () => Navigator.pop(context),
                     child: SvgPicture.asset(
                       'assets/icons/gerigelmeiconu.svg',
-                      width: 13.w,
-                      height: 13.w,
                       fit: BoxFit.contain,
                     ),
                   ),
                   SizedBox(width: 12.w),
                   Text(
-                    'Share with Friend',
-                    style: TextStyle(
+                    LocaleKeys.profile_share_title.tr(), // Yerelleştirildi
+                    style: GoogleFonts.montserrat(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF1A1A1A),
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
                 ],
@@ -44,6 +44,7 @@ class ShareFriendView extends StatelessWidget {
             // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   children: [
@@ -61,13 +62,12 @@ class ShareFriendView extends StatelessWidget {
 
                     // Title
                     Text(
-                      'Share with Friend',
+                      LocaleKeys.profile_share_title.tr(), // Yerelleştirildi
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: GoogleFonts.montserrat(
                         fontSize: 26.sp,
                         fontWeight: FontWeight.w700,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF1A1A1A),
+                        color: const Color(0xFF1A1A1A),
                       ),
                     ),
 
@@ -75,13 +75,12 @@ class ShareFriendView extends StatelessWidget {
 
                     // Subtitle
                     Text(
-                      'Invite your friends and enjoy\nlearning together',
+                      LocaleKeys.profile_share_subtitle.tr(), // Yerelleştirildi
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: GoogleFonts.montserrat(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w400,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF6B7280),
+                        color: const Color(0xFF6B7280),
                         height: 1.5,
                       ),
                     ),
@@ -95,14 +94,14 @@ class ShareFriendView extends StatelessWidget {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
-                          color: Color(0xFFE5E7EB),
+                          color: const Color(0xFFE5E7EB),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.04),
                             blurRadius: 12,
-                            offset: Offset(0, 4),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -110,12 +109,12 @@ class ShareFriendView extends StatelessWidget {
                         children: [
                           // LINK label
                           Text(
-                            'LINK',
-                            style: TextStyle(
+                            LocaleKeys.profile_share_link_label
+                                .tr(), // Yerelleştirildi
+                            style: GoogleFonts.montserrat(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w700,
-                              fontFamily: 'Montserrat',
-                              color: Color(0xFF9CA3AF),
+                              color: const Color(0xFF9CA3AF),
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -129,10 +128,10 @@ class ShareFriendView extends StatelessWidget {
                               vertical: 16.h,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFAFAFA),
+                              color: const Color(0xFFFAFAFA),
                               borderRadius: BorderRadius.circular(12.r),
                               border: Border.all(
-                                color: Color(0xFFE5E7EB),
+                                color: const Color(0xFFE5E7EB),
                                 width: 1,
                               ),
                             ),
@@ -140,12 +139,11 @@ class ShareFriendView extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'https://lingolatravel.app/invite?frie...',
-                                    style: TextStyle(
+                                    'https://lingolatravel.app/invite?friend=alex',
+                                    style: GoogleFonts.montserrat(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w500,
-                                      fontFamily: 'Montserrat',
-                                      color: Color(0xFF1A1A1A),
+                                      color: const Color(0xFF1A1A1A),
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -161,7 +159,7 @@ class ShareFriendView extends StatelessWidget {
                             width: double.infinity,
                             height: 54.h,
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
+                              gradient: const LinearGradient(
                                 colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
@@ -169,9 +167,11 @@ class ShareFriendView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(14.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0xFF4ECDC4).withOpacity(0.4),
+                                  color: const Color(
+                                    0xFF4ECDC4,
+                                  ).withOpacity(0.4),
                                   blurRadius: 12,
-                                  offset: Offset(0, 4),
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
@@ -180,21 +180,20 @@ class ShareFriendView extends StatelessWidget {
                               child: InkWell(
                                 onTap: () {
                                   Clipboard.setData(
-                                    ClipboardData(
+                                    const ClipboardData(
                                       text:
-                                          'https://lingolatravel.app/invite?friend=123',
+                                          'https://lingolatravel.app/invite?friend=alex',
                                     ),
                                   );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Link copied to clipboard!',
-                                        style: TextStyle(
-                                          fontFamily: 'Montserrat',
+                                        LocaleKeys.profile_share_link_copied.tr(),
+                                        style: GoogleFonts.montserrat(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      backgroundColor: Color(0xFF4ECDC4),
+                                      backgroundColor: const Color(0xFF4ECDC4),
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(
@@ -202,7 +201,7 @@ class ShareFriendView extends StatelessWidget {
                                         ),
                                       ),
                                       margin: EdgeInsets.all(16.w),
-                                      duration: Duration(seconds: 2),
+                                      duration: const Duration(seconds: 2),
                                     ),
                                   );
                                 },
@@ -214,18 +213,17 @@ class ShareFriendView extends StatelessWidget {
                                       'assets/icons/sharewithfirendkopya.svg',
                                       width: 24.w,
                                       height: 24.w,
-                                      colorFilter: ColorFilter.mode(
+                                      colorFilter: const ColorFilter.mode(
                                         Colors.white,
                                         BlendMode.srcIn,
                                       ),
                                     ),
                                     SizedBox(width: 12.w),
                                     Text(
-                                      'Copy the link',
-                                      style: TextStyle(
+                                      LocaleKeys.profile_share_copy_button.tr(),
+                                      style: GoogleFonts.montserrat(
                                         fontSize: 18.sp,
                                         fontWeight: FontWeight.w700,
-                                        fontFamily: 'Montserrat',
                                         color: Colors.white,
                                         letterSpacing: 0.3,
                                       ),

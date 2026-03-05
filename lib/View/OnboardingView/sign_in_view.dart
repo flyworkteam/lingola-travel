@@ -1,21 +1,26 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'dart:io';
+import 'package:lingola_travel/Core/Routes/app_routes.dart';
+import 'package:lingola_travel/Core/Utils/future_extensions.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+import 'package:lingola_travel/main.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../Core/Theme/my_colors.dart';
 import '../../Repositories/auth_repository.dart';
 import '../../Repositories/notification_repository.dart';
-import '../../Services/secure_storage_service.dart';
 import '../../Services/auth_service.dart';
 import '../../Services/onesignal_service.dart';
-import '../PolicyView/policy_detail_view.dart';
+import '../../Services/secure_storage_service.dart';
 
-/// Sign In View - Onboarding First Screen
-/// Social login options: Apple, Google, Facebook, Guest
 class SignInView extends ConsumerStatefulWidget {
   const SignInView({super.key});
 
@@ -44,22 +49,20 @@ class _SignInViewState extends ConsumerState<SignInView> {
   void initState() {
     super.initState();
     _termsRecognizer = TapGestureRecognizer()
-      ..onTap = () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const PolicyDetailView(policyType: 'terms'),
-          ),
-        );
+      ..onTap = () async {
+        final Uri url = Uri.parse('https://fly-work.com/lingolatravel/terms/');
+        if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+          debugPrint('Could not launch $url');
+        }
       };
     _privacyRecognizer = TapGestureRecognizer()
-      ..onTap = () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const PolicyDetailView(policyType: 'privacy'),
-          ),
+      ..onTap = () async {
+        final Uri url = Uri.parse(
+          'https://fly-work.com/lingolatravel/privacy-policy/',
         );
+        if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+          debugPrint('Could not launch $url');
+        }
       };
   }
 
@@ -93,8 +96,9 @@ class _SignInViewState extends ConsumerState<SignInView> {
   }
 
   /// Handle Google Sign In
-  Future<void> _handleGoogleSignIn() async {
-    if (_isGoogleLoading) return;
+  // DİKKAT: Future<void> yerine Future<bool> döndürüyoruz ki success durumunu bilelim
+  Future<bool> _handleGoogleSignIn() async {
+    if (_isGoogleLoading) return false;
 
     setState(() => _isGoogleLoading = true);
 
@@ -102,15 +106,14 @@ class _SignInViewState extends ConsumerState<SignInView> {
       // Sign in with Google
       final googleResult = await _authService.signInWithGoogle();
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       if (!googleResult.success) {
-        // Only show error if there's an error message (user didn't cancel)
         if (googleResult.errorMessage != null) {
           _showErrorMessage(googleResult.errorMessage!);
         }
         setState(() => _isGoogleLoading = false);
-        return;
+        return false;
       }
 
       // Login to backend with Google ID token
@@ -118,7 +121,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
         googleResult.idToken!,
       );
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       if (authResult.success && authResult.accessToken != null) {
         // Save tokens and user data
@@ -132,17 +135,19 @@ class _SignInViewState extends ConsumerState<SignInView> {
           await _registerUserDevice(authResult.user!.id);
         }
 
-        // Navigate to language selection or home based on onboarding status
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/language-selection');
-        }
+        // Başarılı olduğunu söylüyoruz, yönlendirmeyi butonda yapacağız
+        return true;
       } else {
-        _showErrorMessage(authResult.errorMessage ?? 'Giriş başarısız');
+        _showErrorMessage(
+          authResult.errorMessage ?? LocaleKeys.login_failed.tr(),
+        );
+        return false;
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Bir hata oluştu: $e');
+        _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
       }
+      return false;
     } finally {
       if (mounted) {
         setState(() => _isGoogleLoading = false);
@@ -151,8 +156,8 @@ class _SignInViewState extends ConsumerState<SignInView> {
   }
 
   /// Handle Apple Sign In
-  Future<void> _handleAppleSignIn() async {
-    if (_isAppleLoading) return;
+  Future<bool> _handleAppleSignIn() async {
+    if (_isAppleLoading) return false;
 
     setState(() => _isAppleLoading = true);
 
@@ -160,15 +165,14 @@ class _SignInViewState extends ConsumerState<SignInView> {
       // Sign in with Apple
       final appleResult = await _authService.signInWithApple();
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       if (!appleResult.success) {
-        // Only show error if there's an error message (user didn't cancel)
         if (appleResult.errorMessage != null) {
           _showErrorMessage(appleResult.errorMessage!);
         }
         setState(() => _isAppleLoading = false);
-        return;
+        return false;
       }
 
       // Login to backend with Apple identity token
@@ -176,7 +180,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
         appleResult.identityToken!,
       );
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       if (authResult.success && authResult.accessToken != null) {
         // Save tokens and user data
@@ -190,17 +194,18 @@ class _SignInViewState extends ConsumerState<SignInView> {
           await _registerUserDevice(authResult.user!.id);
         }
 
-        // Navigate to language selection or home
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/language-selection');
-        }
+        return true;
       } else {
-        _showErrorMessage(authResult.errorMessage ?? 'Giriş başarısız');
+        _showErrorMessage(
+          authResult.errorMessage ?? LocaleKeys.login_failed.tr(),
+        );
+        return false;
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Bir hata oluştu: $e');
+        _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
       }
+      return false;
     } finally {
       if (mounted) {
         setState(() => _isAppleLoading = false);
@@ -209,8 +214,8 @@ class _SignInViewState extends ConsumerState<SignInView> {
   }
 
   /// Handle Facebook Sign In
-  Future<void> _handleFacebookSignIn() async {
-    if (_isFacebookLoading) return;
+  Future<bool> _handleFacebookSignIn() async {
+    if (_isFacebookLoading) return false;
 
     setState(() => _isFacebookLoading = true);
 
@@ -218,15 +223,14 @@ class _SignInViewState extends ConsumerState<SignInView> {
       // Sign in with Facebook
       final facebookResult = await _authService.signInWithFacebook();
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       if (!facebookResult.success) {
-        // Only show error if there's an error message (user didn't cancel)
         if (facebookResult.errorMessage != null) {
           _showErrorMessage(facebookResult.errorMessage!);
         }
         setState(() => _isFacebookLoading = false);
-        return;
+        return false;
       }
 
       // Login to backend with Facebook access token
@@ -234,7 +238,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
         facebookResult.accessToken!,
       );
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       if (authResult.success && authResult.accessToken != null) {
         // Save tokens and user data
@@ -248,18 +252,19 @@ class _SignInViewState extends ConsumerState<SignInView> {
           await _registerUserDevice(authResult.user!.id);
         }
 
-        // Navigate to language selection or home
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/language-selection');
-        }
+        return true;
       } else {
-        _showErrorMessage(authResult.errorMessage ?? 'Giriş başarısız');
+        _showErrorMessage(
+          authResult.errorMessage ?? LocaleKeys.login_failed.tr(),
+        );
+        return false;
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Facebook ile giriş şu anda kullanılamıyor');
+        _showErrorMessage('${LocaleKeys.error_occurred.tr()} (Facebook): $e');
         print('❌ Facebook auth error: $e');
       }
+      return false;
     } finally {
       if (mounted) {
         setState(() => _isFacebookLoading = false);
@@ -278,13 +283,11 @@ class _SignInViewState extends ConsumerState<SignInView> {
   }
 
   /// Handle guest login
-  Future<void> _handleGuestLogin() async {
-    if (_isGuestLoading) return;
-
+ Future<bool> _handleGuestLogin() async {
+    if (_isGuestLoading) return false;
     setState(() => _isGuestLoading = true);
 
     try {
-      // Get device ID
       final deviceInfo = DeviceInfoPlugin();
       String deviceId;
 
@@ -298,72 +301,56 @@ class _SignInViewState extends ConsumerState<SignInView> {
         deviceId = 'unknown-device';
       }
 
-      // Login anonymously
+      // Backend isteği
       final result = await _authRepository.loginAnonymously(deviceId);
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       if (result.success && result.accessToken != null) {
-        // Save tokens
-        print('✅ Guest login successful!');
-        print('🔑 Access token: ${result.accessToken!.substring(0, 20)}...');
-        print('🔑 Refresh token: ${result.refreshToken?.substring(0, 20)}...');
-
+        // Bilgileri kaydet
         await _secureStorage.saveAccessToken(result.accessToken!);
         if (result.refreshToken != null) {
           await _secureStorage.saveRefreshToken(result.refreshToken!);
         }
         if (result.user?.id != null) {
           await _secureStorage.saveUserId(result.user!.id);
-          print('👤 User ID saved: ${result.user!.id}');
-          // Register device for push notifications
           await _registerUserDevice(result.user!.id);
         }
 
-        // Verify token was saved
-        final savedToken = await _secureStorage.getAccessToken();
-        print(
-          '✅ Token verification: ${savedToken != null ? "Token saved successfully" : "⚠️ Token not saved!"}',
-        );
+        // --- KRİTİK NOKTA ---
+        // Eğer backend'den gelen user objesinde 'target_language' gibi
+        // daha önce doldurulmuş bir alan varsa onboarding'i atla.
+        // Not: Backend modelinde bu alanların olduğunu varsayıyorum.
+        final bool hasCompletedOnboarding = result.user?.targetLanguage != null;
 
-        // Navigate to language selection
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/language-selection');
+        if (hasCompletedOnboarding) {
+          navigatorKey.currentState?.pushReplacementNamed(AppRoutes.home);
+        } else {
+          navigatorKey.currentState?.pushReplacementNamed(
+            AppRoutes.languageSelection,
+          );
         }
+
+        return true;
       } else {
-        // Show error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result.errorMessage ?? 'Giriş başarısız. Lütfen tekrar deneyin.',
-              style: GoogleFonts.montserrat(fontSize: 14.sp),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorMessage(result.errorMessage ?? LocaleKeys.login_failed.tr());
+        return false;
       }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Bir hata oluştu: $e',
-            style: GoogleFonts.montserrat(fontSize: 14.sp),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
+      return false;
     } finally {
-      if (mounted) {
-        setState(() => _isGuestLoading = false);
-      }
+      if (mounted) setState(() => _isGuestLoading = false);
     }
   }
-
   @override
   Widget build(BuildContext context) {
     // Platform detection
     final bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
+    // Metni "{}" işaretlerinden bölüyoruz
+    final String termsTemplate = LocaleKeys.terms_privacy_note.tr();
+    final List<String> textParts = termsTemplate.split('{}');
 
     return Scaffold(
       backgroundColor: MyColors.white,
@@ -372,10 +359,8 @@ class _SignInViewState extends ConsumerState<SignInView> {
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Column(
             children: [
-              // Top spacing - KÜÇÜLTÜLDÜ
               SizedBox(height: 24.h),
 
-              // Logo and Title - KÜÇÜLTÜLDÜ
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -391,7 +376,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
                       color: MyColors.black,
-                      letterSpacing: -0.3
+                      letterSpacing: -0.3,
                     ),
                   ),
                 ],
@@ -399,7 +384,6 @@ class _SignInViewState extends ConsumerState<SignInView> {
 
               SizedBox(height: 20.h),
 
-              // Main Image - KÜÇÜLTÜLDÜ
               ClipRRect(
                 borderRadius: BorderRadius.circular(20.r),
                 child: Image.asset(
@@ -411,12 +395,12 @@ class _SignInViewState extends ConsumerState<SignInView> {
                 ),
               ),
 
-              SizedBox(height: 28.h), // ARTTIRILDI: 20h -> 28h
-              // Title - KÜÇÜLTÜLDÜ
+              SizedBox(height: 28.h),
+
               Text(
-                'Start Your Journey',
+                LocaleKeys.sign_in_title.tr(),
                 style: GoogleFonts.montserrat(
-                  fontSize: 22.sp,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.w700,
                   color: MyColors.black,
                   letterSpacing: -0.5,
@@ -425,47 +409,62 @@ class _SignInViewState extends ConsumerState<SignInView> {
                 textAlign: TextAlign.center,
               ),
 
-              SizedBox(height: 10.h), // ARTTIRILDI: 8h -> 10h
-              // Subtitle - KÜÇÜLTÜLDÜ
+              SizedBox(height: 10.h),
+
               Text(
-                'Learn a language where it\'s actually\nspoken. Immerse yourself.',
+                LocaleKeys.sign_in_subtitle.tr(),
                 style: GoogleFonts.montserrat(
-                  fontSize: 13.sp,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w400,
-                  color: MyColors.textSecondary,
+                  color: MyColors.black,
                   letterSpacing: -0.5,
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
 
-              SizedBox(height: 32.h), // ARTTIRILDI: 24h -> 32h
-              // ========================================
-              // PLATFORM-SPECIFIC BUTTON ORDER
-              // ========================================
+              SizedBox(height: 32.h),
 
-              // First Button (Apple for iOS, Google for Android)
               isIOS
                   ? _SocialButton(
-                      onPressed: _isAppleLoading ? null : _handleAppleSignIn,
+                      onPressed: () async {
+                        // BURADA YÖNLENDİRME .withLoading() SONRASI YAPILIYOR
+                        final success = await _handleAppleSignIn().withLoading(
+                          context,
+                        );
+                        if (success) {
+                          navigatorKey.currentState?.pushReplacementNamed(
+                            AppRoutes.languageSelection,
+                          );
+                        }
+                      },
                       backgroundColor: MyColors.black,
                       textColor: MyColors.white,
                       icon: 'assets/icons/applelogo.svg',
-                      text: 'Continue with Apple',
+                      text: LocaleKeys.continue_with_apple.tr(),
                       isLoading: _isAppleLoading,
                     )
                   : _SocialButton(
-                      onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
+                      onPressed: () async {
+                        final success = await _handleGoogleSignIn().withLoading(
+                          context,
+                        );
+                        if (success) {
+                          navigatorKey.currentState?.pushReplacementNamed(
+                            AppRoutes.languageSelection,
+                          );
+                        }
+                      },
                       backgroundColor: MyColors.white,
                       textColor: MyColors.black,
                       icon: 'assets/icons/googlelogo.svg',
-                      text: 'Continue with Gmail',
+                      text: LocaleKeys.continue_with_gmail.tr(),
                       hasBorder: true,
                       isLoading: _isGoogleLoading,
                     ),
 
-              SizedBox(height: 14.h), // ARTTIRILDI: 12h -> 14h
-              // "or" Divider
+              SizedBox(height: 14.h),
+
               Row(
                 children: [
                   Expanded(
@@ -474,7 +473,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12.w),
                     child: Text(
-                      'or',
+                      LocaleKeys.or_divider.tr(),
                       style: GoogleFonts.montserrat(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w400,
@@ -488,71 +487,95 @@ class _SignInViewState extends ConsumerState<SignInView> {
                 ],
               ),
 
-              SizedBox(height: 14.h), // ARTTIRILDI: 12h -> 14h
-              // Second Button (Google for iOS, Apple for Android)
+              SizedBox(height: 14.h),
+
               isIOS
                   ? _SocialButton(
-                      onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
+                      onPressed: () async {
+                        final success = await _handleGoogleSignIn().withLoading(
+                          context,
+                        );
+                        if (success) {
+                          navigatorKey.currentState?.pushReplacementNamed(
+                            AppRoutes.languageSelection,
+                          );
+                        }
+                      },
                       backgroundColor: MyColors.white,
                       textColor: MyColors.black,
                       icon: 'assets/icons/googlelogo.svg',
-                      text: 'Continue with Gmail',
+                      text: LocaleKeys.continue_with_gmail.tr(),
                       hasBorder: true,
                       isLoading: _isGoogleLoading,
                     )
                   : _SocialButton(
-                      onPressed: _isAppleLoading ? null : _handleAppleSignIn,
+                      onPressed: () async {
+                        final success = await _handleAppleSignIn().withLoading(
+                          context,
+                        );
+                        if (success) {
+                          navigatorKey.currentState?.pushReplacementNamed(
+                            AppRoutes.languageSelection,
+                          );
+                        }
+                      },
                       backgroundColor: MyColors.black,
                       textColor: MyColors.white,
                       icon: 'assets/icons/applelogo.svg',
-                      text: 'Continue with Apple',
+                      text: LocaleKeys.continue_with_apple.tr(),
                       isLoading: _isAppleLoading,
                     ),
 
-              SizedBox(height: 14.h), // ARTTIRILDI: 12h -> 14h
-              // Facebook Sign In Button (same for both)
+              SizedBox(height: 14.h),
+
               _SocialButton(
-                onPressed: _isFacebookLoading ? null : _handleFacebookSignIn,
-                backgroundColor: const Color(0xFF1877F2), // Facebook blue
+                onPressed: () async {
+                  final success = await _handleFacebookSignIn().withLoading(
+                    context,
+                  );
+                  if (success) {
+                    navigatorKey.currentState?.pushReplacementNamed(
+                      AppRoutes.languageSelection,
+                    );
+                  }
+                },
+                backgroundColor: const Color(0xFF1877F2),
                 textColor: MyColors.white,
                 icon: 'assets/icons/facebooklogo.svg',
-                text: 'Continue with Facebook',
+                text: LocaleKeys.continue_with_facebook.tr(),
                 isLoading: _isFacebookLoading,
               ),
 
-              SizedBox(height: 20.h), // ARTTIRILDI: 16h -> 20h
-              // Continue as Guest
+              SizedBox(height: 20.h),
+
               GestureDetector(
-                onTap: _isGuestLoading ? null : _handleGuestLogin,
+                onTap: () async {
+                  final success = await _handleGuestLogin().withLoading(
+                    context,
+                  );
+                  if (success) {
+                    navigatorKey.currentState?.pushReplacementNamed(
+                      AppRoutes.languageSelection,
+                    );
+                  }
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (_isGuestLoading)
-                      SizedBox(
-                        width: 18.w,
-                        height: 18.h,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            const Color(0xFF2EC4B6),
-                          ),
-                        ),
-                      )
-                    else
-                      SvgPicture.asset(
-                        'assets/icons/userlogo.svg',
-                        width: 18.w,
-                        height: 18.h,
-                        colorFilter: const ColorFilter.mode(
-                          Color(0xFF2EC4B6),
-                          BlendMode.srcIn,
-                        ),
+                    SvgPicture.asset(
+                      'assets/icons/userlogo.svg',
+                      width: 18.w,
+                      height: 18.h,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF2EC4B6),
+                        BlendMode.srcIn,
                       ),
+                    ),
                     SizedBox(width: 6.w),
                     Text(
-                      'Continue as Guest',
+                      LocaleKeys.continue_as_guest.tr(),
                       style: GoogleFonts.montserrat(
-                        fontSize: 13.sp,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF2EC4B6),
                       ),
@@ -570,34 +593,40 @@ class _SignInViewState extends ConsumerState<SignInView> {
                   textAlign: TextAlign.center,
                   text: TextSpan(
                     style: GoogleFonts.montserrat(
-                      fontSize: 11.sp,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.w400,
-                      color: MyColors.textSecondary,
+                      color: Colors.black,
                       height: 1.4,
                     ),
                     children: [
-                      const TextSpan(text: 'By continuing, you agree to our '),
+                      if (textParts.isNotEmpty)
+                        TextSpan(text: textParts[0]), // "Devam ederek, " vb.
+
                       TextSpan(
-                        text: 'Terms of Service',
+                        text: LocaleKeys.terms_of_service.tr(),
                         style: GoogleFonts.montserrat(
-                          fontSize: 11.sp,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
-                          color: MyColors.primary,
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: _termsRecognizer,
                       ),
-                      const TextSpan(text: '\nand '),
+
+                      if (textParts.length > 1)
+                        TextSpan(text: textParts[1]), // " ve " vb.
+
                       TextSpan(
-                        text: 'Privacy Policy.',
+                        text: LocaleKeys.privacy_policy.tr(),
                         style: GoogleFonts.montserrat(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                          color: MyColors.primary,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w700,
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: _privacyRecognizer,
                       ),
+
+                      if (textParts.length > 2)
+                        TextSpan(text: textParts[2]), // " metinlerini..." vb.
                     ],
                   ),
                 ),
@@ -666,7 +695,7 @@ class _SocialButton extends StatelessWidget {
                   Text(
                     text,
                     style: GoogleFonts.montserrat(
-                      fontSize: 15.sp,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
                       color: textColor,
                     ),

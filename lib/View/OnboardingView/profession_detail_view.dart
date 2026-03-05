@@ -1,14 +1,13 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../Core/Localization/app_localizations.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+
 import '../../Core/Theme/my_colors.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
 import 'english_level_selection_view.dart';
 
-/// Profession Detail Input View - Step 2 of 4 (Part 2)
-/// User enters their specific profession/job title
 class ProfessionDetailView extends ConsumerStatefulWidget {
   final String? selectedCategory;
   final String? selectedLanguage;
@@ -36,9 +35,6 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final appLocale = ref.watch(localeProvider);
-    final l = AppLocalizations.of(appLocale);
-
     return Scaffold(
       backgroundColor: MyColors.white,
       body: SafeArea(
@@ -49,90 +45,66 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
             children: [
               SizedBox(height: 20.h),
 
-              // Progress Bar
+              // Progress Bar (Localized)
               Text(
-                l.step2of4,
+                LocaleKeys.step_2_of_4
+                    .tr(), // JSON'da "STEP 2 OF 4" karşılığı olmalı
                 style: GoogleFonts.montserrat(
                   fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: MyColors.lingolaPrimaryColor,
                   letterSpacing: 0.5,
                 ),
               ),
-              SizedBox(height: 8.h),
+              SizedBox(height: 12.h),
               Row(
-                children: [
-                  Expanded(
+                children: List.generate(4, (index) {
+                  // İlk iki çubuk aktif (Step 2 olduğu için)
+                  bool isActive = index < 2;
+                  return Expanded(
                     child: Container(
                       height: 4.h,
+                      margin: EdgeInsets.only(right: index == 3 ? 0 : 8.w),
                       decoration: BoxDecoration(
-                        color: MyColors.lingolaPrimaryColor,
+                        color: isActive
+                            ? MyColors.lingolaPrimaryColor
+                            : MyColors.grey200,
                         borderRadius: BorderRadius.circular(2.r),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 4.w),
-                  Expanded(
-                    child: Container(
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: MyColors.lingolaPrimaryColor,
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 4.w),
-                  Expanded(
-                    child: Container(
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: MyColors.grey200,
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 4.w),
-                  Expanded(
-                    child: Container(
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: MyColors.grey200,
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 40.h),
-
-              // Title
-              Text(
-                l.step2Title,
-                style: GoogleFonts.montserrat(
-                  fontSize: 36.sp,
-                  fontWeight: FontWeight.w700,
-                  color: MyColors.black,
-                  letterSpacing: -0.5,
-                  height: 1.1,
-                ),
+                  );
+                }),
               ),
 
               SizedBox(height: 16.h),
 
-              // Subtitle
+              // Title (Localized)
               Text(
-                l.step2Subtitle,
+                LocaleKeys.prof_title.tr(),
+                style: GoogleFonts.montserrat(
+                  fontSize: 32.sp, // Tasarıma göre biraz küçültüldü
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 32.sp * -0.05,
+                  color: MyColors.black,
+                  height: 1.1,
+                ),
+              ),
+
+              SizedBox(height: 6.h),
+
+              // Subtitle (Localized)
+              Text(
+                LocaleKeys.prof_professional_desc.tr(),
                 style: GoogleFonts.montserrat(
                   fontSize: 15.sp,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -0.5,
-                  color: MyColors.textSecondary,
+                  fontWeight: FontWeight.w300,
+                  letterSpacing: 15.sp * -0.05,
+                  color: Colors.black,
                   height: 1.4,
                 ),
               ),
 
-              SizedBox(height: 32.h),
+              SizedBox(height: 20.h),
 
               // Text Input
               TextField(
@@ -140,7 +112,7 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
                 cursorColor: MyColors.lingolaPrimaryColor,
                 onChanged: (value) {
                   setState(() {
-                    _hasText = value.isNotEmpty;
+                    _hasText = value.trim().isNotEmpty;
                   });
                 },
                 style: GoogleFonts.montserrat(
@@ -149,7 +121,8 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
                   color: MyColors.black,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Ui/Ux Designer',
+                  // Hint text localize edildi
+                  hintText: "Ui/Ux Designer", // Örn: "Ui/Ux Designer"
                   hintStyle: GoogleFonts.montserrat(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w400,
@@ -158,15 +131,11 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
                   filled: true,
                   fillColor: const Color(0xFFF5F5F5),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
                       color: MyColors.lingolaPrimaryColor,
                       width: 2,
@@ -184,59 +153,46 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
               // Buttons
               Row(
                 children: [
-                  // Back Button
+                  // Back Button (Localized)
                   Expanded(
                     flex: 2,
                     child: SizedBox(
                       height: 50.h,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
+                        onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD1D5DB),
+                          backgroundColor: MyColors.grey300,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              width: 40.w,
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_back,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
-                              ),
+                            Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 20.sp,
                             ),
+                            const Spacer(),
                             Text(
-                              l.back,
+                              LocaleKeys.btn_back.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                                 color: MyColors.white,
                               ),
                             ),
-                            SizedBox(width: 20.w),
+                            const Spacer(),
                           ],
                         ),
                       ),
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  // Continue Button
+                  // Continue Button (Localized)
                   Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: SizedBox(
                       height: 50.h,
                       child: ElevatedButton(
@@ -255,40 +211,29 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
                               }
                             : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2EC4B6),
-                          disabledBackgroundColor: const Color(0xFFD1D5DB),
+                          backgroundColor: MyColors.lingolaPrimaryColor,
+                          disabledBackgroundColor: MyColors.grey300,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SizedBox(width: 20.w),
+                            const Spacer(),
                             Text(
-                              l.continueBtn,
+                              LocaleKeys.continue_btn.tr(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                                 color: MyColors.white,
                               ),
                             ),
-                            Container(
-                              width: 40.w,
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_forward,
-                                  color: MyColors.white,
-                                  size: 22.sp,
-                                ),
-                              ),
+                            const Spacer(),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 20.sp,
                             ),
                           ],
                         ),
@@ -298,7 +243,7 @@ class _ProfessionDetailViewState extends ConsumerState<ProfessionDetailView> {
                 ],
               ),
 
-              SizedBox(height: 24.h),
+              SizedBox(height: 12.h),
             ],
           ),
         ),

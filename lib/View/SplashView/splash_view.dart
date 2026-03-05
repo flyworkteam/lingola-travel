@@ -8,8 +8,6 @@ import '../../Core/Theme/my_colors.dart';
 import '../../Repositories/profile_repository.dart';
 import '../../Services/secure_storage_service.dart';
 
-/// Splash View - First Screen (Complete Implementation)
-/// All 4 SVGs + Gradient + Text
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
 
@@ -32,27 +30,21 @@ class _SplashViewState extends State<SplashView> {
 
     if (!mounted) return;
 
-    // Check if user is logged in
+    // 1. Kullanıcı Giriş Yapmış mı?
     final isLoggedIn = await _secureStorage.isLoggedIn();
 
     if (isLoggedIn) {
-      // User has access token, check if they have onboarding data
       try {
         final profileResult = await _profileRepository.getProfile();
-
         if (!mounted) return;
 
         if (profileResult.success && profileResult.data != null) {
           final user = profileResult.data['user'];
-
-          // Check if user completed onboarding
           final hasOnboarding = user['target_language'] != null;
 
           if (hasOnboarding) {
-            // User completed onboarding, go to home
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else {
-            // User registered but didn't complete onboarding
             Navigator.pushReplacementNamed(
               context,
               AppRoutes.languageSelection,
@@ -61,15 +53,21 @@ class _SplashViewState extends State<SplashView> {
           return;
         }
       } catch (e) {
-        print('Error checking profile: $e');
-        // Token might be invalid, clear and go to onboarding
         await _secureStorage.clearUserData();
       }
     }
 
-    // Not logged in or error occurred, go to splash pages
+    // 2. GİRİŞ YAPILMAMIŞSA: İlk kez mi açıyor?
+    final isFirstLaunch = await _secureStorage.isFirstTime();
+
     if (mounted) {
-      Navigator.pushReplacementNamed(context, AppRoutes.splashPages);
+      if (isFirstLaunch) {
+        // Tanıtım slider'ını göster
+        Navigator.pushReplacementNamed(context, AppRoutes.splashPages);
+      } else {
+        // Daha önce tanıtımı görmüş, direkt Giriş Yap ekranına git
+        Navigator.pushReplacementNamed(context, AppRoutes.signIn);
+      }
     }
   }
 
@@ -79,9 +77,6 @@ class _SplashViewState extends State<SplashView> {
       body: SizedBox.expand(
         child: Stack(
           children: [
-            // ========================================
-            // LAYER 1: GRADIENT BACKGROUND (FULL SCREEN)
-            // ========================================
             Positioned.fill(
               child: Container(
                 decoration: const BoxDecoration(
@@ -89,17 +84,13 @@ class _SplashViewState extends State<SplashView> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      MyColors.splashGradientStart, // #2EC4B6
-                      MyColors.splashGradientEnd, // #145C71
+                      MyColors.splashGradientStart,
+                      MyColors.splashGradientEnd,
                     ],
                   ),
                 ),
               ),
             ),
-
-            // ========================================
-            // LAYER 2: WORLD MAP 1 (SOL ÜST) - Tam Kapsama
-            // ========================================
             Positioned(
               top: 20.h,
               left: -80.w,
@@ -117,10 +108,6 @@ class _SplashViewState extends State<SplashView> {
                 ),
               ),
             ),
-
-            // ========================================
-            // LAYER 3: WORLD MAP 2 (SAĞ ÜST) - Tam Kapsama
-            // ========================================
             Positioned(
               top: 0.h,
               right: -60.w,
@@ -138,10 +125,6 @@ class _SplashViewState extends State<SplashView> {
                 ),
               ),
             ),
-
-            // ========================================
-            // LAYER 4: WORLD MAP 3 (SAĞ ALT) - Tam Kapsama
-            // ========================================
             Positioned(
               bottom: 80.h,
               right: -60.w,
@@ -159,10 +142,6 @@ class _SplashViewState extends State<SplashView> {
                 ),
               ),
             ),
-
-            // ========================================
-            // LAYER 5: TITLE TEXT "Lingola Travel" - Responsive Centered
-            // ========================================
             Positioned(
               left: 0,
               right: 0,
@@ -180,10 +159,6 @@ class _SplashViewState extends State<SplashView> {
                 ),
               ),
             ),
-
-            // ========================================
-            // LAYER 6: AIRPLANE SHAPE - Sol Alt Köşe (Responsive)
-            // ========================================
             Positioned(
               bottom: 0,
               left: 0,

@@ -1,16 +1,24 @@
 import 'dart:ui';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../Core/Localization/app_localizations.dart';
+import 'package:lingola_travel/Core/Localization/localization_manager.dart';
+import 'package:lingola_travel/Core/Utils/future_extensions.dart';
+import 'package:lingola_travel/Models/language_model.dart';
+import 'package:lingola_travel/generated/locale_keys.g.dart';
+
 import '../../Models/language.dart';
-import '../../Repositories/profile_repository.dart';
 import '../../Repositories/notification_repository.dart';
-import '../../Services/secure_storage_service.dart';
-import '../../Services/onesignal_service.dart';
-import '../../Riverpod/Providers/locale_provider.dart';
+import '../../Repositories/profile_repository.dart';
 import '../../Riverpod/Providers/selected_language_provider.dart';
+import '../../Services/onesignal_service.dart';
+import '../../Services/secure_storage_service.dart';
+
+// DİKKAT: localizationManagerProvider'ı tanımladığın dosyayı kendi projenin yoluna göre buraya ekle
+// import '../../Riverpod/Providers/localization_manager.dart';
 
 class ProfileSettingsView extends ConsumerStatefulWidget {
   const ProfileSettingsView({super.key});
@@ -22,11 +30,11 @@ class ProfileSettingsView extends ConsumerStatefulWidget {
 
 class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   final ProfileRepository _profileRepository = ProfileRepository();
-  bool _isSaving = false;
+
   bool _isLoading = true;
 
   String _selectedGender = 'Male';
-  Language _selectedLanguage = AppLanguages.all.first; // English
+  late Language _selectedLanguage;
   String? _userPhotoUrl;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -35,83 +43,55 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   @override
   void initState() {
     super.initState();
+    _initDefaultLanguage();
     _loadProfile();
   }
 
-  /// Load user profile from backend
+  void _initDefaultLanguage() {
+    final currentLocaleCode = Intl.getCurrentLocale().split('_')[0];
+
+    _selectedLanguage = AppLanguages.all.firstWhere(
+      (lang) => lang.code == currentLocaleCode,
+      orElse: () => AppLanguages.all.first,
+    );
+  }
+
   Future<void> _loadProfile() async {
     try {
-      print('📥 Loading profile from backend...');
       final response = await _profileRepository.getProfile();
 
       if (response.success && response.data != null) {
         final userData = response.data['user'];
-        print('✅ Profile loaded successfully');
-        print('👤 User data: $userData');
 
-        // Set name
-        if (userData['name'] != null) {
-          _nameController.text = userData['name'];
-        }
-
-        // Set email
-        if (userData['email'] != null) {
+        if (userData['name'] != null) _nameController.text = userData['name'];
+        if (userData['email'] != null)
           _emailController.text = userData['email'];
-        }
-
-        // Set photo URL
-        if (userData['photo_url'] != null) {
+        if (userData['photo_url'] != null)
           _userPhotoUrl = userData['photo_url'];
-        }
-
-        // Set age (if available in backend)
-        if (userData['age'] != null) {
+        if (userData['age'] != null)
           _ageController.text = userData['age'].toString();
-        }
+        if (userData['gender'] != null) _selectedGender = userData['gender'];
 
-        // Set gender (if available in backend)
-        if (userData['gender'] != null) {
-          _selectedGender = userData['gender'];
-        }
-
-        // Set target language from backend
         final targetLanguageCode = userData['target_language'] as String?;
-        print('🌐 Target language code from backend: $targetLanguageCode');
-
-        Language? targetLanguage;
+        Language? foundLanguage;
         if (targetLanguageCode != null) {
-          targetLanguage = AppLanguages.all.firstWhere(
+          foundLanguage = AppLanguages.all.firstWhere(
             (lang) => lang.code == targetLanguageCode,
-            orElse: () => AppLanguages.all.first,
+            orElse: () => _selectedLanguage,
           );
-          print('✅ Language found: ${targetLanguage.name}');
-        } else {
-          print('⚠️ No target language in backend, using default: English');
         }
 
         if (mounted) {
           setState(() {
-            if (targetLanguage != null) {
-              _selectedLanguage = targetLanguage;
-            }
+            if (foundLanguage != null) _selectedLanguage = foundLanguage;
             _isLoading = false;
           });
         }
       } else {
-        print('❌ Profile load failed: ${response.error?.message}');
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
-      print('❌ Error loading profile: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -125,306 +105,68 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
 
   @override
   Widget build(BuildContext context) {
-    final appLocale = ref.watch(localeProvider);
-    final l = AppLocalizations.of(appLocale);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Color(0xFF4ECDC4)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF4ECDC4)),
+            )
           : SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // AppBar with back button
-                  Container(
-                    padding: EdgeInsets.only(
-                      left: 20.w,
-                      right: 20.w,
-                      top: MediaQuery.of(context).padding.top + 8.h,
-                      bottom: 8.h,
-                    ),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: SvgPicture.asset(
-                            'assets/icons/gerigelmeiconu.svg',
-                            width: 13.w,
-                            height: 13.w,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Text(
-                          'Profile Settings',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'Montserrat',
-                            color: Color(0xFF1A1A1A),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Profile Photo
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 130.w,
-                            height: 130.w,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: _userPhotoUrl != null
-                                  ? null
-                                  : LinearGradient(
-                                      colors: [
-                                        Color(0xFFFFB3C1),
-                                        Color(0xFFFF85A1),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(0xFFFFB3C1).withOpacity(0.4),
-                                  blurRadius: 20,
-                                  offset: Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child:
-                                _userPhotoUrl != null &&
-                                    _userPhotoUrl!.isNotEmpty
-                                ? ClipOval(
-                                    child: Image.network(
-                                      _userPhotoUrl!,
-                                      width: 130.w,
-                                      height: 130.w,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        // If image fails to load, show default
-                                        return Center(
-                                          child: SvgPicture.asset(
-                                            'assets/icons/userlogo.svg',
-                                            width: 65.w,
-                                            height: 65.w,
-                                            colorFilter: const ColorFilter.mode(
-                                              Colors.white,
-                                              BlendMode.srcIn,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  )
-                                : Center(
-                                    child: SvgPicture.asset(
-                                      'assets/icons/userlogo.svg',
-                                      width: 65.w,
-                                      height: 65.w,
-                                      colorFilter: const ColorFilter.mode(
-                                        Colors.white,
-                                        BlendMode.srcIn,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                          Transform.translate(
-                            offset: Offset(40.w, -30.h),
-                            child: Container(
-                              width: 44.w,
-                              height: 44.w,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 10,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: SvgPicture.asset(
-                                  'assets/icons/changephoto.svg',
-                                  width: 22.w,
-                                  height: 22.w,
-                                  colorFilter: const ColorFilter.mode(
-                                    Color(0xFF4ECDC4),
-                                    BlendMode.srcIn,
-                                  ),
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Transform.translate(
-                            offset: Offset(0, -20.h),
-                            child: Text(
-                              'Change Photo',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Montserrat',
-                                color: Color(0xFF4ECDC4),
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Form Fields
+                  _buildAppBar(context),
+                  SizedBox(height: 20.h),
+                  _buildProfilePhotoSection(),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 12.h),
-
-                        // Full Name
-                        _buildLabel(l.fullName),
+                        _buildLabel(LocaleKeys.profile_profile_full_name.tr()),
                         SizedBox(height: 10.h),
                         _buildInputField(
                           controller: _nameController,
                           iconPath: 'assets/icons/fullname.svg',
-                          hint: l.enterYourName,
+                          hint: LocaleKeys.profile_enterYourName.tr(),
                           enabled: true,
                         ),
-
                         SizedBox(height: 20.h),
-
-                        // E-mail
-                        _buildLabel(l.email),
+                        _buildLabel(LocaleKeys.profile_profile_email.tr()),
                         SizedBox(height: 10.h),
                         _buildInputField(
                           controller: _emailController,
                           iconPath: 'assets/icons/email.svg',
-                          hint: l.enterYourEmail,
+                          hint: LocaleKeys.profile_enterYourEmail.tr(),
                           enabled: false,
                           showLock: true,
                         ),
-
                         SizedBox(height: 20.h),
-
-                        // Age
-                        _buildLabel(l.age),
+                        _buildLabel(LocaleKeys.profile_profile_age.tr()),
                         SizedBox(height: 10.h),
                         _buildInputField(
                           controller: _ageController,
                           iconPath: 'assets/icons/age.svg',
-                          hint: l.enterYourAge,
+                          hint: LocaleKeys.profile_enterYourAge.tr(),
                           enabled: false,
                           showLock: true,
                         ),
-
                         SizedBox(height: 24.h),
-
-                        // Gender
-                        _buildLabel(l.gender),
+                        _buildLabel(LocaleKeys.profile_profile_gender.tr()),
                         SizedBox(height: 12.h),
-                        _buildGenderSelector(l),
-
+                        _buildGenderSelector(),
                         SizedBox(height: 24.h),
-
-                        // Language
-                        _buildLabel(l.selectLearnLanguage),
+                        _buildLabel(
+                          LocaleKeys.profile_select_language_subtitle.tr(),
+                        ),
                         SizedBox(height: 10.h),
                         _buildLanguageDropdown(),
-
                         SizedBox(height: 40.h),
-
-                        // Save Button
-                        Container(
-                          width: double.infinity,
-                          height: 56.h,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFF4ECDC4).withOpacity(0.4),
-                                blurRadius: 16,
-                                offset: Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _isSaving ? null : _saveProfile,
-                              borderRadius: BorderRadius.circular(16.r),
-                              child: Center(
-                                child: _isSaving
-                                    ? SizedBox(
-                                        width: 24.w,
-                                        height: 24.h,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      )
-                                    : Text(
-                                        l.save,
-                                        style: TextStyle(
-                                          fontSize: 17.sp,
-                                          fontWeight: FontWeight.w700,
-                                          fontFamily: 'Montserrat',
-                                          color: Colors.white,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ),
-                        ),
-
+                        _buildSaveButton(),
                         SizedBox(height: 20.h),
-
-                        // Delete Account
-                        Center(
-                          child: TextButton(
-                            onPressed: () {
-                              _showDeleteAccountDialog();
-                            },
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20.w,
-                                vertical: 12.h,
-                              ),
-                            ),
-                            child: Text(
-                              'Delete Account',
-                              style: TextStyle(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Montserrat',
-                                color: Color(0xFFE57373),
-                              ),
-                            ),
-                          ),
-                        ),
-
+                        _buildDeleteAccountButton(),
                         SizedBox(height: 30.h),
                       ],
                     ),
@@ -435,6 +177,123 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
+  // --- Helper Widgets ---
+
+  Widget _buildAppBar(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 20.w,
+        right: 20.w,
+        top: MediaQuery.of(context).padding.top + 8.h,
+        bottom: 8.h,
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            child: SvgPicture.asset(
+              'assets/icons/gerigelmeiconu.svg',
+              fit: BoxFit.contain,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Text(
+            LocaleKeys.profile_profile_settings.tr(),
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Montserrat',
+              color: const Color(0xFF1A1A1A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfilePhotoSection() {
+    return Center(
+      child: Column(
+        children: [
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 100.w,
+                height: 100.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF4ECDC4), width: 3),
+                ),
+                child: ClipOval(
+                  child: _userPhotoUrl != null && _userPhotoUrl!.isNotEmpty
+                      ? Image.network(
+                          _userPhotoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildDefaultAvatar(),
+                        )
+                      : _buildDefaultAvatar(),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {},
+                child: Container(
+                  padding: EdgeInsets.all(6.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4ECDC4),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.white,
+                    size: 18.sp,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            LocaleKeys.profile_profile_change_photo.tr(),
+            style: TextStyle(
+              fontSize: 12.sp,
+              letterSpacing: 12.sp * -0.05,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Montserrat',
+              color: const Color(0xFF5F8486),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultAvatar() {
+    return Container(
+      color: const Color(0xFF4ECDC4).withOpacity(0.1),
+      child: Center(
+        child: SvgPicture.asset(
+          'assets/icons/userlogo.svg',
+          width: 50.w,
+          height: 50.w,
+          colorFilter: const ColorFilter.mode(
+            Color(0xFF4ECDC4),
+            BlendMode.srcIn,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -442,7 +301,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
         fontSize: 13.sp,
         fontWeight: FontWeight.w600,
         fontFamily: 'Montserrat',
-        color: Color(0xFF6B7280),
+        color: const Color(0xFF6B7280),
         letterSpacing: 0.3,
       ),
     );
@@ -457,21 +316,9 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: enabled ? Color(0xFFF9FAFB) : Color(0xFFF3F4F6),
+        color: enabled ? const Color(0xFFF9FAFB) : const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: enabled ? Color(0xFFE5E7EB) : Color(0xFFE5E7EB),
-          width: 1.2,
-        ),
-        boxShadow: enabled
-            ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ]
-            : null,
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1.2),
       ),
       child: TextField(
         controller: controller,
@@ -480,28 +327,18 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
           fontSize: 15.sp,
           fontWeight: FontWeight.w600,
           fontFamily: 'Montserrat',
-          color: enabled ? Color(0xFF1A1A1A) : Color(0xFF9CA3AF),
+          color: enabled ? const Color(0xFF1A1A1A) : const Color(0xFF9CA3AF),
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(
-            fontSize: 15.sp,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Montserrat',
-            color: enabled
-                ? Color(0xFF9CA3AF)
-                : Color(0xFF9CA3AF).withOpacity(0.6),
-          ),
+          hintStyle: TextStyle(fontSize: 15.sp, color: const Color(0xFF9CA3AF)),
           prefixIcon: Padding(
             padding: EdgeInsets.only(left: 16.w, right: 12.w),
             child: SvgPicture.asset(
               iconPath,
               width: 22.w,
-              height: 22.w,
               colorFilter: ColorFilter.mode(
-                enabled
-                    ? Color(0xFF6B7280)
-                    : Color(0xFF9CA3AF).withOpacity(0.8),
+                enabled ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
                 BlendMode.srcIn,
               ),
               fit: BoxFit.scaleDown,
@@ -513,11 +350,8 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                   child: SvgPicture.asset(
                     'assets/icons/lock.svg',
                     width: 20.w,
-                    height: 20.w,
-                    colorFilter: ColorFilter.mode(
-                      enabled
-                          ? Color(0xFF9CA3AF)
-                          : Color(0xFF9CA3AF).withOpacity(0.7),
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF9CA3AF),
                       BlendMode.srcIn,
                     ),
                     fit: BoxFit.scaleDown,
@@ -534,12 +368,12 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
-  Widget _buildGenderSelector(AppLocalizations l) {
+  Widget _buildGenderSelector() {
     return Row(
       children: [
         Expanded(
           child: _buildGenderOption(
-            label: l.male,
+            label: LocaleKeys.profile_profile_gender_male.tr(),
             iconPath: 'assets/icons/male.svg',
             isSelected: _selectedGender == 'Male',
             onTap: () => setState(() => _selectedGender = 'Male'),
@@ -548,7 +382,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
         SizedBox(width: 12.w),
         Expanded(
           child: _buildGenderOption(
-            label: l.female,
+            label: LocaleKeys.profile_profile_gender_female.tr(),
             iconPath: 'assets/icons/female.svg',
             isSelected: _selectedGender == 'Female',
             onTap: () => setState(() => _selectedGender = 'Female'),
@@ -573,13 +407,15 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(vertical: 14.h),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Color(0xFFFAFAFA),
+          color: isSelected ? Colors.white : const Color(0xFFFAFAFA),
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
-            color: isSelected ? Color(0xFF4ECDC4) : Color(0xFFE5E7EB),
+            color: isSelected
+                ? const Color(0xFF4ECDC4)
+                : const Color(0xFFE5E7EB),
             width: isSelected ? 2 : 1.5,
           ),
         ),
@@ -589,12 +425,10 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
             SvgPicture.asset(
               iconPath,
               width: 22.w,
-              height: 22.w,
               colorFilter: ColorFilter.mode(
-                isSelected ? Color(0xFF6B7280) : Color(0xFF9CA3AF),
+                isSelected ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
                 BlendMode.srcIn,
               ),
-              fit: BoxFit.contain,
             ),
             SizedBox(width: 8.w),
             Text(
@@ -602,8 +436,9 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
               style: TextStyle(
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w700,
-                fontFamily: 'Montserrat',
-                color: isSelected ? Color(0xFF6B7280) : Color(0xFF9CA3AF),
+                color: isSelected
+                    ? const Color(0xFF6B7280)
+                    : const Color(0xFF9CA3AF),
               ),
             ),
           ],
@@ -620,14 +455,16 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         width: 56.w,
         height: 56.w,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Color(0xFFFAFAFA),
+          color: isSelected ? Colors.white : const Color(0xFFFAFAFA),
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
-            color: isSelected ? Color(0xFF4ECDC4) : Color(0xFFE5E7EB),
+            color: isSelected
+                ? const Color(0xFF4ECDC4)
+                : const Color(0xFFE5E7EB),
             width: isSelected ? 2 : 1.5,
           ),
         ),
@@ -635,12 +472,10 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
           child: SvgPicture.asset(
             iconPath,
             width: 24.w,
-            height: 24.w,
             colorFilter: ColorFilter.mode(
-              isSelected ? Color(0xFF6B7280) : Color(0xFF9CA3AF),
+              isSelected ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
               BlendMode.srcIn,
             ),
-            fit: BoxFit.contain,
           ),
         ),
       ),
@@ -654,20 +489,12 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           child: Row(
             children: [
-              // Flag image
               ClipRRect(
                 borderRadius: BorderRadius.circular(4.r),
                 child: Image.asset(
@@ -680,18 +507,16 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
               SizedBox(width: 12.w),
               Expanded(
                 child: Text(
-                  _selectedLanguage.name,
+                  _selectedLanguage.nativeName,
                   style: TextStyle(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'Montserrat',
-                    color: Color(0xFF1A1A1A),
+                    color: const Color(0xFF1A1A1A),
                   ),
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.keyboard_arrow_down_rounded,
-                size: 24.sp,
                 color: Color(0xFF9CA3AF),
               ),
             ],
@@ -701,7 +526,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
-  /// Show language selector bottom sheet
   void _showLanguageSelector() {
     showModalBottomSheet(
       context: context,
@@ -709,40 +533,27 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               margin: EdgeInsets.only(top: 12.h),
               width: 40.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: Color(0xFFE5E7EB),
+                color: const Color(0xFFE5E7EB),
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
-
-            // Title
             Padding(
               padding: EdgeInsets.symmetric(vertical: 16.h),
               child: Text(
-                'Select Learn Language',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF1A1A1A),
-                ),
+                LocaleKeys.profile_profile_select_language.tr(),
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
             ),
-
-            // Language list
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
@@ -750,12 +561,9 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                 itemBuilder: (context, index) {
                   final language = AppLanguages.all[index];
                   final isSelected = language.code == _selectedLanguage.code;
-
                   return InkWell(
                     onTap: () {
-                      setState(() {
-                        _selectedLanguage = language;
-                      });
+                      setState(() => _selectedLanguage = language);
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -763,14 +571,11 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                         horizontal: 20.w,
                         vertical: 12.h,
                       ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Color(0xFF4ECDC4).withOpacity(0.1)
-                            : Colors.transparent,
-                      ),
+                      color: isSelected
+                          ? const Color(0xFF4ECDC4).withOpacity(0.1)
+                          : Colors.transparent,
                       child: Row(
                         children: [
-                          // Flag
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4.r),
                             child: Image.asset(
@@ -781,30 +586,20 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                             ),
                           ),
                           SizedBox(width: 12.w),
-
-                          // Language name
                           Expanded(
                             child: Text(
-                              language.getLocalizedName(_selectedLanguage.code),
+                              language.getTranslatedName(),
                               style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                fontFamily: 'Montserrat',
                                 color: isSelected
-                                    ? Color(0xFF4ECDC4)
-                                    : Color(0xFF1A1A1A),
+                                    ? const Color(0xFF4ECDC4)
+                                    : Colors.black,
                               ),
                             ),
                           ),
-
-                          // Checkmark
                           if (isSelected)
-                            Icon(
+                            const Icon(
                               Icons.check_circle,
                               color: Color(0xFF4ECDC4),
-                              size: 24.sp,
                             ),
                         ],
                       ),
@@ -813,7 +608,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                 },
               ),
             ),
-
             SizedBox(height: 20.h),
           ],
         ),
@@ -821,110 +615,93 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
-  /// Save profile changes
-  Future<void> _saveProfile() async {
-    if (_isSaving) return;
-
-    // Validate name
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please enter your name',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Montserrat',
-            ),
-          ),
-          backgroundColor: Color(0xFFE57373),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          margin: EdgeInsets.all(16.w),
+  Widget _buildSaveButton() {
+    return Container(
+      width: double.infinity,
+      height: 56.h,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4ECDC4), Color(0xFF2EC4B6)],
         ),
-      );
-      return;
-    }
-
-    setState(() => _isSaving = true);
-
-    try {
-      // 1. Update profile info (name)
-      final profileResult = await _profileRepository.updateProfile(
-        name: _nameController.text.trim(),
-      );
-
-      if (!mounted) return;
-
-      if (!profileResult.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              profileResult.error?.message ??
-                  'Failed to update profile. Please try again.',
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4ECDC4).withOpacity(0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _saveProfile().withLoading(context),
+          borderRadius: BorderRadius.circular(16.r),
+          child: Center(
+            child: Text(
+              LocaleKeys.profile_save.tr(),
               style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Montserrat',
+                fontSize: 17.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-            backgroundColor: Color(0xFFE57373),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            margin: EdgeInsets.all(16.w),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteAccountButton() {
+    return Center(
+      child: TextButton(
+        onPressed: _showDeleteAccountDialog,
+        child: Text(
+          LocaleKeys.profile_delete_dialog_confirm.tr(),
+          style: TextStyle(
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFFE57373),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Yeni eklenen yardımcı fonksiyon ---
+  Locale _getLocaleFromCode(String code) {
+    return LocalizationManager.supportedLocales.firstWhere(
+      (locale) => locale.languageCode == code,
+      orElse: () => LocalizationManager.defaultLocale,
+    );
+  }
+
+  // --- Güncellenen _saveProfile fonksiyonu ---
+  Future<void> _saveProfile() async {
+    await _profileRepository.updateProfile(name: _nameController.text.trim());
+    final langResult = await _profileRepository.saveOnboarding(
+      targetLanguage: _selectedLanguage.code,
+    );
+
+    if (langResult.success) {
+      // 1. Riverpod state'ini güncelle
+      ref.read(selectedLanguageProvider.notifier).state =
+          _selectedLanguage.code;
+
+      // 2. Uygulamanın UI dilini değiştir
+      final newLocale = _getLocaleFromCode(_selectedLanguage.code);
+      await ref
+          .read(localizationManagerProvider.notifier)
+          .changeLanguage(context, newLocale);
+
+      // 3. Başarılı olduğuna dair bilgi mesajı
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${LocaleKeys.profile_save.tr()} Başarılı!'),
+            backgroundColor: const Color(0xFF4ECDC4),
           ),
         );
-        return;
-      }
-
-      // 2. Save selected language to user_onboarding
-      final langResult = await _profileRepository.saveOnboarding(
-        targetLanguage: _selectedLanguage.code,
-      );
-
-      if (!mounted) return;
-
-      if (langResult.success) {
-        // 3. Update global language provider so CourseView & TravelVocabularyView refresh
-        ref.read(selectedLanguageProvider.notifier).state =
-            _selectedLanguage.code;
-        print('✅ Language saved & provider updated: ${_selectedLanguage.code}');
-      } else {
-        print('⚠️ Language save failed: ${langResult.error?.message}');
-        // Non-fatal — profile name was saved, just language didn't update
-      }
-
-      // 4. Close settings page and notify parent that profile was updated
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'An error occurred: ${e.toString()}',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Montserrat',
-            ),
-          ),
-          backgroundColor: Color(0xFFE57373),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          margin: EdgeInsets.all(16.w),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
       }
     }
   }
@@ -932,426 +709,66 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.3),
-      builder: (BuildContext context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            child: Container(
-              width: 340.w,
-              padding: EdgeInsets.all(28.w),
-              decoration: BoxDecoration(
-                color: Color(0xFFFFF5F5),
-                borderRadius: BorderRadius.circular(24.r),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Delete Icon
-                  Container(
-                    width: 80.w,
-                    height: 80.w,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/icons/userlogo.svg',
-                          width: 42.w,
-                          height: 42.w,
-                          colorFilter: const ColorFilter.mode(
-                            Color(0xFFE57373),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 8.h,
-                          right: 8.w,
-                          child: Container(
-                            width: 24.w,
-                            height: 24.w,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFE57373),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Color(0xFFFFE5E5),
-                                width: 2,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.close,
-                              size: 14.sp,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-                  // Title
-                  Text(
-                    'Are you sure you want to\ndelete your account?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF1A1A1A),
-                      height: 1.3,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  // Description
-                  Text(
-                    'This action cannot be undone, and all\nyour history and data will be\npermanently deleted.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF6B7280),
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 32.h),
-                  // Delete Account Button
-                  Container(
-                    width: double.infinity,
-                    height: 54.h,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFE57373), Color(0xFFEF5350)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFFE57373).withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.pop(context);
-                          _showDeleteAccountConfirmation();
-                        },
-                        borderRadius: BorderRadius.circular(16.r),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.delete_outline_rounded,
-                              size: 22.sp,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              'Delete Account',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Montserrat',
-                                color: Colors.white,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  // Cancel Button
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Montserrat',
-                        color: Color(0xFF4ECDC4),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// Show final confirmation before deleting account
-  void _showDeleteAccountConfirmation() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon
-              Container(
-                width: 64.w,
-                height: 64.h,
-                decoration: BoxDecoration(
-                  color: Color(0xFFFFEBEE),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.warning_amber_rounded,
-                  size: 32.w,
-                  color: Color(0xFFE57373),
-                ),
-              ),
-              SizedBox(height: 20.h),
-
-              // Title
-              Text(
-                'Delete Account?',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF1A1A1A),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 12.h),
-
-              // Message
-              Text(
-                'This action cannot be undone. All your progress, courses, and saved words will be permanently deleted.',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF6B7280),
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24.h),
-
-              // Delete Button
-              SizedBox(
-                width: double.infinity,
-                height: 48.h,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFE57373),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                  ),
-                  child: Text(
-                    'Delete Account',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Montserrat',
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-
-              // Cancel Button
-              SizedBox(
-                width: double.infinity,
-                height: 48.h,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                  ),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Montserrat',
-                      color: Color(0xFF6B7280),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (confirmed == true) {
-      await _deleteAccount();
-    }
-  }
-
-  /// Delete account permanently
-  Future<void> _deleteAccount() async {
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: Container(
-          padding: EdgeInsets.all(24.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4ECDC4)),
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                'Deleting account...',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontFamily: 'Montserrat',
-                  color: Color(0xFF1A1A1A),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    try {
-      // Unregister device from push notifications before deletion
-      final playerId = await OneSignalService().getPlayerId();
-      if (playerId != null && playerId.isNotEmpty) {
-        await NotificationRepository().unregisterDevice(playerId);
-      }
-      await OneSignalService().removeExternalUserId();
-
-      final response = await _profileRepository.deleteAccount();
-
-      if (!mounted) return;
-      Navigator.pop(context); // Close loading dialog
-
-      if (response.success) {
-        // Clear local storage
-        final secureStorage = SecureStorageService();
-        await secureStorage.clearUserData();
-
-        // Navigate to onboarding
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/onboarding',
-          (route) => false,
-        );
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Your account has been deleted successfully'),
-            backgroundColor: Color(0xFF4ECDC4),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } else {
-        // Show error
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            title: Text(
-              'Error',
-              style: TextStyle(
-                fontFamily: 'Montserrat',
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            content: Text(
-              response.error?.toString() ??
-                  'Failed to delete account. Please try again.',
-              style: TextStyle(fontFamily: 'Montserrat'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'OK',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF4ECDC4),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context); // Close loading dialog
-
-      // Show error
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          backgroundColor: const Color(0xFFFFF5F5),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.r),
+            borderRadius: BorderRadius.circular(24.r),
           ),
-          title: Text(
-            'Error',
-            style: TextStyle(
-              fontFamily: 'Montserrat',
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            'An error occurred while deleting your account. Please try again.',
-            style: TextStyle(fontFamily: 'Montserrat'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'OK',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF4ECDC4),
+          child: Padding(
+            padding: EdgeInsets.all(28.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.delete_forever_rounded,
+                  color: const Color(0xFFE57373),
+                  size: 50.sp,
                 ),
-              ),
+                SizedBox(height: 16.h),
+                Text(
+                  LocaleKeys.profile_delete_dialog_title.tr(),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 32.h),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _deleteAccount().withLoading(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE63D4F),
+                  ),
+                  child: Text(
+                    LocaleKeys.profile_delete_dialog_confirm.tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(LocaleKeys.profile_delete_dialog_cancel.tr()),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      );
+      ),
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    final playerId = await OneSignalService().getPlayerId();
+    if (playerId != null) {
+      await NotificationRepository().unregisterDevice(playerId);
+    }
+    await OneSignalService().removeExternalUserId();
+    final response = await _profileRepository.deleteAccount();
+    if (response.success) {
+      await SecureStorageService().clearUserData();
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/signIn', (route) => false);
+      }
     }
   }
 }
