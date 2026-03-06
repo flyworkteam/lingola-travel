@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,8 +8,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'package:lingola_travel/generated/locale_keys.g.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Models/library_model.dart';
+import '../../Repositories/library_repository.dart';
 import '../../Riverpod/Controllers/library_controller.dart';
 import '../../Services/tts_service.dart';
 
@@ -40,6 +44,14 @@ class _LibraryFolderDetailViewState
   late TtsService _ttsService;
   late AnimationController _progressController;
 
+  // Favori işlemleri için
+  final LibraryRepository _libraryRepository = LibraryRepository();
+  Set<String> _bookmarkedItems = {};
+  static const String _localBookmarksKey = 'lingola_local_bookmarks';
+
+  // SÜREKLİ EKLENMESİNİ ENGELLEYEN KRİTİK DEĞİŞKEN
+  bool _hasSyncedInitialItems = false;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +63,8 @@ class _LibraryFolderDetailViewState
 
     _ttsService = TtsService();
     _ttsService.init();
+
+    _loadLocalBookmarks();
 
     Future.microtask(() {
       ref
@@ -66,7 +80,103 @@ class _LibraryFolderDetailViewState
     super.dispose();
   }
 
-  // BURASI GÜNCELLENDİ: Yeni 11 kategori sistemine göre çeviriler yapıldı.
+  Future<void> _loadLocalBookmarks() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? bookmarksJson = prefs.getString(_localBookmarksKey);
+      if (bookmarksJson != null) {
+        final List<dynamic> decoded = jsonDecode(bookmarksJson);
+        if (mounted) {
+          setState(() => _bookmarkedItems = decoded.cast<String>().toSet());
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Favori yükleme hatası: $e');
+    }
+  }
+
+  // ⚡ BUTONU ÇALIŞTIRAN ASIL FONKSİYON (GÜNCELLENDİ) ⚡
+  Future<void> _toggleBookmark(LibraryItemModel item) async {
+    final String itemId = item.itemId;
+    final bool isCurrentlyBookmarked = _bookmarkedItems.contains(itemId);
+
+    // 1. Optimistic UI (Arayüzü anında güncelle)
+    setState(() {
+      if (isCurrentlyBookmarked) {
+        _bookmarkedItems.remove(itemId);
+      } else {
+        _bookmarkedItems.add(itemId);
+      }
+    });
+
+    bool apiSuccess = false;
+
+    try {
+      if (isCurrentlyBookmarked) {
+        // Çıkarıyorsak libraryItemId ile siliyoruz
+        final response = await _libraryRepository.removeItem(
+          item.libraryItemId,
+        );
+        apiSuccess = response.success;
+      } else {
+        // Geri ekliyorsak word ve translation değerleriyle ekliyoruz
+        final response = await _libraryRepository.addItemToFolder(
+          folderId: widget.folderId,
+          itemType: item.itemType,
+          itemId: itemId,
+          word: item.word, // YENİ EKLENDİ
+          translation: item.translation, // YENİ EKLENDİ
+        );
+        apiSuccess = response.success;
+      }
+    } catch (e) {
+      debugPrint('❌ Backend bookmark hatası: $e');
+      apiSuccess = false;
+    }
+
+    if (apiSuccess) {
+      // Sayıları güncelle
+      ref.read(libraryControllerProvider.notifier).loadFolders();
+
+      // Cache'i güncelle
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          _localBookmarksKey,
+          jsonEncode(_bookmarkedItems.toList()),
+        );
+      } catch (e) {}
+
+      // Eğer item'i sildikten sonra geri eklediysek, backend'den ona yeni bir
+      // libraryItemId atandığı için arkaplanda listeyi bir kez tazeliyoruz.
+      if (!isCurrentlyBookmarked) {
+        ref
+            .read(
+              libraryFolderItemsControllerProvider(widget.folderId).notifier,
+            )
+            .refresh();
+      }
+    } else {
+      // Hata durumunda işlemi geri al (Rollback)
+      if (mounted) {
+        setState(() {
+          if (isCurrentlyBookmarked) {
+            _bookmarkedItems.add(itemId);
+          } else {
+            _bookmarkedItems.remove(itemId);
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bağlantı hatası: İşlem gerçekleştirilemedi.'),
+            backgroundColor: Colors.redAccent,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   String getLocalizedFolderName(String name) {
     final n = name.trim().toLowerCase();
 
@@ -84,7 +194,6 @@ class _LibraryFolderDetailViewState
     if (n == 'business essentials') return LocaleKeys.home_catBusiness.tr();
     if (n == 'emergency essentials') return LocaleKeys.home_catEmergency.tr();
 
-    // Kullanıcı ismi kendi değiştirmişse (Örn: "Benim Tatilim"), GİRDİĞİ GİBİ GÖSTER!
     return name;
   }
 
@@ -109,7 +218,6 @@ class _LibraryFolderDetailViewState
       );
       final success = await controller.removeItem(libraryItemId);
       if (success) {
-        // İtem silindiğinde klasörün tarihi güncellendiği için ana listeyi yenile
         ref.read(libraryControllerProvider.notifier).loadFolders();
       }
     } catch (e) {
@@ -188,11 +296,9 @@ class _LibraryFolderDetailViewState
       final success = await ref
           .read(libraryControllerProvider.notifier)
           .updateFolder(folderId: widget.folderId, name: result);
-
       if (success) {
         if (mounted) {
           setState(() => _currentFolderName = result);
-          // İsim değişince tarih de güncellendiği için ana listeyi yenile
           ref.read(libraryControllerProvider.notifier).loadFolders();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -210,27 +316,33 @@ class _LibraryFolderDetailViewState
     String targetLanguageText,
     String? languageCode,
   ) async {
-    setState(() {
-      if (_playingItemId == itemId) {
-        _playingItemId = null;
-        _progressController.stop();
+    if (_playingItemId == itemId) {
+      setState(() => _playingItemId = null);
+      _progressController.stop();
+      _progressController.reset();
+      await _ttsService.stop();
+      return;
+    }
+
+    setState(() => _playingItemId = itemId);
+    _progressController.stop();
+    _progressController.reset();
+    await _ttsService.stop();
+
+    int durationMs = (targetLanguageText.length * 90).clamp(1200, 5000);
+    _progressController.duration = Duration(milliseconds: durationMs);
+
+    _progressController.forward();
+    await _ttsService.speak(targetLanguageText, languageCode: languageCode);
+
+    _progressController.addStatusListener((status) {
+      if (status == AnimationStatus.completed &&
+          mounted &&
+          _playingItemId == itemId) {
+        setState(() => _playingItemId = null);
         _progressController.reset();
-        _ttsService.stop();
-      } else {
-        _playingItemId = itemId;
-        _progressController.reset();
-        _progressController.forward();
-        _ttsService.speak(targetLanguageText, languageCode: languageCode);
       }
     });
-
-    if (_playingItemId == itemId) {
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted && _playingItemId == itemId) {
-          setState(() => _playingItemId = null);
-        }
-      });
-    }
   }
 
   @override
@@ -240,6 +352,27 @@ class _LibraryFolderDetailViewState
     );
     final allItems = folderItemsState.items;
     final filteredItems = _getFilteredItems(allItems);
+
+    if (!folderItemsState.isLoading &&
+        allItems.isNotEmpty &&
+        !_hasSyncedInitialItems) {
+      _hasSyncedInitialItems = true;
+      bool needUpdate = false;
+      for (var item in allItems) {
+        if (!_bookmarkedItems.contains(item.itemId)) {
+          _bookmarkedItems.add(item.itemId);
+          needUpdate = true;
+        }
+      }
+      if (needUpdate) {
+        SharedPreferences.getInstance().then((prefs) {
+          prefs.setString(
+            _localBookmarksKey,
+            jsonEncode(_bookmarkedItems.toList()),
+          );
+        });
+      }
+    }
 
     return Scaffold(
       backgroundColor: MyColors.background,
@@ -370,27 +503,21 @@ class _LibraryFolderDetailViewState
                       margin: EdgeInsets.symmetric(horizontal: 24.w),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          // Toplam genişliği üçe bölerek her bir tabın genişliğini buluyoruz
                           final tabWidth = constraints.maxWidth / 3;
                           return Stack(
                             children: [
-                              // Arka plan çizgisi
                               Container(
                                 height: 2.h,
                                 color: const Color(0xFFE5E7EB),
                               ),
-                              // Animasyonlu Seçili Tab Çizgisi
                               AnimatedPositioned(
                                 duration: const Duration(milliseconds: 250),
                                 curve: Curves.easeInOut,
-                                left:
-                                    _selectedTab *
-                                    tabWidth, // Dinamik konumlandırma
+                                left: _selectedTab * tabWidth,
                                 child: Container(
                                   height: 2.h,
                                   width: tabWidth,
                                   alignment: Alignment.center,
-                                  // Yeşil çizgiyi hücrenin %60'lık kısmına ortalar (daha şık durur)
                                   child: FractionallySizedBox(
                                     widthFactor: 0.6,
                                     child: Container(
@@ -459,14 +586,13 @@ class _LibraryFolderDetailViewState
     final isSelected = _selectedTab == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedTab = index),
-      behavior: HitTestBehavior
-          .opaque, // Sadece metne değil, tüm alana tıklamayı algılar
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: EdgeInsets.only(bottom: 8.h),
         alignment: Alignment.center,
         child: Text(
           title,
-          maxLines: 1, // Uzun kelimelerde taşıp tasarımı bozmaması için
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 16.sp,
@@ -498,7 +624,7 @@ class _LibraryFolderDetailViewState
             LocaleKeys.library_library_no_items_title.tr(),
             style: TextStyle(
               fontSize: 14.sp,
-              letterSpacing: 16.sp * -0.05,
+              letterSpacing: 14.sp * -0.05,
               fontWeight: FontWeight.bold,
               fontFamily: 'Montserrat',
             ),
@@ -543,25 +669,24 @@ class _LibraryFolderDetailViewState
   }
 
   Widget _buildItemCard(LibraryItemModel item, bool isPlaying) {
+    final isBookmarked = _bookmarkedItems.contains(item.itemId);
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15.r), // Figma Corner Radius
+            borderRadius: BorderRadius.circular(15.r),
             boxShadow: [
               BoxShadow(
-                color: const Color(
-                  0xFFC2D6E1,
-                ).withOpacity(0.60), // Figma Drop Shadow
+                color: const Color(0xFFC2D6E1).withOpacity(0.60),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
                 spreadRadius: 0,
               ),
             ],
           ),
-          // Progress barın taşmasını önlemek için
           clipBehavior: Clip.hardEdge,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -576,9 +701,7 @@ class _LibraryFolderDetailViewState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.targetLanguage == 'en'
-                                ? item.word
-                                : item.translation,
+                            item.word,
                             style: TextStyle(
                               fontSize: 16.sp,
                               letterSpacing: 16.sp * -0.05,
@@ -588,9 +711,7 @@ class _LibraryFolderDetailViewState
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            item.targetLanguage == 'en'
-                                ? item.translation
-                                : item.word,
+                            item.translation,
                             style: TextStyle(
                               letterSpacing: 13.sp * -0.05,
                               fontSize: 13.sp,
@@ -604,13 +725,8 @@ class _LibraryFolderDetailViewState
                       Row(
                         children: [
                           GestureDetector(
-                            onTap: () => _playAudio(
-                              item.itemId,
-                              item.targetLanguage == 'en'
-                                  ? item.word
-                                  : item.translation,
-                              item.targetLanguage,
-                            ),
+                            onTap: () =>
+                                _playAudio(item.itemId, item.word, "en"),
                             child: Container(
                               width: 40.w,
                               height: 40.h,
@@ -626,17 +742,27 @@ class _LibraryFolderDetailViewState
                             ),
                           ),
                           SizedBox(width: 8.w),
-                          Container(
-                            width: 40.w,
-                            height: 40.h,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF4F7F9),
-                              borderRadius: BorderRadius.circular(5.r),
-                            ),
-                            padding: EdgeInsets.all(10.w),
-                            child: SvgPicture.asset(
-                              'assets/icons/travelvocabularykaydet.svg',
-                              color: const Color(0xFF4ECDC4),
+                          GestureDetector(
+                            onTap: () => _toggleBookmark(item),
+                            child: Container(
+                              width: 40.w,
+                              height: 40.h,
+                              decoration: BoxDecoration(
+                                color: isBookmarked
+                                    ? const Color(0x3D2989E9)
+                                    : const Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(5.r),
+                              ),
+                              padding: EdgeInsets.all(10.w),
+                              child: SvgPicture.asset(
+                                'assets/icons/travelvocabularykaydet.svg',
+                                colorFilter: ColorFilter.mode(
+                                  isBookmarked
+                                      ? const Color(0xFF2989E9)
+                                      : const Color(0xFFB0B0B0),
+                                  BlendMode.srcIn,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -644,7 +770,6 @@ class _LibraryFolderDetailViewState
                   ],
                 ),
               ),
-              // Animasyonlu Alt Progress Bar
               AnimatedSize(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,

@@ -1116,7 +1116,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
     }
   }
 
-  /// Save item to library
+  /// Save item to library (GÜNCELLENDİ: word ve translation eklendi)
   void _saveItem(String type) async {
     try {
       // Show loading state
@@ -1132,19 +1132,19 @@ class _LessonDetailViewState extends State<LessonDetailView>
             (v) =>
                 v.term.toLowerCase() ==
                 _lesson!.keyVocabularyTerm!.toLowerCase(),
-            orElse: () =>
-                _lesson!.vocabulary!.first, // Fallback to first vocabulary
+            orElse: () => _lesson!.vocabulary!.first,
           );
 
-          // Save to backend
+          // Save to backend with word and translation
           final response = await _libraryRepository.addBookmark(
             itemType: 'lesson_vocabulary',
             itemId: vocabItem.id,
+            word: vocabItem.term, // YENİ: Kelimenin kendisi
+            translation: vocabItem.definition, // YENİ: Çevirisi
           );
 
           if (response.success) {
             print('✅ Word saved to library: ${vocabItem.term}');
-            // Bookmark icon color change provides visual feedback
           } else {
             print('❌ Failed to save word: ${response.error}');
             setState(() {
@@ -1160,12 +1160,13 @@ class _LessonDetailViewState extends State<LessonDetailView>
             final response = await _libraryRepository.addBookmark(
               itemType: 'lesson_vocabulary',
               itemId: vocabItem.id,
+              word: vocabItem.term, // YENİ
+              translation: vocabItem.definition, // YENİ
             );
             if (response.success) successCount++;
           }
 
           print('✅ Saved $successCount vocabulary items to library');
-          // Bookmark icon color change provides visual feedback
         }
       }
     } catch (e) {

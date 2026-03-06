@@ -24,7 +24,7 @@ void main() async {
   await RevenueCatService().init();
 
   // Initialize OneSignal (Push Notifications)
-  await OneSignalService().initialize();
+  OneSignalService().initialize();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

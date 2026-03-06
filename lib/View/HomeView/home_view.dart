@@ -11,6 +11,7 @@ import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Core/Utils/language_data.dart';
 import 'package:lingola_travel/Models/language.dart';
 import 'package:lingola_travel/Models/language_model.dart';
+import 'package:lingola_travel/Repositories/library_repository.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
 import 'package:lingola_travel/generated/locale_keys.g.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +38,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Language _selectedLanguage = AppLanguages.all.first;
   int _selectedCategoryIndex = 0; // Kategori filtrelemesi için tıklanan index
   final Map<int, double> _swipeProgressMap = {};
+  final LibraryRepository _libraryRepository = LibraryRepository();
   bool _isNavigating = false;
 
   String _userName = 'Guest';
@@ -44,7 +46,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   String? _userPhotoUrl; // Profil fotoğrafı için eklenen değişken
 
   // Yerel Bookmark Set'i ve SharedPreferences Anahtarı
-  Set<String> _bookmarkedPhrases = {};
+  final Set<String> _bookmarkedPhrases = {};
   static const String _localBookmarksKey = 'lingola_local_bookmarks';
 
   final ProfileRepository _profileRepository = ProfileRepository();
@@ -122,8 +124,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
   @override
   void initState() {
     super.initState();
-    _loadUserProfile();
     _loadLocalBookmarks();
+    _loadUserProfile();
 
     Future.microtask(() async {
       try {
@@ -141,6 +143,21 @@ class _HomeViewState extends ConsumerState<HomeView> {
     });
   }
 
+  Future<void> _loadLocalBookmarks() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? bookmarksJson = prefs.getString(_localBookmarksKey);
+      if (bookmarksJson != null) {
+        final List<dynamic> decoded = jsonDecode(bookmarksJson);
+        if (mounted) {
+          setState(() => _bookmarkedPhrases.addAll(decoded.cast<String>()));
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Favori yükleme hatası: $e');
+    }
+  }
+
   Future<void> _loadUserProfile() async {
     try {
       final response = await _profileRepository.getProfile();
@@ -151,7 +168,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
             if (userData['name'] != null) {
               _userName = userData['name'];
             }
-            // Hatanın çözüldüğü kısım burası: 1 ise veya true ise _isPremium = true olur
             if (userData['is_premium'] != null) {
               _isPremium =
                   userData['is_premium'] == 1 || userData['is_premium'] == true;
@@ -167,45 +183,80 @@ class _HomeViewState extends ConsumerState<HomeView> {
     }
   }
 
-  // --- %100 YEREL (LOCAL) BOOKMARK YÜKLEME ---
-  Future<void> _loadLocalBookmarks() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? bookmarksJson = prefs.getString(_localBookmarksKey);
+  Future<void> _toggleBookmark(
+    String itemId, {
+    String itemType = 'dictionary_word',
+  }) async {
+    final bool isCurrentlyBookmarked = _bookmarkedPhrases.contains(itemId);
+    final String selectedCategoryKey =
+        _staticCategories[_selectedCategoryIndex]['nameKey'] as String;
 
-      if (bookmarksJson != null) {
-        final List<dynamic> decoded = jsonDecode(bookmarksJson);
-        if (mounted) {
-          setState(() {
-            _bookmarkedPhrases = decoded.cast<String>().toSet();
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('❌ Yerel favoriler yüklenirken hata: $e');
-    }
-  }
-
-  // --- %100 YEREL (LOCAL) BOOKMARK KAYDETME/SİLME ---
-  Future<void> _toggleBookmark(String itemId) async {
+    // 1. Arayüzü ANINDA güncelle (Optimistic UI)
     setState(() {
-      if (_bookmarkedPhrases.contains(itemId)) {
+      if (isCurrentlyBookmarked) {
         _bookmarkedPhrases.remove(itemId);
       } else {
         _bookmarkedPhrases.add(itemId);
       }
     });
 
+    bool apiSuccess = false;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String encoded = jsonEncode(_bookmarkedPhrases.toList());
-      await prefs.setString(_localBookmarksKey, encoded);
+      if (isCurrentlyBookmarked) {
+        // Backend'den Sil
+        final response = await _libraryRepository.removeBookmarkByItem(
+          itemType: itemType,
+          itemId: itemId,
+        );
+        apiSuccess = response.success;
+      } else {
+        // YENİ REPOSITORY'E GÖRE GÜNCELLENDİ: word ve translation eklendi
+        final response = await _libraryRepository.addBookmark(
+          itemType: itemType,
+          itemId: itemId,
+          word: _getEnglishText(itemId), // İngilizce tam metin
+          translation: itemId.tr(), // Çevirisi
+          category: selectedCategoryKey,
+        );
+        apiSuccess = response.success;
+      }
     } catch (e) {
-      debugPrint('❌ Yerel favoriler kaydedilirken hata: $e');
+      debugPrint('❌ Home Bookmark API Hatası: $e');
+      apiSuccess = false;
+    }
+
+    // 2. API Sonucuna Göre Aksiyon
+    if (apiSuccess) {
+      // Başarılıysa yerel cache'i güncelle
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          _localBookmarksKey,
+          jsonEncode(_bookmarkedPhrases.toList()),
+        );
+      } catch (e) {
+        debugPrint('❌ Yerel cache kaydetme hatası: $e');
+      }
+    } else {
+      // API Başarısızsa Geri Al (Rollback)
+      if (mounted) {
+        setState(() {
+          if (isCurrentlyBookmarked) {
+            _bookmarkedPhrases.add(itemId);
+          } else {
+            _bookmarkedPhrases.remove(itemId);
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bağlantı hatası: Favori güncellenemedi.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
-  // İngilizce kelimeyi formatlama (camelCase düzeltici)
   String _getEnglishText(String key) {
     final lastPart = key.split('.').last;
     if (lastPart == 'oneMomentPlease') return 'One moment, please';
@@ -216,14 +267,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
     String formatted = parts.map((p) => p.toLowerCase()).join(' ');
     formatted = formatted[0].toUpperCase() + formatted.substring(1);
 
-    // Kısmaltmaları düzelt
     formatted = formatted.replaceAll("I dont ", "I don't ");
     formatted = formatted.replaceAll("Im ", "I'm ");
     formatted = formatted.replaceAll("Youre ", "You're ");
     formatted = formatted.replaceAll("Cant ", "Can't ");
     formatted = formatted.replaceAll("Lets ", "Let's ");
 
-    // Soru cümlelerine soru işareti ekle
     final lower = formatted.toLowerCase();
     if (lower.startsWith('can ') ||
         lower.startsWith('where ') ||
@@ -241,16 +290,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return formatted;
   }
 
-  // Seçilen kategoriye göre LanguageDataManager'dan ilk 2 cümleyi getirir
   List<Map<String, String>> _getFilteredSentences() {
     final selectedCategoryKey =
         _staticCategories[_selectedCategoryIndex]['nameKey'] as String;
 
-    // Verileri lokal dosyadan çek
     final sentences =
         LanguageDataManager.sentencesData[selectedCategoryKey] ?? [];
 
-    // Sadece ilk 2 cümleyi göster
     return sentences.take(2).map((key) {
       return {
         'id': key,
@@ -302,7 +348,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   SizedBox(height: 24.h),
                   _buildQuickPhrasebook(),
                   SizedBox(height: 4.h),
-                  _buildQuestions(), // Artık lokalize ve dinamik
+                  _buildQuestions(),
                   SizedBox(height: 16.h),
                   _buildFeatures(),
                   SizedBox(height: 16.h),
@@ -643,7 +689,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   style: TextStyle(
                     fontSize: 12.sp,
                     letterSpacing: 12.sp * -0.05,
-
                     fontFamily: 'Montserrat',
                     color: MyColors.textSecondary,
                   ),
@@ -670,7 +715,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   label: category['nameKey']!.toString().tr(),
                   isSelected: _selectedCategoryIndex == index,
                   onTap: () {
-                    // Tıklanan kategoriyi seçili yap ve altındaki cümleleri güncelle
                     setState(() {
                       _selectedCategoryIndex = index;
                     });
@@ -741,7 +785,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  // LOKALDEN ÇEKİLEN VERİLERLE DİNAMİK CÜMLE LİSTESİ
   Widget _buildQuestions() {
     final filteredSentences = _getFilteredSentences();
 
@@ -750,21 +793,27 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
-        children: filteredSentences
-            .map(
-              (phrase) => Padding(
-                padding: EdgeInsets.only(bottom: 8.h),
-                child: _buildQuestionCard(
-                  targetLanguageText:
-                      phrase['englishText']!, // Her zaman ana dili (en) üstte gösteriyoruz
-                  turkishText:
-                      phrase['translationText']!, // Çeviriyi altta gösteriyoruz
-                  isBookmarked: _bookmarkedPhrases.contains(phrase['id']),
-                  onBookmarkToggle: () => _toggleBookmark(phrase['id']!),
-                ),
+        children: filteredSentences.map((phrase) {
+          final String currentId = phrase['id']!;
+          final bool isBookmarked = _bookmarkedPhrases.contains(currentId);
+          return Padding(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: _buildQuestionCard(
+              targetLanguageText: phrase['englishText']!,
+              turkishText: phrase['translationText']!,
+              trailing: _iconButton(
+                'assets/icons/travelvocabularykaydet.svg',
+                isBookmarked
+                    ? const Color(0x3D2989E9)
+                    : const Color(0xFFF3F4F6),
+                isBookmarked
+                    ? const Color(0xFF2989E9)
+                    : const Color(0xFFB0B0B0),
+                () => _toggleBookmark(currentId, itemType: 'travel_phrase'),
               ),
-            )
-            .toList(),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -772,33 +821,24 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Widget _buildQuestionCard({
     required String targetLanguageText,
     required String turkishText,
-    required bool isBookmarked,
-    required VoidCallback onBookmarkToggle,
+    required Widget trailing,
   }) {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(15.r),
         boxShadow: [
-          const BoxShadow(
-            color: Color(0xFFDCE1EC),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Stack(
+      child: Row(
         children: [
-          Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/images/ceviriarkaplan.svg',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(right: 40.w),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -806,48 +846,55 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   targetLanguageText,
                   style: TextStyle(
                     fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 16.sp * -0.05,
-                    fontWeight: FontWeight.w600,
                     fontFamily: 'Montserrat',
                     color: MyColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 2.h),
+                SizedBox(height: 4.h),
                 Text(
                   turkishText,
                   style: TextStyle(
                     fontSize: 13.sp,
-                    letterSpacing: 13.sp * -0.05,
                     fontWeight: FontWeight.w300,
+                    letterSpacing: 13.sp * -0.05,
                     fontFamily: 'Montserrat',
-                    color: MyColors.textPrimary,
+                    color: Colors.black54,
                   ),
                 ),
               ],
             ),
           ),
-          Positioned(
-            right: 0,
-            top: 0,
-            child: GestureDetector(
-              onTap: onBookmarkToggle,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  color: const Color(0xFFF4F7F9),
-                ),
-                child: Icon(
-                  Icons.bookmark,
-                  color: isBookmarked
-                      ? const Color(0xFF2196F3)
-                      : const Color(0xFFCBD5E1),
-                  size: 24.sp,
-                ),
-              ),
-            ),
-          ),
+          SizedBox(width: 8.w),
+          trailing,
         ],
+      ),
+    );
+  }
+
+  Widget _iconButton(
+    String iconPath,
+    Color bgColor,
+    Color iconColor,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40.w,
+        height: 40.h,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10.r),
+        ),
+        child: Center(
+          child: SvgPicture.asset(
+            iconPath,
+            width: 20.w,
+            colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+          ),
+        ),
       ),
     );
   }
@@ -857,20 +904,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
       {
         'title': LocaleKeys.home_featureLearnSentence.tr(),
         'subtitle': LocaleKeys.home_featureDailyConversation.tr(),
-        'gradient': [
-          const Color(0xFF6366F1),
-          const Color(0xFF6366FF),
-        ], // Tasarımdaki mor tonları
+        'gradient': [const Color(0xFF6366F1), const Color(0xFF6366FF)],
         'icon': 'assets/images/messagebox.png',
         'isIconSvg': false,
       },
       {
         'title': LocaleKeys.home_featureLearnWords.tr(),
         'subtitle': LocaleKeys.home_featureQuickLearn.tr(),
-        'gradient': [
-          const Color(0xFF1D73F6),
-          const Color(0xFF1D73FF),
-        ], // Tasarımdaki mavi tonları
+        'gradient': [const Color(0xFF1D73F6), const Color(0xFF1D73FF)],
         'icon': 'assets/icons/learnnewword.svg',
         'isIconSvg': true,
       },
@@ -905,7 +946,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         ),
         SizedBox(height: 12.h),
         SizedBox(
-          height: 280.h, // Kart boyutu tasarıma göre biraz büyütüldü
+          height: 280.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.only(left: 12.w),
@@ -948,7 +989,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // Arka plandaki dekoratif yuvarlak desenler
           Positioned(
             bottom: -30.h,
             left: 30.w,
@@ -992,13 +1032,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ),
           ),
 
-          // İçerikler
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sol üstteki ikon
                 Container(
                   width: 48.w,
                   height: 48.w,
@@ -1026,22 +1064,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   ),
                 ),
                 SizedBox(height: 12.h),
-
-                // Başlık (Learn New Sentence)
                 Text(
                   title,
                   style: TextStyle(
                     fontSize: 24.sp,
-                    fontWeight: FontWeight.w700, // Bold
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 24.sp * -0.04,
                     fontFamily: 'Montserrat',
                     color: Colors.white,
-                    height: 1.1, // Satır arası boşluk sıkılaştırıldı
+                    height: 1.1,
                   ),
                 ),
                 SizedBox(height: 8.h),
-
-                // Alt Başlık (Daily Conversation)
                 Text(
                   subtitle,
                   style: TextStyle(
@@ -1051,8 +1085,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     letterSpacing: 13.sp * -0.02,
                   ),
                 ),
-
-                // Swipe Butonu
               ],
             ),
           ),
@@ -1071,28 +1103,23 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final currentProgress = _swipeProgressMap[cardIndex] ?? 0.0;
-        final maxDrag =
-            constraints.maxWidth -
-            56.w; // 56w = ikon genişliği + kenar boşlukları
+        final maxDrag = constraints.maxWidth - 56.w;
 
         return Container(
           width: double.infinity,
           height: 56.h,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.25), // Yarı saydam arka plan
+            color: Colors.white.withOpacity(0.25),
             borderRadius: BorderRadius.circular(50.r),
             border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
           ),
           child: Stack(
             alignment: Alignment.centerLeft,
             children: [
-              // Ortadaki "SWIPE TO START" yazısı ve sağdaki çift oklar
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    width: 50.w,
-                  ), // İkonun kapladığı alanı dengelemek için offset
+                  SizedBox(width: 50.w),
                   Text(
                     LocaleKeys.home_swipeToStart.tr().toUpperCase(),
                     style: TextStyle(
@@ -1110,10 +1137,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     size: 16.sp,
                   ),
                   Transform.translate(
-                    offset: const Offset(
-                      -8,
-                      0,
-                    ), // Okları birbirine yaklaştırmak için
+                    offset: const Offset(-8, 0),
                     child: Icon(
                       Icons.keyboard_arrow_right_rounded,
                       color: Colors.white.withOpacity(0.3),
@@ -1122,8 +1146,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   ),
                 ],
               ),
-
-              // Sürüklenen beyaz yuvarlak buton
               Positioned(
                 left: currentProgress,
                 child: GestureDetector(
@@ -1138,10 +1160,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   },
                   onHorizontalDragEnd: (_) {
                     if (currentProgress > maxDrag * 0.75) {
-                      // Kaydırma başarılıysa butonu tamamen sağa daya
                       setState(() => _swipeProgressMap[cardIndex] = maxDrag);
-
-                      // Ufak bir animasyon gecikmesi ile sayfaya geçiş yap
                       Future.delayed(const Duration(milliseconds: 150), () {
                         Navigator.push(
                           context,
@@ -1151,14 +1170,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                 : const VisualDictionaryView(isPremium: false),
                           ),
                         ).then((_) {
-                          // Sayfadan geri dönüldüğünde butonu sıfırla
                           if (mounted) {
                             setState(() => _swipeProgressMap[cardIndex] = 0);
                           }
                         });
                       });
                     } else {
-                      // Yeterince kaydırılmadıysa geri yaylan
                       setState(() => _swipeProgressMap[cardIndex] = 0);
                     }
                   },
@@ -1172,7 +1189,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     ),
                     child: Icon(
                       Icons.arrow_forward_rounded,
-                      color: iconColor, // Kartın kendi rengi oka verilir
+                      color: iconColor,
                       size: 24.sp,
                     ),
                   ),

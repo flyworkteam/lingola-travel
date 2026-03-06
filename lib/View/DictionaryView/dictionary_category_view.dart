@@ -9,14 +9,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Core/Utils/language_data.dart';
+import 'package:lingola_travel/Repositories/library_repository.dart';
 import 'package:lingola_travel/generated/locale_keys.g.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Services/tts_service.dart';
 
 class DictionaryCategoryView extends ConsumerStatefulWidget {
-  final String
-  categoryName; // Artık doğrudan LocaleKeys.home_cat... stringi gelecek
+  final String categoryName;
   final String categoryId;
   final bool isPremium;
 
@@ -32,11 +32,14 @@ class DictionaryCategoryView extends ConsumerStatefulWidget {
       _DictionaryCategoryViewState();
 }
 
-class _DictionaryCategoryViewState
-    extends ConsumerState<DictionaryCategoryView> {
+// TickerProviderStateMixin animasyon için eklendi
+class _DictionaryCategoryViewState extends ConsumerState<DictionaryCategoryView>
+    with TickerProviderStateMixin {
+  // Backend işlemleri için Repository örneği
+  final LibraryRepository _libraryRepository = LibraryRepository();
+
   final TextEditingController _searchController = TextEditingController();
 
-  // YEREL BOOKMARK YÖNETİMİ
   Set<String> _bookmarkedItems = {};
   static const String _localBookmarksKey = 'lingola_local_bookmarks';
 
@@ -44,33 +47,27 @@ class _DictionaryCategoryViewState
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? _playingItemId;
-  StreamSubscription? _audioCompletionSubscription;
-
   late final TtsService _ttsService;
+
+  // İlerleme çubuğu için animasyon kontrolcüsü
+  late AnimationController _progressController;
 
   @override
   void initState() {
     super.initState();
 
-    _loadLocalBookmarks(); // Yerel favorileri çek
+    _loadLocalBookmarks();
 
     _ttsService = TtsService();
-    _ttsService.init().then((_) {
-      debugPrint('✅ TTS initialized');
-    });
+    _ttsService.init();
 
-    _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
-      event,
-    ) {
-      if (mounted) {
-        setState(() {
-          _playingItemId = null;
-        });
-      }
-    });
+    // Animasyon kontrolcüsü başlatıldı
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
   }
 
-  // --- %100 YEREL (LOCAL) BOOKMARK YÜKLEME ---
   Future<void> _loadLocalBookmarks() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -89,36 +86,96 @@ class _DictionaryCategoryViewState
     }
   }
 
-  // --- %100 YEREL (LOCAL) BOOKMARK KAYDETME/SİLME ---
+  // Backend ile Senkronize Kaydetme / Silme İşlemi (Optimistic UI)
   Future<void> _toggleBookmark(String itemId) async {
-    // 1. Arayüzü anında güncelle
+    // 1. Mevcut durumu kaydet (İşlem başarısız olursa geri dönmek için)
+    final bool isCurrentlyBookmarked = _bookmarkedItems.contains(itemId);
+
+    // 2. Arayüzü anında güncelle (Kullanıcı bekletilmez)
     setState(() {
-      if (_bookmarkedItems.contains(itemId)) {
+      if (isCurrentlyBookmarked) {
         _bookmarkedItems.remove(itemId);
       } else {
         _bookmarkedItems.add(itemId);
       }
     });
 
-    // 2. Arka planda cihaz hafızasına (SharedPreferences) kaydet (Sıfır API isteği)
+    // 3. Backend API isteğini yap
+    bool apiSuccess = false;
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String encoded = jsonEncode(_bookmarkedItems.toList());
-      await prefs.setString(_localBookmarksKey, encoded);
+      if (isCurrentlyBookmarked) {
+        // Backend'den Silme
+        final response = await _libraryRepository.removeBookmarkByItem(
+          itemType: 'dictionary_word',
+          itemId: itemId,
+        );
+        apiSuccess = response.success;
+      } else {
+        // Backend'e Ekleme (GÜNCELLENDİ: word ve translation eklendi)
+        final response = await _libraryRepository.addBookmark(
+          itemType: 'dictionary_word',
+          itemId: itemId,
+          word: _formatEnglishWord(itemId), // Kelimenin formatlı İngilizce hali
+          translation: itemId.tr(), // Seçili dile göre çevirisi
+          category: widget.categoryName,
+        );
+        apiSuccess = response.success;
+      }
     } catch (e) {
-      debugPrint('❌ Yerel favoriler kaydedilirken hata: $e');
+      debugPrint('❌ Backend API hatası: $e');
+      apiSuccess = false;
+    }
+
+    // 4. Sonuca göre aksiyon al
+    if (apiSuccess) {
+      // Başarılıysa yerel cache'i de güncelle
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final String encoded = jsonEncode(_bookmarkedItems.toList());
+        await prefs.setString(_localBookmarksKey, encoded);
+      } catch (e) {
+        debugPrint('❌ Yerel favoriler kaydedilirken hata: $e');
+      }
+    } else {
+      // Başarısız olursa arayüzü eski haline döndür
+      if (mounted) {
+        setState(() {
+          if (isCurrentlyBookmarked) {
+            _bookmarkedItems.add(itemId);
+          } else {
+            _bookmarkedItems.remove(itemId);
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'İşlem başarısız oldu. Lütfen internet bağlantınızı kontrol edin.',
+            ),
+            backgroundColor: Colors.redAccent,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
   @override
   void dispose() {
+    _stopAllAudio();
     _searchController.dispose();
-    _audioCompletionSubscription?.cancel();
+    _progressController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
 
-  // İngilizce kelimeyi formatlama (camelCase düzeltici)
+  void _stopAllAudio() {
+    _audioPlayer.stop();
+    _ttsService.stop();
+    _progressController.reset();
+  }
+
   String _formatEnglishWord(String key) {
     final lastPart = key.split('.').last;
     if (lastPart == 'oneMomentPlease') return 'One moment, please';
@@ -132,9 +189,7 @@ class _DictionaryCategoryViewState
     return formatted;
   }
 
-  // Kelimeleri LanguageDataManager'dan dinamik olarak çek
   List<Map<String, String>> get _words {
-    // categoryName değişkeni zaten 'home.catGeneral' formatında geldiği varsayılıyor.
     final List<String> keys =
         LanguageDataManager.vocabularyData[widget.categoryName] ?? [];
 
@@ -143,7 +198,7 @@ class _DictionaryCategoryViewState
       String translatedWord = key.tr();
 
       return {
-        'id': key, // Favoriye eklerken orijinal anahtarı kullanacağız
+        'id': key,
         'word': englishWord,
         'translation': translatedWord,
         'targetLanguage': 'en',
@@ -151,7 +206,6 @@ class _DictionaryCategoryViewState
     }).toList();
   }
 
-  // Arama Filtresi
   List<Map<String, String>> get _filteredWords {
     if (_searchQuery.isEmpty) return _words;
     final query = _searchQuery.toLowerCase();
@@ -163,34 +217,38 @@ class _DictionaryCategoryViewState
     }).toList();
   }
 
-  Future<void> _playAudio(
-    String itemId,
-    String word,
-    String? targetLanguage,
-  ) async {
+  // Senkronize edilmiş ses oynatma mekaniği
+  Future<void> _playAudio(String itemId, String wordText) async {
+    if (!mounted) return;
+
     try {
       if (_playingItemId == itemId) {
-        await _audioPlayer.stop();
-        await _ttsService.stop();
+        _stopAllAudio();
         setState(() => _playingItemId = null);
         return;
       }
 
-      await _audioPlayer.stop();
-      await _ttsService.stop();
-
+      _stopAllAudio();
       setState(() => _playingItemId = itemId);
 
-      _ttsService.speak(word, languageCode: targetLanguage ?? 'en');
+      // Dinamik süre hesabı: Karakter başına ~90ms
+      int durationMs = (wordText.length * 90).clamp(1200, 5000);
+      _progressController.duration = Duration(milliseconds: durationMs);
 
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted && _playingItemId == itemId) {
+      _progressController.forward();
+      await _ttsService.speak(wordText, languageCode: 'en');
+
+      _progressController.addStatusListener((status) {
+        if (status == AnimationStatus.completed &&
+            mounted &&
+            _playingItemId == itemId) {
           setState(() => _playingItemId = null);
+          _progressController.reset();
         }
       });
     } catch (e) {
-      setState(() => _playingItemId = null);
-      debugPrint('Error playing audio: $e');
+      debugPrint('❌ TTS error: $e');
+      if (mounted) setState(() => _playingItemId = null);
     }
   }
 
@@ -215,7 +273,7 @@ class _DictionaryCategoryViewState
           ),
         ),
         title: Text(
-          widget.categoryName.tr(), // Doğrudan local stringi .tr() ile çevirdik
+          widget.categoryName.tr(),
           style: TextStyle(
             fontSize: 20.sp,
             letterSpacing: 20.sp * -0.05,
@@ -272,12 +330,8 @@ class _DictionaryCategoryViewState
             fontFamily: 'Montserrat',
             color: MyColors.textSecondary,
           ),
-          prefixIconConstraints: BoxConstraints(
-            minWidth: 40.w,
-            maxHeight: 24.h,
-          ),
           prefixIcon: Padding(
-            padding: EdgeInsets.only(left: 12.w, right: 8.w),
+            padding: EdgeInsets.all(12.w),
             child: SvgPicture.asset(
               'assets/icons/scope.svg',
               width: 18.w,
@@ -301,7 +355,6 @@ class _DictionaryCategoryViewState
                 )
               : null,
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 12.h),
         ),
         cursorColor: MyColors.lingolaPrimaryColor,
         onChanged: (value) => setState(() => _searchQuery = value),
@@ -324,7 +377,6 @@ class _DictionaryCategoryViewState
     );
   }
 
-  /// Word list
   Widget _buildWordList() {
     final words = _filteredWords;
 
@@ -334,9 +386,8 @@ class _DictionaryCategoryViewState
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 200),
+              SizedBox(height: 100.h),
               Icon(
                 Icons.search_off,
                 size: 64.sp,
@@ -350,15 +401,6 @@ class _DictionaryCategoryViewState
                   fontWeight: FontWeight.w600,
                   fontFamily: 'Montserrat',
                   color: MyColors.textSecondary,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                LocaleKeys.search_try_different.tr(),
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontFamily: 'Montserrat',
-                  color: MyColors.textSecondary.withOpacity(0.7),
                 ),
               ),
             ],
@@ -382,6 +424,7 @@ class _DictionaryCategoryViewState
   Widget _buildWordCard(Map<String, String> word) {
     final wordId = word['id']!;
     final isBookmarked = _bookmarkedItems.contains(wordId);
+    final isPlaying = _playingItemId == wordId;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,13 +433,17 @@ class _DictionaryCategoryViewState
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(10.r),
+              topRight: Radius.circular(10.r),
+              bottomLeft: Radius.circular(isPlaying ? 0 : 10.r),
+              bottomRight: Radius.circular(isPlaying ? 0 : 10.r),
+            ),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFC2D6E1).withOpacity(0.60),
                 offset: const Offset(0, 2),
                 blurRadius: 4,
-                spreadRadius: 0,
               ),
             ],
           ),
@@ -432,8 +479,7 @@ class _DictionaryCategoryViewState
               ),
               SizedBox(width: 12.w),
               GestureDetector(
-                onTap: () =>
-                    _playAudio(wordId, word['word']!, word['targetLanguage']),
+                onTap: () => _playAudio(wordId, word['word']!),
                 child: SvgPicture.asset('assets/icons/visualdictionaryses.svg'),
               ),
               SizedBox(width: 8.w),
@@ -466,17 +512,42 @@ class _DictionaryCategoryViewState
             ],
           ),
         ),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          height: 3.h,
-          margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 12.h),
-          decoration: BoxDecoration(
-            color: _playingItemId == wordId
-                ? const Color(0xFF4ECDC4)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(2.r),
-          ),
-        ),
+
+        // Animasyonlu İlerleme Çubuğu
+        if (isPlaying)
+          Container(
+            height: 4.h,
+            margin: EdgeInsets.only(bottom: 12.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE0E0E0),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(10.r),
+                bottomRight: Radius.circular(10.r),
+              ),
+            ),
+            alignment: Alignment.centerLeft,
+            child: AnimatedBuilder(
+              animation: _progressController,
+              builder: (context, child) {
+                return FractionallySizedBox(
+                  widthFactor: _progressController.value,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4ECDC4),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(10.r),
+                        bottomRight: Radius.circular(
+                          _progressController.value > 0.98 ? 10.r : 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          )
+        else
+          SizedBox(height: 12.h),
       ],
     );
   }

@@ -26,14 +26,15 @@ class VisualDictionaryView extends ConsumerStatefulWidget {
       _VisualDictionaryViewState();
 }
 
-class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
+// TravelVocabularyView ile senkron için TickerProviderStateMixin eklendi
+class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView>
+    with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
 
   static const String _recentSearchesKey = 'visual_dict_recent_searches';
 
   List<Map<String, String>> _recentSearches = [];
 
-  final Set<String> _bookmarkedCategories = {};
   final Set<String> _bookmarkedWords = {};
   String _searchQuery = '';
   List<Map<String, String>> _searchResults = [];
@@ -41,38 +42,25 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   Timer? _debounceTimer;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
-  String? _playingCategory;
   String? _playingWordId;
-  StreamSubscription? _audioCompletionSubscription;
-
   late final TtsService _ttsService;
+
+  // İlerleme çubuğu animasyon kontrolcüsü
+  late AnimationController _progressController;
 
   @override
   void initState() {
     super.initState();
-
     _loadRecentSearches();
 
     _ttsService = TtsService();
-    _ttsService
-        .init()
-        .then((_) {
-          debugPrint('✅ TTS initialized in visual_dictionary_view');
-        })
-        .catchError((e) {
-          debugPrint('⚠️ Error initializing TTS: $e');
-        });
+    _ttsService.init();
 
-    _audioCompletionSubscription = _audioPlayer.onPlayerComplete.listen((
-      event,
-    ) {
-      if (mounted) {
-        setState(() {
-          _playingCategory = null;
-          _playingWordId = null;
-        });
-      }
-    });
+    // Animasyon kontrolcüsü başlatıldı
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
   }
 
   Future<void> _loadRecentSearches() async {
@@ -105,7 +93,6 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     }
   }
 
-  // --- STATİK KATEGORİ LİSTESİ (GERÇEK KELİME SAYILARI İLE) ---
   int _getWordCount(String categoryKey) {
     return LanguageDataManager.vocabularyData[categoryKey]?.length ?? 0;
   }
@@ -114,7 +101,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     return [
       {
         'id': 'dict-cat-001',
-        'key': LocaleKeys.home_catGeneral, // Tıklama için orijinal key gerekli
+        'key': LocaleKeys.home_catGeneral,
         'name': LocaleKeys.home_catGeneral.tr(),
         'icon': 'assets/images/home/general.png',
         'color': '#FFD166',
@@ -205,14 +192,20 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
 
   @override
   void dispose() {
+    _stopAllAudio();
     _searchController.dispose();
     _debounceTimer?.cancel();
-    _audioCompletionSubscription?.cancel();
+    _progressController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
 
-  // İngilizce kelimeyi formatlama (camelCase düzeltici)
+  void _stopAllAudio() {
+    _audioPlayer.stop();
+    _ttsService.stop();
+    _progressController.reset();
+  }
+
   String _formatEnglishWord(String key) {
     final lastPart = key.split('.').last;
     if (lastPart == 'oneMomentPlease') return 'One moment, please';
@@ -230,7 +223,6 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     final String q = query.toLowerCase();
     final List<Map<String, String>> results = [];
 
-    // Taramayı statik LanguageDataManager üzerinden yap
     LanguageDataManager.vocabularyData.forEach((catKey, words) {
       for (var wordKey in words) {
         String englishWord = _formatEnglishWord(wordKey);
@@ -239,10 +231,10 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         if (englishWord.toLowerCase().contains(q) ||
             translated.toLowerCase().contains(q)) {
           results.add({
-            'id': wordKey, // Kelimenin orjinal anahtarı
+            'id': wordKey,
             'word': englishWord,
             'translation': translated,
-            'categoryName': catKey, // Kategori anahtarı
+            'categoryName': catKey,
           });
 
           if (results.length >= 50) break;
@@ -252,7 +244,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
 
     setState(() {
       _searchResults = results;
-      _isSearching = false; // Arama tamamlandı
+      _isSearching = false;
     });
   }
 
@@ -282,128 +274,62 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     _saveRecentSearches();
   }
 
-  void _toggleBookmark(String categoryKey) async {
-    try {
-      final isCurrentlyBookmarked = _bookmarkedCategories.contains(categoryKey);
+  Future<void> _playAudio(String wordId, String englishText) async {
+    if (!mounted) return;
 
-      if (isCurrentlyBookmarked) {
-        await LibraryRepository().removeBookmarkByItem(
-          itemType: 'dictionary_category',
-          itemId: categoryKey,
-        );
-        setState(() {
-          _bookmarkedCategories.remove(categoryKey);
-        });
-      } else {
-        await LibraryRepository().addBookmark(
-          itemType: 'dictionary_category',
-          itemId: categoryKey,
-          category: 'Dictionary',
-        );
-        setState(() {
-          _bookmarkedCategories.add(categoryKey);
-        });
-        ref.read(libraryControllerProvider.notifier).loadFolders();
-      }
-    } catch (e) {
-      debugPrint('Error toggling bookmark: $e');
-    }
-  }
-
-  Future<void> _playAudio(String textToSpeak) async {
-    try {
-      if (_playingCategory == textToSpeak) {
-        await _audioPlayer.stop();
-        await _ttsService.stop();
-        setState(() {
-          _playingCategory = null;
-        });
-        return;
-      }
-
-      await _audioPlayer.stop();
-      await _ttsService.stop();
-
-      setState(() {
-        _playingCategory = textToSpeak;
-      });
-
-      _ttsService
-          .speak(textToSpeak, languageCode: context.locale.languageCode)
-          .catchError((e) {
-            debugPrint('❌ TTS error: $e');
-          });
-
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && _playingCategory == textToSpeak) {
-          setState(() {
-            _playingCategory = null;
-          });
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _playingCategory = null;
-      });
-      debugPrint('Error playing audio: $e');
-    }
-  }
-
-  Future<void> _playWordAudio(String wordId, String englishWord) async {
     try {
       if (_playingWordId == wordId) {
-        await _audioPlayer.stop();
-        await _ttsService.stop();
-        setState(() {
-          _playingWordId = null;
-        });
+        _stopAllAudio();
+        setState(() => _playingWordId = null);
         return;
       }
 
-      await _audioPlayer.stop();
-      await _ttsService.stop();
+      _stopAllAudio();
+      setState(() => _playingWordId = wordId);
 
-      setState(() {
-        _playingWordId = wordId;
-        _playingCategory = null;
-      });
+      // TravelVocabularyView ile aynı süre hesabı
+      int durationMs = (englishText.length * 90).clamp(1200, 5000);
+      _progressController.duration = Duration(milliseconds: durationMs);
 
-      _ttsService.speak(englishWord, languageCode: 'en').catchError((e) {
-        debugPrint('❌ TTS error: $e');
-      });
+      _progressController.forward();
+      await _ttsService.speak(englishText, languageCode: 'en');
 
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted && _playingWordId == wordId) {
-          setState(() {
-            _playingWordId = null;
-          });
+      _progressController.addStatusListener((status) {
+        if (status == AnimationStatus.completed &&
+            mounted &&
+            _playingWordId == wordId) {
+          setState(() => _playingWordId = null);
+          _progressController.reset();
         }
       });
     } catch (e) {
-      setState(() {
-        _playingWordId = null;
-      });
-      debugPrint('Error playing word audio: $e');
+      debugPrint('❌ TTS error: $e');
+      if (mounted) setState(() => _playingWordId = null);
     }
   }
 
+  // ⚡ GÜNCELLENDİ: word ve translation eklendi ⚡
   void _toggleWordBookmark(String wordId, String categoryName) async {
     try {
-      setState(() => _bookmarkedWords.remove(wordId));
       final isCurrentlyBookmarked = _bookmarkedWords.contains(wordId);
 
       if (isCurrentlyBookmarked) {
+        setState(() => _bookmarkedWords.remove(wordId));
         await LibraryRepository().removeBookmarkByItem(
           itemType: 'dictionary_word',
           itemId: wordId,
         );
       } else {
         setState(() => _bookmarkedWords.add(wordId));
+
         await LibraryRepository().addBookmark(
           itemType: 'dictionary_word',
           itemId: wordId,
+          word: _formatEnglishWord(wordId), // İngilizce Hali
+          translation: wordId.tr(), // Çevirisi
           category: categoryName,
         );
+
         ref.read(libraryControllerProvider.notifier).loadFolders();
       }
     } catch (e) {
@@ -423,7 +349,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
       context,
       MaterialPageRoute(
         builder: (context) => DictionaryCategoryView(
-          categoryName: categoryKey, // Tıklananın gerçek key'i aktarılır
+          categoryName: categoryKey,
           categoryId: categoryKey,
           isPremium: widget.isPremium,
         ),
@@ -501,26 +427,18 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   }
 
   Widget _buildSearchBar() {
-    // Color specification for the shadow
-    const shadowColor = Color(0xFFC2D6E1); // Hex value from spec
+    const shadowColor = Color(0xFFC2D6E1);
 
     return Container(
-      height: 48.h, // Maintain current height
+      height: 48.h,
       decoration: BoxDecoration(
-        color: MyColors.white, // Fill: White (FFFFFF) from spec
-        borderRadius: BorderRadius.circular(
-          10.r,
-        ), // Corner radius: 10 from spec
-        // REMOVED: Border.all - spec has no stroke applied
-        // ADDED: boxshadow with spec settings
+        color: MyColors.white,
+        borderRadius: BorderRadius.circular(10.r),
         boxShadow: [
           BoxShadow(
-            color: shadowColor.withOpacity(
-              0.5,
-            ), // Spec: Color C2D6E1, 50% opacity
-            blurRadius: 4.r, // Spec: Blur 4
-            spreadRadius: 0.r, // Spec: Spread 0
-            offset: Offset(0, 2.h), // Spec: Position X=0, Y=2
+            color: shadowColor.withOpacity(0.5),
+            blurRadius: 4.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -557,7 +475,6 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
             fontFamily: 'Montserrat',
             color: MyColors.textSecondary,
           ),
-          // REMOVED complex constraints for prefix icon to allow vertical centering
           prefixIcon: Padding(
             padding: EdgeInsets.symmetric(horizontal: 12.w),
             child: SvgPicture.asset(
@@ -585,11 +502,8 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                   },
                 )
               : null,
-          border:
-              InputBorder.none, // Component border is defined by BoxDecoration
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 0.w,
-          ), // Reset to help vertical centering
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 0.w),
         ),
         cursorColor: MyColors.lingolaPrimaryColor,
       ),
@@ -634,7 +548,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     final bool isSvg = iconPath.toLowerCase().endsWith('.svg');
 
     return GestureDetector(
-      onTap: () => _navigateToCategory(category['key']), // KEY aktarılıyor
+      onTap: () => _navigateToCategory(category['key']),
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
@@ -660,7 +574,6 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Center(
-                // EKLENEN KISIM: Uzantıya göre SVG veya PNG render etme
                 child: isSvg
                     ? SvgPicture.asset(
                         iconPath,
@@ -686,7 +599,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
             ),
             SizedBox(height: 12.h),
             Text(
-              category['name'], // Ekrana çevrilmiş isim yazılır
+              category['name'],
               style: TextStyle(
                 fontSize: 15.sp,
                 letterSpacing: 15.sp * -0.05,
@@ -772,7 +685,6 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
                 Icons.search_off,
@@ -822,139 +734,158 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
     );
   }
 
-  Widget _buildSearchWordCard(Map<String, String> word) {
-    final wordId = word['id']!;
-    final isBookmarked = _bookmarkedWords.contains(wordId);
-    final isPlaying = _playingWordId == wordId;
+  Widget _buildSearchWordCard(Map<String, String> wordData) {
+    final String itemKey = wordData['id'] ?? '';
+    final String categoryKey = wordData['categoryName'] ?? '';
+    final String englishText = wordData['word'] ?? '';
 
-    return GestureDetector(
-      onTap: () {
-        FocusManager.instance.primaryFocus?.unfocus();
-        _addWordToRecentSearches(word);
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    final isPlaying = _playingWordId == itemKey;
+    final isBookmarked = _bookmarkedWords.contains(itemKey);
+
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            color: MyColors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(15.r),
+              topRight: Radius.circular(15.r),
+              bottomLeft: Radius.circular(isPlaying ? 0 : 15.r),
+              bottomRight: Radius.circular(isPlaying ? 0 : 15.r),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                height: 40.w,
+                width: 40.w,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F7F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.history),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      englishText,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        letterSpacing: 16.sp * -0.05,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: MyColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      itemKey.tr(),
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        letterSpacing: 13.sp * -0.05,
+                        fontFamily: 'Montserrat',
+                        fontWeight: FontWeight.w300,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _iconButton(
+                'assets/icons/travelvocabularyseslendirme.svg',
+                const Color(0xFFE0F7F4),
+                const Color(0xFF4ECDC4),
+                () {
+                  _addWordToRecentSearches(wordData);
+                  _playAudio(itemKey, englishText);
+                },
+              ),
+              SizedBox(width: 8.w),
+              _iconButton(
+                'assets/icons/travelvocabularykaydet.svg',
+                isBookmarked
+                    ? const Color(0x3D2989E9)
+                    : const Color(0xFFF3F4F6),
+                isBookmarked
+                    ? const Color(0xFF2989E9)
+                    : const Color(0xFFB0B0B0),
+                () => _toggleWordBookmark(itemKey, categoryKey),
+              ),
+            ],
+          ),
+        ),
+        if (isPlaying)
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            height: 6.h,
+            margin: EdgeInsets.only(bottom: 16.h),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10.r),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFC2D6E1).withOpacity(0.60),
-                  offset: const Offset(0, 2),
-                  blurRadius: 4,
-                  spreadRadius: 0,
-                ),
-              ],
+              color: const Color(0xFFE0E0E0),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(15.r),
+                bottomRight: Radius.circular(15.r),
+              ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  height: 40.w,
-                  width: 40.w,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF4F7F9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.history),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        word['word']!,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          letterSpacing: 12.sp * -0.05,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Montserrat',
-                          color: MyColors.textPrimary,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            word['translation']!,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              letterSpacing: 10.sp * -0.05,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Montserrat',
-                              color: const Color(0xFF96A4B9),
-                            ),
-                          ),
-                          Text(
-                            " • ${word['categoryName']!.tr()}",
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Montserrat',
-                              color: const Color(0xFF4ECDC4),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                GestureDetector(
-                  onTap: () {
-                    _addWordToRecentSearches(word);
-                    _playWordAudio(wordId, word['word']!);
-                  },
-                  child: SvgPicture.asset(
-                    'assets/icons/visualdictionaryses.svg',
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                GestureDetector(
-                  onTap: () {
-                    _addWordToRecentSearches(word);
-                    _toggleWordBookmark(wordId, word['categoryName']!);
-                  },
+            alignment: Alignment.centerLeft,
+            child: AnimatedBuilder(
+              animation: _progressController,
+              builder: (context, child) {
+                return FractionallySizedBox(
+                  widthFactor: _progressController.value,
                   child: Container(
-                    width: 30.w,
-                    height: 30.h,
                     decoration: BoxDecoration(
-                      color: isBookmarked
-                          ? const Color(0xFF2989E9).withOpacity(0.2)
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(5.r),
-                    ),
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'assets/icons/visualdictionarysaved.svg',
-                        width: 12.w,
-                        height: 12.h,
-                        colorFilter: ColorFilter.mode(
-                          isBookmarked
-                              ? const Color(0xFF2989E9)
-                              : const Color(0xFFCBD5E1),
-                          BlendMode.srcIn,
+                      color: const Color(0xFF4ECDC4),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(15.r),
+                        bottomRight: Radius.circular(
+                          _progressController.value > 0.98 ? 15.r : 0,
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
+          )
+        else
+          SizedBox(height: 16.h),
+      ],
+    );
+  }
+
+  Widget _iconButton(
+    String iconPath,
+    Color bgColor,
+    Color iconColor,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40.w,
+        height: 40.h,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10.r),
+        ),
+        child: Center(
+          child: SvgPicture.asset(
+            iconPath,
+            width: 20.w,
+            colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
           ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            height: 3.h,
-            margin: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 12.h),
-            decoration: BoxDecoration(
-              color: isPlaying ? const Color(0xFF4ECDC4) : Colors.transparent,
-              borderRadius: BorderRadius.circular(2.r),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

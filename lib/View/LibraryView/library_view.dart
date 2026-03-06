@@ -36,6 +36,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
       backgroundColor: MyColors.background,
       body: SafeArea(
         bottom: false,
+        top: false,
         child: Stack(
           key: const ValueKey('library_stack'),
           children: [
@@ -51,7 +52,7 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 64.h),
                       Text(
                         LocaleKeys.library_library_collection.tr(),
                         style: TextStyle(

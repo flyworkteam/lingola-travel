@@ -73,16 +73,24 @@ class LibraryRepository extends BaseRepository {
   }
 
   /// Add an item (word or phrase) to a folder
+  /// GÜNCELLENDİ: Artık word ve translation değerlerini de backend'e yolluyoruz.
   Future<ApiResponse<bool>> addItemToFolder({
     required String folderId,
     required String
     itemType, // 'dictionary_word', 'travel_phrase', 'lesson_vocabulary'
     required String itemId,
+    required String word,
+    required String translation,
   }) async {
     try {
       final response = await apiClient.post(
         '/library/folders/$folderId/items',
-        data: {'item_type': itemType, 'item_id': itemId},
+        data: {
+          'item_type': itemType,
+          'item_id': itemId,
+          'word': word,
+          'translation': translation,
+        },
       );
 
       return ApiResponse(
@@ -96,10 +104,13 @@ class LibraryRepository extends BaseRepository {
   }
 
   /// Add a bookmark (without folder)
+  /// GÜNCELLENDİ: Artık word ve translation değerlerini de backend'e yolluyoruz.
   Future<ApiResponse<bool>> addBookmark({
     required String
     itemType, // 'dictionary_word', 'travel_phrase', 'lesson_vocabulary'
     required String itemId,
+    required String word,
+    required String translation,
     String? category,
   }) async {
     try {
@@ -108,6 +119,8 @@ class LibraryRepository extends BaseRepository {
         data: {
           'item_type': itemType,
           'item_id': itemId,
+          'word': word,
+          'translation': translation,
           if (category != null) 'category': category,
         },
       );
@@ -122,7 +135,6 @@ class LibraryRepository extends BaseRepository {
     }
   }
 
-  /// Remove bookmark by item details
   /// Remove bookmark by item details
   Future<ApiResponse<bool>> removeBookmarkByItem({
     required String itemType,
