@@ -46,11 +46,9 @@ class _LibraryFolderDetailViewState
 
   // Favori işlemleri için
   final LibraryRepository _libraryRepository = LibraryRepository();
-  Set<String> _bookmarkedItems = {};
-  static const String _localBookmarksKey = 'lingola_local_bookmarks';
 
-  // SÜREKLİ EKLENMESİNİ ENGELLEYEN KRİTİK DEĞİŞKEN
-  bool _hasSyncedInitialItems = false;
+  List<LibraryItemModel> _localSavedItems = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -65,12 +63,6 @@ class _LibraryFolderDetailViewState
     _ttsService.init();
 
     _loadLocalBookmarks();
-
-    Future.microtask(() {
-      ref
-          .read(libraryFolderItemsControllerProvider(widget.folderId).notifier)
-          .init();
-    });
   }
 
   @override
@@ -80,101 +72,70 @@ class _LibraryFolderDetailViewState
     super.dispose();
   }
 
+  // LibraryFolderDetailView içindeki fonksiyonu bu şekilde güncelleyin:
   Future<void> _loadLocalBookmarks() async {
     try {
+      setState(() => _isLoading = true);
+
       final prefs = await SharedPreferences.getInstance();
-      final String? bookmarksJson = prefs.getString(_localBookmarksKey);
-      if (bookmarksJson != null) {
-        final List<dynamic> decoded = jsonDecode(bookmarksJson);
-        if (mounted) {
-          setState(() => _bookmarkedItems = decoded.cast<String>().toSet());
-        }
+      final String userId = prefs.getString('current_user_id') ?? 'guest_user';
+
+      // ⚡ DÜZELTME: Repository'deki kayıt anahtarı ile aynı olmalı
+      final String key = 'folder_items_${userId}_${widget.folderId}';
+
+      final String? itemsJson = prefs.getString(key);
+
+      List<LibraryItemModel> loadedItems = [];
+
+      if (itemsJson != null) {
+        final List<dynamic> decoded = jsonDecode(itemsJson);
+        loadedItems = decoded
+            .map((json) => LibraryItemModel.fromJson(json))
+            .toList();
+      }
+
+      if (mounted) {
+        setState(() {
+          _localSavedItems = loadedItems;
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      debugPrint('❌ Favori yükleme hatası: $e');
+      debugPrint('❌ Veri yükleme hatası: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  // ⚡ BUTONU ÇALIŞTIRAN ASIL FONKSİYON (GÜNCELLENDİ) ⚡
   Future<void> _toggleBookmark(LibraryItemModel item) async {
-    final String itemId = item.itemId;
-    final bool isCurrentlyBookmarked = _bookmarkedItems.contains(itemId);
-
-    // 1. Optimistic UI (Arayüzü anında güncelle)
     setState(() {
-      if (isCurrentlyBookmarked) {
-        _bookmarkedItems.remove(itemId);
-      } else {
-        _bookmarkedItems.add(itemId);
-      }
+      _localSavedItems.removeWhere((element) => element.itemId == item.itemId);
     });
 
-    bool apiSuccess = false;
+    final response = await _libraryRepository.removeBookmarkByItem(
+      itemType: item.itemType,
+      itemId: item.itemId,
+    );
 
-    try {
-      if (isCurrentlyBookmarked) {
-        // Çıkarıyorsak libraryItemId ile siliyoruz
-        final response = await _libraryRepository.removeItem(
-          item.libraryItemId,
-        );
-        apiSuccess = response.success;
-      } else {
-        // Geri ekliyorsak word ve translation değerleriyle ekliyoruz
-        final response = await _libraryRepository.addItemToFolder(
-          folderId: widget.folderId,
-          itemType: item.itemType,
-          itemId: itemId,
-          word: item.word, // YENİ EKLENDİ
-          translation: item.translation, // YENİ EKLENDİ
-        );
-        apiSuccess = response.success;
-      }
-    } catch (e) {
-      debugPrint('❌ Backend bookmark hatası: $e');
-      apiSuccess = false;
-    }
-
-    if (apiSuccess) {
-      // Sayıları güncelle
-      ref.read(libraryControllerProvider.notifier).loadFolders();
-
-      // Cache'i güncelle
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(
-          _localBookmarksKey,
-          jsonEncode(_bookmarkedItems.toList()),
-        );
-      } catch (e) {}
-
-      // Eğer item'i sildikten sonra geri eklediysek, backend'den ona yeni bir
-      // libraryItemId atandığı için arkaplanda listeyi bir kez tazeliyoruz.
-      if (!isCurrentlyBookmarked) {
-        ref
-            .read(
-              libraryFolderItemsControllerProvider(widget.folderId).notifier,
-            )
-            .refresh();
-      }
-    } else {
-      // Hata durumunda işlemi geri al (Rollback)
+    if (!response.success) {
+      _loadLocalBookmarks();
       if (mounted) {
-        setState(() {
-          if (isCurrentlyBookmarked) {
-            _bookmarkedItems.add(itemId);
-          } else {
-            _bookmarkedItems.remove(itemId);
-          }
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Bağlantı hatası: İşlem gerçekleştirilemedi.'),
+            content: Text('İşlem başarısız oldu.'),
             backgroundColor: Colors.redAccent,
             duration: Duration(seconds: 2),
           ),
         );
       }
+    } else {
+      ref.read(libraryControllerProvider.notifier).loadFolders();
     }
+  }
+
+  void _deleteItem(LibraryItemModel item) async {
+    await _toggleBookmark(item);
   }
 
   String getLocalizedFolderName(String name) {
@@ -197,10 +158,10 @@ class _LibraryFolderDetailViewState
     return name;
   }
 
-  List<LibraryItemModel> _getFilteredItems(List<LibraryItemModel> allItems) {
-    if (_selectedTab == 0) return allItems;
+  List<LibraryItemModel> _getFilteredItems() {
+    if (_selectedTab == 0) return _localSavedItems;
     if (_selectedTab == 1) {
-      return allItems
+      return _localSavedItems
           .where(
             (item) =>
                 item.itemType == 'dictionary_word' ||
@@ -208,21 +169,9 @@ class _LibraryFolderDetailViewState
           )
           .toList();
     }
-    return allItems.where((item) => item.itemType == 'travel_phrase').toList();
-  }
-
-  void _deleteItem(int libraryItemId) async {
-    try {
-      final controller = ref.read(
-        libraryFolderItemsControllerProvider(widget.folderId).notifier,
-      );
-      final success = await controller.removeItem(libraryItemId);
-      if (success) {
-        ref.read(libraryControllerProvider.notifier).loadFolders();
-      }
-    } catch (e) {
-      debugPrint('❌ Error deleting item: $e');
-    }
+    return _localSavedItems
+        .where((item) => item.itemType == 'travel_phrase')
+        .toList();
   }
 
   void _showEditNameDialog() async {
@@ -347,39 +296,15 @@ class _LibraryFolderDetailViewState
 
   @override
   Widget build(BuildContext context) {
-    final folderItemsState = ref.watch(
-      libraryFolderItemsControllerProvider(widget.folderId),
-    );
-    final allItems = folderItemsState.items;
-    final filteredItems = _getFilteredItems(allItems);
-
-    if (!folderItemsState.isLoading &&
-        allItems.isNotEmpty &&
-        !_hasSyncedInitialItems) {
-      _hasSyncedInitialItems = true;
-      bool needUpdate = false;
-      for (var item in allItems) {
-        if (!_bookmarkedItems.contains(item.itemId)) {
-          _bookmarkedItems.add(item.itemId);
-          needUpdate = true;
-        }
-      }
-      if (needUpdate) {
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setString(
-            _localBookmarksKey,
-            jsonEncode(_bookmarkedItems.toList()),
-          );
-        });
-      }
-    }
+    final filteredItems = _getFilteredItems();
 
     return Scaffold(
       backgroundColor: MyColors.background,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: Column(
               children: [
                 // Header
                 Padding(
@@ -539,7 +464,7 @@ class _LibraryFolderDetailViewState
 
                 // Items list
                 Expanded(
-                  child: folderItemsState.isLoading
+                  child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
                             color: Color(0xFF4ECDC4),
@@ -567,17 +492,12 @@ class _LibraryFolderDetailViewState
                 ),
               ],
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 8.h,
-              child: CustomBottomNavBar(
-                currentIndex: 2,
-                isPremium: widget.isPremium,
-              ),
-            ),
-          ],
-        ),
+          ),
+
+          // ⚡ HATA BURADA DÜZELTİLDİ: Positioned kaldırıldı! ⚡
+          // CustomBottomNavBar kendi içinde ayarını yapıyor.
+          CustomBottomNavBar(currentIndex: 2, isPremium: widget.isPremium),
+        ],
       ),
     );
   }
@@ -669,8 +589,6 @@ class _LibraryFolderDetailViewState
   }
 
   Widget _buildItemCard(LibraryItemModel item, bool isPlaying) {
-    final isBookmarked = _bookmarkedItems.contains(item.itemId);
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -748,18 +666,14 @@ class _LibraryFolderDetailViewState
                               width: 40.w,
                               height: 40.h,
                               decoration: BoxDecoration(
-                                color: isBookmarked
-                                    ? const Color(0x3D2989E9)
-                                    : const Color(0xFFF3F4F6),
+                                color: const Color(0x3D2989E9),
                                 borderRadius: BorderRadius.circular(5.r),
                               ),
                               padding: EdgeInsets.all(10.w),
                               child: SvgPicture.asset(
                                 'assets/icons/travelvocabularykaydet.svg',
-                                colorFilter: ColorFilter.mode(
-                                  isBookmarked
-                                      ? const Color(0xFF2989E9)
-                                      : const Color(0xFFB0B0B0),
+                                colorFilter: const ColorFilter.mode(
+                                  Color(0xFF2989E9),
                                   BlendMode.srcIn,
                                 ),
                               ),
@@ -797,7 +711,7 @@ class _LibraryFolderDetailViewState
             top: -8.w,
             left: 4.w,
             child: GestureDetector(
-              onTap: () => _deleteItem(item.libraryItemId),
+              onTap: () => _deleteItem(item),
               child: Container(
                 width: 24.w,
                 height: 24.w,

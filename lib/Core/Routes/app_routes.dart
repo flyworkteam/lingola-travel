@@ -62,7 +62,6 @@ class AppRoutes {
 
   // Route Generator
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    // TODO: Implement actual route generation with proper widgets
     // For now, return a placeholder
     return MaterialPageRoute(
       builder: (_) => Scaffold(
@@ -83,8 +82,6 @@ class AppRoutes {
       dailyGoalSelection: (context) => const DailyGoalSelectionView(),
       creatingPlan: (context) => const CreatingPlanView(),
       home: (context) => const HomeView(), // Free version (default)
-      // TODO: Add more routes as views are created
-      // etc.
     };
   }
 }
