@@ -65,6 +65,7 @@ class _DailyGoalSelectionViewState
       ref
           .read(onboardingControllerProvider.notifier)
           .setDailyGoal(_selectedGoal!, dailyGoalMinutes);
+      ref.read(onboardingControllerProvider.notifier).saveOnboarding();
 
       Navigator.pushNamed(context, AppRoutes.creatingPlan);
     }

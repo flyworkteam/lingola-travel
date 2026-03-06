@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -5,20 +7,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lingola_travel/Core/Localization/localization_manager.dart';
 import 'package:lingola_travel/Core/Utils/future_extensions.dart';
 import 'package:lingola_travel/Models/language_model.dart';
+import 'package:lingola_travel/Services/auth_service.dart';
+import 'package:lingola_travel/Services/bunny_cdn_service.dart';
 import 'package:lingola_travel/generated/locale_keys.g.dart';
 
 import '../../Models/language.dart';
 import '../../Repositories/notification_repository.dart';
 import '../../Repositories/profile_repository.dart';
-import '../../Riverpod/Providers/selected_language_provider.dart';
 import '../../Services/onesignal_service.dart';
 import '../../Services/secure_storage_service.dart';
-
-// DİKKAT: localizationManagerProvider'ı tanımladığın dosyayı kendi projenin yoluna göre buraya ekle
-// import '../../Riverpod/Providers/localization_manager.dart';
 
 class ProfileSettingsView extends ConsumerStatefulWidget {
   const ProfileSettingsView({super.key});
@@ -32,6 +33,9 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   final ProfileRepository _profileRepository = ProfileRepository();
 
   bool _isLoading = true;
+  bool _isPhotoUploading = false;
+  bool _isLangInitialized = false;
+  bool _isDeleting = false; // Silme işlemi için yükleme durumu
 
   String _selectedGender = 'Male';
   late Language _selectedLanguage;
@@ -43,16 +47,28 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   @override
   void initState() {
     super.initState();
-    _initDefaultLanguage();
-    _loadProfile();
+    Future.microtask(() {
+      _loadProfile();
+    });
   }
 
-  void _initDefaultLanguage() {
-    final currentLocaleCode = Intl.getCurrentLocale().split('_')[0];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isLangInitialized) {
+      final currentLocaleCode = context.locale.languageCode;
+      _selectedLanguage = AppLanguages.all.firstWhere(
+        (lang) => lang.code == currentLocaleCode,
+        orElse: () => AppLanguages.all.first,
+      );
+      _isLangInitialized = true;
+    }
+  }
 
-    _selectedLanguage = AppLanguages.all.firstWhere(
-      (lang) => lang.code == currentLocaleCode,
-      orElse: () => AppLanguages.all.first,
+  Locale _getLocaleFromCode(String code) {
+    return LocalizationManager.supportedLocales.firstWhere(
+      (locale) => locale.languageCode == code,
+      orElse: () => LocalizationManager.defaultLocale,
     );
   }
 
@@ -72,18 +88,8 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
           _ageController.text = userData['age'].toString();
         if (userData['gender'] != null) _selectedGender = userData['gender'];
 
-        final targetLanguageCode = userData['target_language'] as String?;
-        Language? foundLanguage;
-        if (targetLanguageCode != null) {
-          foundLanguage = AppLanguages.all.firstWhere(
-            (lang) => lang.code == targetLanguageCode,
-            orElse: () => _selectedLanguage,
-          );
-        }
-
         if (mounted) {
           setState(() {
-            if (foundLanguage != null) _selectedLanguage = foundLanguage;
             _isLoading = false;
           });
         }
@@ -92,6 +98,65 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (pickedFile != null) {
+      setState(() => _isPhotoUploading = true);
+
+      try {
+        File imageFile = File(pickedFile.path);
+        final bunnyService = BunnyCdnService();
+        final uploadedUrl = await bunnyService.uploadImage(imageFile);
+
+        if (uploadedUrl != null) {
+          final response = await _profileRepository.updateProfile(
+            photoUrl: uploadedUrl,
+          );
+
+          if (response.success) {
+            setState(() {
+              _userPhotoUrl = uploadedUrl;
+            });
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profil fotoğrafı güncellendi!'),
+                  backgroundColor: Color(0xFF4ECDC4),
+                ),
+              );
+            }
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Fotoğraf CDN\'e yüklenemedi.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bir hata oluştu.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isPhotoUploading = false);
+      }
     }
   }
 
@@ -177,8 +242,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
-  // --- Helper Widgets ---
-
   Widget _buildAppBar(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
@@ -226,18 +289,28 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                   border: Border.all(color: const Color(0xFF4ECDC4), width: 3),
                 ),
                 child: ClipOval(
-                  child: _userPhotoUrl != null && _userPhotoUrl!.isNotEmpty
-                      ? Image.network(
-                          _userPhotoUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildDefaultAvatar(),
+                  child: _isPhotoUploading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF4ECDC4),
+                          ),
                         )
-                      : _buildDefaultAvatar(),
+                      : (_userPhotoUrl != null && _userPhotoUrl!.isNotEmpty
+                            ? Image.network(
+                                _userPhotoUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    _buildDefaultAvatar(),
+                              )
+                            : _buildDefaultAvatar()),
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  _isPhotoUploading
+                      ? null
+                      : _pickAndUploadImage().withLoading(context);
+                },
                 child: Container(
                   padding: EdgeInsets.all(6.w),
                   decoration: BoxDecoration(
@@ -407,6 +480,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
+        height: 50,
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(vertical: 14.h),
         decoration: BoxDecoration(
@@ -456,8 +530,8 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 56.w,
-        height: 56.w,
+        width: 50.w,
+        height: 50.w,
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : const Color(0xFFFAFAFA),
           borderRadius: BorderRadius.circular(14.r),
@@ -635,7 +709,9 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _saveProfile().withLoading(context),
+          onTap: _isPhotoUploading
+              ? null
+              : () => _saveProfile().withLoading(context),
           borderRadius: BorderRadius.circular(16.r),
           child: Center(
             child: Text(
@@ -668,33 +744,17 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
-  // --- Yeni eklenen yardımcı fonksiyon ---
-  Locale _getLocaleFromCode(String code) {
-    return LocalizationManager.supportedLocales.firstWhere(
-      (locale) => locale.languageCode == code,
-      orElse: () => LocalizationManager.defaultLocale,
-    );
-  }
-
-  // --- Güncellenen _saveProfile fonksiyonu ---
   Future<void> _saveProfile() async {
-    await _profileRepository.updateProfile(name: _nameController.text.trim());
-    final langResult = await _profileRepository.saveOnboarding(
-      targetLanguage: _selectedLanguage.code,
+    final response = await _profileRepository.updateProfile(
+      name: _nameController.text.trim(),
     );
 
-    if (langResult.success) {
-      // 1. Riverpod state'ini güncelle
-      ref.read(selectedLanguageProvider.notifier).state =
-          _selectedLanguage.code;
-
-      // 2. Uygulamanın UI dilini değiştir
+    if (response.success) {
       final newLocale = _getLocaleFromCode(_selectedLanguage.code);
       await ref
           .read(localizationManagerProvider.notifier)
           .changeLanguage(context, newLocale);
 
-      // 3. Başarılı olduğuna dair bilgi mesajı
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -703,71 +763,185 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
           ),
         );
       }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.error?.message ?? 'Bir hata oluştu'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
+  // BURASI GÜNCELLENDİ: Logout dialogu yapısına birebir uyumlu Delete Dialog
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          backgroundColor: const Color(0xFFFFF5F5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.r),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(28.w),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.delete_forever_rounded,
-                  color: const Color(0xFFE57373),
-                  size: 50.sp,
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 320.w,
+                padding: EdgeInsets.all(32.w),
+                decoration: BoxDecoration(
+                  color: const Color(
+                    0xFFFEF4F4,
+                  ), // Logout'taki kırmızımsı arka plan
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF000000).withOpacity(0.25),
+                      offset: const Offset(0, 0),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 16.h),
-                Text(
-                  LocaleKeys.profile_delete_dialog_title.tr(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 75.w,
+                      height: 75.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/deleteaccount.svg',
+                          width: 48.w, // İkon boyutu
+                          height: 48.w,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    Text(
+                      LocaleKeys.profile_delete_dialog_title.tr(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: const Color(0xFF000000),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    Text(
+                      LocaleKeys.profile_delete_dialog_subtitle.tr(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Montserrat',
+                        color: const Color(0xFF4B5563),
+                        height: 1.4,
+                      ),
+                    ),
+                    SizedBox(height: 32.h),
+                    GestureDetector(
+                      onTap: _isDeleting
+                          ? null
+                          : () async {
+                              setStateDialog(() => _isDeleting = true);
+                              await _deleteAccount();
+                              if (mounted)
+                                setStateDialog(() => _isDeleting = false);
+                            },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE63D4F), // Kırmızı buton
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              'assets/icons/cop.svg',
+                              width: 20.w, // İkon boyutu
+                              height: 20.w,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              LocaleKeys.profile_delete_dialog_confirm.tr(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Montserrat',
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    GestureDetector(
+                      onTap: _isDeleting ? null : () => Navigator.pop(context),
+                      child: Text(
+                        LocaleKeys.profile_delete_dialog_cancel.tr(),
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Montserrat',
+                          color: const Color(0xFF4ECDC4),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 32.h),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _deleteAccount().withLoading(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE63D4F),
-                  ),
-                  child: Text(
-                    LocaleKeys.profile_delete_dialog_confirm.tr(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(LocaleKeys.profile_delete_dialog_cancel.tr()),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
+  // BURASI GÜNCELLENDİ: İşlem başarısız olursa error gösterilecek.
   Future<void> _deleteAccount() async {
     final playerId = await OneSignalService().getPlayerId();
     if (playerId != null) {
       await NotificationRepository().unregisterDevice(playerId);
     }
     await OneSignalService().removeExternalUserId();
+
     final response = await _profileRepository.deleteAccount();
+
     if (response.success) {
       await SecureStorageService().clearUserData();
+
+      try {
+        final authService = AuthService();
+        await authService.signOutAll();
+      } catch (e) {
+        debugPrint('Error signing out from social providers: $e');
+      }
+
       if (mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/signIn', (route) => false);
+      }
+    } else {
+      // Backend hesabı SİLEMEDİĞİ İÇİN ekrana hata basıyoruz.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              response.error?.message ??
+                  'Hesap silinemedi. Lütfen tekrar deneyin.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

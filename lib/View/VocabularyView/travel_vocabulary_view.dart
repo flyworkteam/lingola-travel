@@ -298,11 +298,12 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-        
+
       title: Text(
         LocaleKeys.travel_vocabulary_title.tr(),
         style: TextStyle(
           fontSize: 20.sp,
+          letterSpacing: 20.sp * -0.05,
           fontWeight: FontWeight.w700,
           fontFamily: 'Montserrat',
           color: MyColors.textPrimary,
@@ -313,17 +314,31 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
   }
 
   Widget _buildSearchBar() {
+    const shadowColor = Color(0xFFC2D6E1);
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Container(
         height: 48.h,
         decoration: BoxDecoration(
           color: MyColors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: MyColors.border, width: 1),
+          borderRadius: BorderRadius.circular(
+            10.r,
+          ), // Tasarımdaki gibi 10.r yapıldı
+          // Border kaldırıldı, yerine tasarımdaki gölge (BoxShadow) eklendi
+          boxShadow: [
+            BoxShadow(
+              color: shadowColor.withOpacity(0.5),
+              blurRadius: 4.r,
+              spreadRadius: 0.r,
+              offset: Offset(0, 2.h),
+            ),
+          ],
         ),
         child: TextField(
           controller: _searchController,
+          textAlignVertical:
+              TextAlignVertical.center, // İmleci ve metni dikeyde ortalar
           style: TextStyle(
             fontSize: 14.sp,
             fontFamily: 'Montserrat',
@@ -338,14 +353,29 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
               fontFamily: 'Montserrat',
               color: MyColors.textSecondary,
             ),
-            prefixIcon: Icon(
-              Icons.search,
-              color: MyColors.textSecondary,
-              size: 20.sp,
+            isDense: true, // TextField'ın varsayılan iç boşluklarını temizler
+            prefixIconConstraints: BoxConstraints(
+              minWidth: 40.w,
+              minHeight: 48
+                  .h, // Container yüksekliği ile eşitleyerek ikonu dikeyde ortalar
+            ),
+            prefixIcon: Padding(
+              padding: EdgeInsets.only(left: 12.w, right: 8.w),
+              // Tasarımdaki özel arama ikonunu (scope.svg) ekledik
+              // Eğer normal ikon kullanmak istersen: Icon(Icons.search, color: MyColors.textSecondary, size: 20.sp) ile değiştirebilirsin.
+              child: SvgPicture.asset(
+                'assets/icons/scope.svg',
+                width: 18.w,
+                height: 18.h,
+                fit: BoxFit.contain,
+              ),
             ),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+            contentPadding: EdgeInsets.only(
+              right: 12.w,
+            ), // Dikey padding'i kaldırdık, sadece sağdan boşluk verdik
           ),
+          cursorColor: MyColors.lingolaPrimaryColor,
         ),
       ),
     );
@@ -631,7 +661,7 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          margin: EdgeInsets.only(bottom: 0),
+          margin: EdgeInsets.only(bottom: 0, top: 0),
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           decoration: BoxDecoration(
             color: MyColors.white,
@@ -718,7 +748,6 @@ class _TravelVocabularyViewState extends ConsumerState<TravelVocabularyView> {
                   ),
                 ],
               ),
-              SizedBox(height: 4.h),
               Text(
                 translatedText,
                 style: TextStyle(

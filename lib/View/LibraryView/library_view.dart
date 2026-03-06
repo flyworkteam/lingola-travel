@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
 import 'package:lingola_travel/Riverpod/Controllers/library_controller.dart';
 import 'package:lingola_travel/Widgets/Common/custom_bottom_nav_bar.dart';
@@ -145,22 +146,29 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
 
     String getFolderIcon(String folderName) {
       final nameLower = folderName.toLowerCase();
-      if (nameLower.contains('airport')) return 'assets/icons/airport.png';
-      if (nameLower.contains('hotel')) return 'assets/icons/accommodation.png';
-      if (nameLower.contains('transport'))
-        return 'assets/icons/transportation.png';
-      if (nameLower.contains('food')) return 'assets/icons/food_drink.png';
-      if (nameLower.contains('shopping')) return 'assets/icons/shopping.png';
-      if (nameLower.contains('culture')) return 'assets/icons/culture.png';
-      if (nameLower.contains('meeting')) return 'assets/icons/meeting.png';
-      if (nameLower.contains('sport')) return 'assets/icons/sport.png';
-      if (nameLower.contains('health')) return 'assets/icons/health.png';
+
+      if (nameLower.contains('general'))
+        return 'assets/images/home/general.png';
+      if (nameLower.contains('travel')) return 'assets/icons/airport.svg';
+      if (nameLower.contains('accommodation')) return 'assets/icons/acc.svg';
+      if (nameLower.contains('food')) return 'assets/icons/ffff.svg';
+      if (nameLower.contains('culture')) return 'assets/icons/culture.svg';
+      if (nameLower.contains('shopping')) return 'assets/icons/shopping.svg';
+      if (nameLower.contains('direction'))
+        return 'assets/images/home/direction.png';
+      if (nameLower.contains('sport')) return 'assets/icons/sport.svg';
+      if (nameLower.contains('health')) return 'assets/icons/health.svg';
       if (nameLower.contains('business')) return 'assets/icons/business.png';
-      return 'assets/icons/airport.png';
+      if (nameLower.contains('emergency'))
+        return 'assets/images/home/emergency.png';
+
+      return 'assets/icons/airport.svg';
     }
 
     final folderColor = parseColor(folder.color);
-    final folderIcon = folder.icon ?? getFolderIcon(folder.name);
+
+    // Veritabanından gelen icon path'i varsa onu, yoksa isme göre eşleşeni kullan.
+    String folderIcon = folder.icon ?? getFolderIcon(folder.name);
 
     return GestureDetector(
       onTap: () async {
@@ -180,17 +188,17 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
         }
       },
       child: Container(
-        width: double.infinity, // KARTIN GENİŞLİĞİNİ SABİTLEDİK
+        width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(15.r), // Figma Corner Radius
+          borderRadius: BorderRadius.circular(15.r),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFC2D6E1).withOpacity(0.6),
-              blurRadius: 4, // Figma Blur
-              offset: const Offset(0, 2), // Figma X:0, Y:2
-              spreadRadius: 0, // Figma Spread
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+              spreadRadius: 0,
             ),
           ],
         ),
@@ -215,7 +223,6 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
                     children: [
                       _buildIconBox(folderColor, folderIcon),
                       SizedBox(width: 8.w),
-                      // Yatay kartta metnin taşmasını engellemek için Expanded
                       Expanded(child: _buildFolderName(folder.name)),
                     ],
                   ),
@@ -227,23 +234,34 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
     );
   }
 
-  Widget _buildIconBox(Color color, String icon) {
+  Widget _buildIconBox(Color color, String iconPath) {
+    final bool isSvg = iconPath.toLowerCase().endsWith('.svg');
+
     return Container(
       width: 36.w,
       height: 36.w,
+      padding: EdgeInsets.all(6.w),
       decoration: BoxDecoration(
         color: color.withOpacity(0.3),
         borderRadius: BorderRadius.circular(10.r),
       ),
-      child: Center(child: Image.asset(icon, fit: BoxFit.contain)),
+      child: Center(
+        child: isSvg
+            ? SvgPicture.asset(iconPath, fit: BoxFit.contain)
+            : Image.asset(
+                iconPath,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              ),
+      ),
     );
   }
 
   Widget _buildFolderName(String name) {
     return Text(
       _getLocalizedFolderName(name),
-      maxLines: 2, // EN FAZLA 2 SATIR OLSUN
-      overflow: TextOverflow.ellipsis, // TAŞARSA SONUNA 3 NOKTA KOYSUN
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
       style: TextStyle(
         fontSize: 15.sp,
         letterSpacing: 15.sp * -0.05,
@@ -281,31 +299,23 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
     );
   }
 
-  // BURASI GÜNCELLENDİ: İçinde "airport" geçen her şeyi değil,
-  // sadece varsayılan isimleri çevirecek. Özel bir isimse aynen bırakacak.
   String _getLocalizedFolderName(String name) {
     final n = name.trim().toLowerCase();
 
-    if (n == 'my airport essentials' || n == 'airport essentials')
-      return LocaleKeys.library_folder_airport.tr();
-    if (n == 'my hotel essentials' || n == 'hotel essentials')
-      return LocaleKeys.library_folder_hotel.tr();
-    if (n == 'transport essentials')
-      return LocaleKeys.library_folder_transport.tr();
-    if (n == 'my food essentials' || n == 'food essentials')
-      return LocaleKeys.library_folder_food.tr();
-    if (n == 'my shopping essentials' || n == 'shopping essentials')
-      return LocaleKeys.library_folder_shopping.tr();
-    if (n == 'culture essentials')
-      return LocaleKeys.library_folder_culture.tr();
-    if (n == 'meeting essentials')
-      return LocaleKeys.library_folder_meeting.tr();
-    if (n == 'sport essentials') return LocaleKeys.library_folder_sport.tr();
-    if (n == 'health essentials') return LocaleKeys.library_folder_health.tr();
-    if (n == 'business essentials')
-      return LocaleKeys.library_folder_business.tr();
+    if (n == 'general essentials') return LocaleKeys.home_catGeneral.tr();
+    if (n == 'travel essentials') return LocaleKeys.home_catTravel.tr();
+    if (n == 'accommodation essentials')
+      return LocaleKeys.home_catAccommodation.tr();
+    if (n == 'food & drink essentials')
+      return LocaleKeys.home_catFoodAndDrink.tr();
+    if (n == 'culture essentials') return LocaleKeys.home_catCulture.tr();
+    if (n == 'shopping essentials') return LocaleKeys.home_catShop.tr();
+    if (n == 'direction essentials') return LocaleKeys.home_catDirection.tr();
+    if (n == 'sport essentials') return LocaleKeys.home_catSport.tr();
+    if (n == 'health essentials') return LocaleKeys.home_catHealth.tr();
+    if (n == 'business essentials') return LocaleKeys.home_catBusiness.tr();
+    if (n == 'emergency essentials') return LocaleKeys.home_catEmergency.tr();
 
-    // Özel isimse olduğu gibi döndür
     return name;
   }
 
@@ -313,30 +323,24 @@ class _LibraryViewState extends ConsumerState<LibraryView> {
     final now = DateTime.now();
     final difference = now.difference(date);
 
-    // Bugün ve Dün kontrolleri
     if (difference.inDays == 0) return LocaleKeys.library_today.tr();
     if (difference.inDays == 1) return LocaleKeys.library_yesterday.tr();
 
     String timeValue;
 
     if (difference.inDays < 7) {
-      // Gün: "Updated 5d ago"
       timeValue = '${difference.inDays}${LocaleKeys.library_unit_day.tr()}';
     } else if (difference.inDays < 30) {
-      // Hafta: "Updated 2w ago"
       timeValue =
           '${(difference.inDays / 7).floor()}${LocaleKeys.library_unit_week.tr()}';
     } else if (difference.inDays < 365) {
-      // Ay: "Updated 3mo ago"
       timeValue =
           '${(difference.inDays / 30).floor()}${LocaleKeys.library_unit_month.tr()}';
     } else {
-      // Yıl: "Updated 1y ago"
       timeValue =
           '${(difference.inDays / 365).floor()}${LocaleKeys.library_unit_year.tr()}';
     }
 
-    // Ana kalıba argüman olarak gönderiyoruz
     return LocaleKeys.library_library_updated.tr(args: [timeValue]);
   }
 }

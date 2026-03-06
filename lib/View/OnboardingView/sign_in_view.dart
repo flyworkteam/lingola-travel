@@ -11,10 +11,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lingola_travel/Core/Routes/app_routes.dart';
 import 'package:lingola_travel/Core/Utils/future_extensions.dart';
 import 'package:lingola_travel/generated/locale_keys.g.dart';
-import 'package:lingola_travel/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../Core/Theme/my_colors.dart';
+import '../../Models/user_model.dart';
 import '../../Repositories/auth_repository.dart';
 import '../../Repositories/notification_repository.dart';
 import '../../Services/auth_service.dart';
@@ -35,13 +35,11 @@ class _SignInViewState extends ConsumerState<SignInView> {
   final NotificationRepository _notificationRepository =
       NotificationRepository();
 
-  // Separate loading states for each button
   bool _isGoogleLoading = false;
   bool _isAppleLoading = false;
-  bool _isFacebookLoading = false;
+  // final bool _isFacebookLoading = false;
   bool _isGuestLoading = false;
 
-  // Gesture recognizers for policy links
   late TapGestureRecognizer _termsRecognizer;
   late TapGestureRecognizer _privacyRecognizer;
 
@@ -73,218 +71,204 @@ class _SignInViewState extends ConsumerState<SignInView> {
     super.dispose();
   }
 
-  /// Register user device for push notifications
   Future<void> _registerUserDevice(String userId) async {
     try {
-      // Set OneSignal external user ID
       await OneSignalService().setExternalUserId(userId);
-
-      // Get OneSignal player ID
       final playerId = await OneSignalService().getPlayerId();
 
       if (playerId != null && playerId.isNotEmpty) {
-        // Register device to backend
         await _notificationRepository.registerDevice(
           playerId: playerId,
           platform: Platform.isIOS ? 'ios' : 'android',
         );
-        print('✅ Device registered for push notifications');
+        debugPrint('✅ Device registered for push notifications');
       }
     } catch (e) {
-      print('⚠️ Device registration error: $e');
+      debugPrint('⚠️ Device registration error: $e');
     }
   }
 
-  /// Handle Google Sign In
-  // DİKKAT: Future<void> yerine Future<bool> döndürüyoruz ki success durumunu bilelim
-  Future<bool> _handleGoogleSignIn() async {
-    if (_isGoogleLoading) return false;
+  /// Ortak yönlendirme fonksiyonu: Kullanıcının kaydı varsa Home'a, yoksa Onboarding'e atar.
+  void _routeBasedOnUserStatus(BuildContext context, UserModel user) {
+    // Tüm onboarding alanlarını kontrol ediyoruz
+    final bool hasLanguage =
+        user.targetLanguage != null &&
+        user.targetLanguage != 'null' &&
+        user.targetLanguage!.trim().isNotEmpty;
+    final bool hasLevel =
+        user.englishLevel != null &&
+        user.englishLevel != 'null' &&
+        user.englishLevel!.trim().isNotEmpty;
+    final bool hasGoal =
+        user.dailyGoal != null &&
+        user.dailyGoal != 'null' &&
+        user.dailyGoal!.trim().isNotEmpty;
+    final bool hasProfession =
+        user.profession != null &&
+        user.profession != 'null' &&
+        user.profession!.trim().isNotEmpty;
 
+    // Herhangi bir onboarding verisi varsa süreç tamamlanmış sayılır
+    final bool hasCompletedOnboarding =
+        hasLanguage || hasLevel || hasGoal || hasProfession;
+
+    debugPrint(
+      '✅ Onboarding Status: $hasCompletedOnboarding | Lang: $hasLanguage, Level: $hasLevel, Goal: $hasGoal, Prof: $hasProfession',
+    );
+
+    if (!context.mounted) return;
+
+    if (hasCompletedOnboarding) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else {
+      Navigator.pushReplacementNamed(context, AppRoutes.languageSelection);
+    }
+  }
+
+  Future<UserModel?> _handleGoogleSignIn() async {
+    if (_isGoogleLoading) return null;
     setState(() => _isGoogleLoading = true);
 
     try {
-      // Sign in with Google
       final googleResult = await _authService.signInWithGoogle();
-
-      if (!mounted) return false;
+      if (!mounted) return null;
 
       if (!googleResult.success) {
         if (googleResult.errorMessage != null) {
           _showErrorMessage(googleResult.errorMessage!);
         }
         setState(() => _isGoogleLoading = false);
-        return false;
+        return null;
       }
 
-      // Login to backend with Google ID token
       final authResult = await _authRepository.loginWithGoogle(
         googleResult.idToken!,
       );
 
-      if (!mounted) return false;
+      if (!mounted) return null;
 
-      if (authResult.success && authResult.accessToken != null) {
-        // Save tokens and user data
+      if (authResult.success &&
+          authResult.accessToken != null &&
+          authResult.user != null) {
         await _secureStorage.saveAccessToken(authResult.accessToken!);
         if (authResult.refreshToken != null) {
           await _secureStorage.saveRefreshToken(authResult.refreshToken!);
         }
-        if (authResult.user?.id != null) {
-          await _secureStorage.saveUserId(authResult.user!.id);
-          // Register device for push notifications
-          await _registerUserDevice(authResult.user!.id);
-        }
+        await _secureStorage.saveUserId(authResult.user!.id);
+        await _registerUserDevice(authResult.user!.id);
 
-        // Başarılı olduğunu söylüyoruz, yönlendirmeyi butonda yapacağız
-        return true;
+        return authResult.user;
       } else {
         _showErrorMessage(
           authResult.errorMessage ?? LocaleKeys.login_failed.tr(),
         );
-        return false;
+        return null;
       }
     } catch (e) {
-      if (mounted) {
-        _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
-      }
-      return false;
+      if (mounted) _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
+      return null;
     } finally {
-      if (mounted) {
-        setState(() => _isGoogleLoading = false);
-      }
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
-  /// Handle Apple Sign In
-  Future<bool> _handleAppleSignIn() async {
-    if (_isAppleLoading) return false;
-
+  Future<UserModel?> _handleAppleSignIn() async {
+    if (_isAppleLoading) return null;
     setState(() => _isAppleLoading = true);
 
     try {
-      // Sign in with Apple
       final appleResult = await _authService.signInWithApple();
-
-      if (!mounted) return false;
+      if (!mounted) return null;
 
       if (!appleResult.success) {
         if (appleResult.errorMessage != null) {
           _showErrorMessage(appleResult.errorMessage!);
         }
         setState(() => _isAppleLoading = false);
-        return false;
+        return null;
       }
 
-      // Login to backend with Apple identity token
       final authResult = await _authRepository.loginWithApple(
         appleResult.identityToken!,
       );
 
-      if (!mounted) return false;
+      if (!mounted) return null;
 
-      if (authResult.success && authResult.accessToken != null) {
-        // Save tokens and user data
+      if (authResult.success &&
+          authResult.accessToken != null &&
+          authResult.user != null) {
         await _secureStorage.saveAccessToken(authResult.accessToken!);
         if (authResult.refreshToken != null) {
           await _secureStorage.saveRefreshToken(authResult.refreshToken!);
         }
-        if (authResult.user?.id != null) {
-          await _secureStorage.saveUserId(authResult.user!.id);
-          // Register device for push notifications
-          await _registerUserDevice(authResult.user!.id);
-        }
+        await _secureStorage.saveUserId(authResult.user!.id);
+        await _registerUserDevice(authResult.user!.id);
 
-        return true;
+        return authResult.user;
       } else {
         _showErrorMessage(
           authResult.errorMessage ?? LocaleKeys.login_failed.tr(),
         );
-        return false;
+        return null;
       }
     } catch (e) {
-      if (mounted) {
-        _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
-      }
-      return false;
+      if (mounted) _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
+      return null;
     } finally {
-      if (mounted) {
-        setState(() => _isAppleLoading = false);
-      }
+      if (mounted) setState(() => _isAppleLoading = false);
     }
   }
 
-  /// Handle Facebook Sign In
-  Future<bool> _handleFacebookSignIn() async {
-    if (_isFacebookLoading) return false;
+  // Future<UserModel?> _handleFacebookSignIn() async {
+  //   if (_isFacebookLoading) return null;
+  //   setState(() => _isFacebookLoading = true);
 
-    setState(() => _isFacebookLoading = true);
+  //   try {
+  //     final facebookResult = await _authService.signInWithFacebook();
+  //     if (!mounted) return null;
 
-    try {
-      // Sign in with Facebook
-      final facebookResult = await _authService.signInWithFacebook();
+  //     if (!facebookResult.success) {
+  //       if (facebookResult.errorMessage != null) {
+  //         _showErrorMessage(facebookResult.errorMessage!);
+  //       }
+  //       setState(() => _isFacebookLoading = false);
+  //       return null;
+  //     }
 
-      if (!mounted) return false;
+  //     final authResult = await _authRepository.loginWithFacebook(
+  //       facebookResult.accessToken!,
+  //     );
 
-      if (!facebookResult.success) {
-        if (facebookResult.errorMessage != null) {
-          _showErrorMessage(facebookResult.errorMessage!);
-        }
-        setState(() => _isFacebookLoading = false);
-        return false;
-      }
+  //     if (!mounted) return null;
 
-      // Login to backend with Facebook access token
-      final authResult = await _authRepository.loginWithFacebook(
-        facebookResult.accessToken!,
-      );
+  //     if (authResult.success &&
+  //         authResult.accessToken != null &&
+  //         authResult.user != null) {
+  //       await _secureStorage.saveAccessToken(authResult.accessToken!);
+  //       if (authResult.refreshToken != null) {
+  //         await _secureStorage.saveRefreshToken(authResult.refreshToken!);
+  //       }
+  //       await _secureStorage.saveUserId(authResult.user!.id);
+  //       await _registerUserDevice(authResult.user!.id);
 
-      if (!mounted) return false;
+  //       return authResult.user;
+  //     } else {
+  //       _showErrorMessage(
+  //         authResult.errorMessage ?? LocaleKeys.login_failed.tr(),
+  //       );
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     if (mounted)
+  //       _showErrorMessage('${LocaleKeys.error_occurred.tr()} (Facebook): $e');
+  //     return null;
+  //   } finally {
+  //     if (mounted) setState(() => _isFacebookLoading = false);
+  //   }
+  // }
 
-      if (authResult.success && authResult.accessToken != null) {
-        // Save tokens and user data
-        await _secureStorage.saveAccessToken(authResult.accessToken!);
-        if (authResult.refreshToken != null) {
-          await _secureStorage.saveRefreshToken(authResult.refreshToken!);
-        }
-        if (authResult.user?.id != null) {
-          await _secureStorage.saveUserId(authResult.user!.id);
-          // Register device for push notifications
-          await _registerUserDevice(authResult.user!.id);
-        }
-
-        return true;
-      } else {
-        _showErrorMessage(
-          authResult.errorMessage ?? LocaleKeys.login_failed.tr(),
-        );
-        return false;
-      }
-    } catch (e) {
-      if (mounted) {
-        _showErrorMessage('${LocaleKeys.error_occurred.tr()} (Facebook): $e');
-        print('❌ Facebook auth error: $e');
-      }
-      return false;
-    } finally {
-      if (mounted) {
-        setState(() => _isFacebookLoading = false);
-      }
-    }
-  }
-
-  /// Show error message
-  void _showErrorMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: GoogleFonts.montserrat(fontSize: 14.sp)),
-        backgroundColor: MyColors.error,
-      ),
-    );
-  }
-
-  /// Handle guest login
- Future<bool> _handleGuestLogin() async {
-    if (_isGuestLoading) return false;
+  Future<UserModel?> _handleGuestLogin() async {
+    if (_isGuestLoading) return null;
     setState(() => _isGuestLoading = true);
 
     try {
@@ -301,54 +285,42 @@ class _SignInViewState extends ConsumerState<SignInView> {
         deviceId = 'unknown-device';
       }
 
-      // Backend isteği
       final result = await _authRepository.loginAnonymously(deviceId);
+      if (!mounted) return null;
 
-      if (!mounted) return false;
-
-      if (result.success && result.accessToken != null) {
-        // Bilgileri kaydet
+      if (result.success && result.accessToken != null && result.user != null) {
         await _secureStorage.saveAccessToken(result.accessToken!);
         if (result.refreshToken != null) {
           await _secureStorage.saveRefreshToken(result.refreshToken!);
         }
-        if (result.user?.id != null) {
-          await _secureStorage.saveUserId(result.user!.id);
-          await _registerUserDevice(result.user!.id);
-        }
+        await _secureStorage.saveUserId(result.user!.id);
+        await _registerUserDevice(result.user!.id);
 
-        // --- KRİTİK NOKTA ---
-        // Eğer backend'den gelen user objesinde 'target_language' gibi
-        // daha önce doldurulmuş bir alan varsa onboarding'i atla.
-        // Not: Backend modelinde bu alanların olduğunu varsayıyorum.
-        final bool hasCompletedOnboarding = result.user?.targetLanguage != null;
-
-        if (hasCompletedOnboarding) {
-          navigatorKey.currentState?.pushReplacementNamed(AppRoutes.home);
-        } else {
-          navigatorKey.currentState?.pushReplacementNamed(
-            AppRoutes.languageSelection,
-          );
-        }
-
-        return true;
+        return result.user;
       } else {
         _showErrorMessage(result.errorMessage ?? LocaleKeys.login_failed.tr());
-        return false;
+        return null;
       }
     } catch (e) {
       if (mounted) _showErrorMessage('${LocaleKeys.error_occurred.tr()}: $e');
-      return false;
+      return null;
     } finally {
       if (mounted) setState(() => _isGuestLoading = false);
     }
   }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.montserrat(fontSize: 14.sp)),
+        backgroundColor: MyColors.error,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Platform detection
     final bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-
-    // Metni "{}" işaretlerinden bölüyoruz
     final String termsTemplate = LocaleKeys.terms_privacy_note.tr();
     final List<String> textParts = termsTemplate.split('{}');
 
@@ -360,7 +332,6 @@ class _SignInViewState extends ConsumerState<SignInView> {
           child: Column(
             children: [
               SizedBox(height: 24.h),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -381,9 +352,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                   ),
                 ],
               ),
-
               SizedBox(height: 20.h),
-
               ClipRRect(
                 borderRadius: BorderRadius.circular(20.r),
                 child: Image.asset(
@@ -394,9 +363,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                   filterQuality: FilterQuality.high,
                 ),
               ),
-
               SizedBox(height: 28.h),
-
               Text(
                 LocaleKeys.sign_in_title.tr(),
                 style: GoogleFonts.montserrat(
@@ -408,9 +375,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                 ),
                 textAlign: TextAlign.center,
               ),
-
               SizedBox(height: 10.h),
-
               Text(
                 LocaleKeys.sign_in_subtitle.tr(),
                 style: GoogleFonts.montserrat(
@@ -422,20 +387,15 @@ class _SignInViewState extends ConsumerState<SignInView> {
                 ),
                 textAlign: TextAlign.center,
               ),
-
               SizedBox(height: 32.h),
 
               isIOS
                   ? _SocialButton(
                       onPressed: () async {
-                        // BURADA YÖNLENDİRME .withLoading() SONRASI YAPILIYOR
-                        final success = await _handleAppleSignIn().withLoading(
-                          context,
-                        );
-                        if (success) {
-                          navigatorKey.currentState?.pushReplacementNamed(
-                            AppRoutes.languageSelection,
-                          );
+                        final UserModel? user = await _handleAppleSignIn()
+                            .withLoading(context);
+                        if (user != null && mounted) {
+                          _routeBasedOnUserStatus(context, user);
                         }
                       },
                       backgroundColor: MyColors.black,
@@ -446,13 +406,10 @@ class _SignInViewState extends ConsumerState<SignInView> {
                     )
                   : _SocialButton(
                       onPressed: () async {
-                        final success = await _handleGoogleSignIn().withLoading(
-                          context,
-                        );
-                        if (success) {
-                          navigatorKey.currentState?.pushReplacementNamed(
-                            AppRoutes.languageSelection,
-                          );
+                        final UserModel? user = await _handleGoogleSignIn()
+                            .withLoading(context);
+                        if (user != null && mounted) {
+                          _routeBasedOnUserStatus(context, user);
                         }
                       },
                       backgroundColor: MyColors.white,
@@ -464,7 +421,6 @@ class _SignInViewState extends ConsumerState<SignInView> {
                     ),
 
               SizedBox(height: 14.h),
-
               Row(
                 children: [
                   Expanded(
@@ -486,19 +442,15 @@ class _SignInViewState extends ConsumerState<SignInView> {
                   ),
                 ],
               ),
-
               SizedBox(height: 14.h),
 
               isIOS
                   ? _SocialButton(
                       onPressed: () async {
-                        final success = await _handleGoogleSignIn().withLoading(
-                          context,
-                        );
-                        if (success) {
-                          navigatorKey.currentState?.pushReplacementNamed(
-                            AppRoutes.languageSelection,
-                          );
+                        final UserModel? user = await _handleGoogleSignIn()
+                            .withLoading(context);
+                        if (user != null && mounted) {
+                          _routeBasedOnUserStatus(context, user);
                         }
                       },
                       backgroundColor: MyColors.white,
@@ -510,13 +462,10 @@ class _SignInViewState extends ConsumerState<SignInView> {
                     )
                   : _SocialButton(
                       onPressed: () async {
-                        final success = await _handleAppleSignIn().withLoading(
-                          context,
-                        );
-                        if (success) {
-                          navigatorKey.currentState?.pushReplacementNamed(
-                            AppRoutes.languageSelection,
-                          );
+                        final UserModel? user = await _handleAppleSignIn()
+                            .withLoading(context);
+                        if (user != null && mounted) {
+                          _routeBasedOnUserStatus(context, user);
                         }
                       },
                       backgroundColor: MyColors.black,
@@ -526,37 +475,30 @@ class _SignInViewState extends ConsumerState<SignInView> {
                       isLoading: _isAppleLoading,
                     ),
 
-              SizedBox(height: 14.h),
-
-              _SocialButton(
-                onPressed: () async {
-                  final success = await _handleFacebookSignIn().withLoading(
-                    context,
-                  );
-                  if (success) {
-                    navigatorKey.currentState?.pushReplacementNamed(
-                      AppRoutes.languageSelection,
-                    );
-                  }
-                },
-                backgroundColor: const Color(0xFF1877F2),
-                textColor: MyColors.white,
-                icon: 'assets/icons/facebooklogo.svg',
-                text: LocaleKeys.continue_with_facebook.tr(),
-                isLoading: _isFacebookLoading,
-              ),
-
+              // SizedBox(height: 14.h),
+              // _SocialButton(
+              //   onPressed: () async {
+              //     final UserModel? user = await _handleFacebookSignIn()
+              //         .withLoading(context);
+              //     if (user != null && mounted) {
+              //       _routeBasedOnUserStatus(context, user);
+              //     }
+              //   },
+              //   backgroundColor: const Color(0xFF1877F2),
+              //   textColor: MyColors.white,
+              //   icon: 'assets/icons/facebooklogo.svg',
+              //   text: LocaleKeys.continue_with_facebook.tr(),
+              //   isLoading: _isFacebookLoading,
+              // ),
               SizedBox(height: 20.h),
 
               GestureDetector(
                 onTap: () async {
-                  final success = await _handleGuestLogin().withLoading(
+                  final UserModel? user = await _handleGuestLogin().withLoading(
                     context,
                   );
-                  if (success) {
-                    navigatorKey.currentState?.pushReplacementNamed(
-                      AppRoutes.languageSelection,
-                    );
+                  if (user != null && mounted) {
+                    _routeBasedOnUserStatus(context, user);
                   }
                 },
                 child: Row(
@@ -585,8 +527,6 @@ class _SignInViewState extends ConsumerState<SignInView> {
               ),
 
               const Spacer(),
-
-              // Terms and Privacy
               Padding(
                 padding: EdgeInsets.only(bottom: 16.h),
                 child: RichText(
@@ -599,9 +539,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                       height: 1.4,
                     ),
                     children: [
-                      if (textParts.isNotEmpty)
-                        TextSpan(text: textParts[0]), // "Devam ederek, " vb.
-
+                      if (textParts.isNotEmpty) TextSpan(text: textParts[0]),
                       TextSpan(
                         text: LocaleKeys.terms_of_service.tr(),
                         style: GoogleFonts.montserrat(
@@ -611,10 +549,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                         ),
                         recognizer: _termsRecognizer,
                       ),
-
-                      if (textParts.length > 1)
-                        TextSpan(text: textParts[1]), // " ve " vb.
-
+                      if (textParts.length > 1) TextSpan(text: textParts[1]),
                       TextSpan(
                         text: LocaleKeys.privacy_policy.tr(),
                         style: GoogleFonts.montserrat(
@@ -624,9 +559,7 @@ class _SignInViewState extends ConsumerState<SignInView> {
                         ),
                         recognizer: _privacyRecognizer,
                       ),
-
-                      if (textParts.length > 2)
-                        TextSpan(text: textParts[2]), // " metinlerini..." vb.
+                      if (textParts.length > 2) TextSpan(text: textParts[2]),
                     ],
                   ),
                 ),
@@ -639,7 +572,6 @@ class _SignInViewState extends ConsumerState<SignInView> {
   }
 }
 
-/// Social Sign In Button Widget
 class _SocialButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Color backgroundColor;
@@ -678,30 +610,21 @@ class _SocialButton extends StatelessWidget {
                 : BorderSide.none,
           ),
         ),
-        child: isLoading
-            ? SizedBox(
-                width: 18.w,
-                height: 18.h,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(textColor),
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(icon, width: 18.w, height: 18.h),
-                  SizedBox(width: 10.w),
-                  Text(
-                    text,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                    ),
-                  ),
-                ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(icon, width: 18.w, height: 18.h),
+            SizedBox(width: 10.w),
+            Text(
+              text,
+              style: GoogleFonts.montserrat(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: textColor,
               ),
+            ),
+          ],
+        ),
       ),
     );
   }

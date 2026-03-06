@@ -124,7 +124,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-002',
         'key': LocaleKeys.home_catTravel,
         'name': LocaleKeys.home_catTravel.tr(),
-        'icon': 'assets/images/home/trip.png',
+        'icon': 'assets/icons/airport.svg',
         'color': '#B8A7FF',
         'count': _getWordCount(LocaleKeys.home_catTravel),
       },
@@ -132,7 +132,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-003',
         'key': LocaleKeys.home_catAccommodation,
         'name': LocaleKeys.home_catAccommodation.tr(),
-        'icon': 'assets/images/home/accomo.png',
+        'icon': 'assets/icons/acc.svg',
         'color': '#FF9F6A',
         'count': _getWordCount(LocaleKeys.home_catAccommodation),
       },
@@ -140,7 +140,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-004',
         'key': LocaleKeys.home_catFoodAndDrink,
         'name': LocaleKeys.home_catFoodAndDrink.tr(),
-        'icon': 'assets/images/home/food.png',
+        'icon': 'assets/icons/ffff.svg',
         'color': '#FF8FA5',
         'count': _getWordCount(LocaleKeys.home_catFoodAndDrink),
       },
@@ -148,7 +148,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-005',
         'key': LocaleKeys.home_catCulture,
         'name': LocaleKeys.home_catCulture.tr(),
-        'icon': 'assets/images/home/culture.png',
+        'icon': 'assets/icons/culture.svg',
         'color': '#B8D9FF',
         'count': _getWordCount(LocaleKeys.home_catCulture),
       },
@@ -156,7 +156,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-006',
         'key': LocaleKeys.home_catShop,
         'name': LocaleKeys.home_catShop.tr(),
-        'icon': 'assets/images/home/shope.png',
+        'icon': 'assets/icons/shopping.svg',
         'color': '#8BDDCD',
         'count': _getWordCount(LocaleKeys.home_catShop),
       },
@@ -172,7 +172,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-008',
         'key': LocaleKeys.home_catSport,
         'name': LocaleKeys.home_catSport.tr(),
-        'icon': 'assets/images/home/sport.png',
+        'icon': 'assets/icons/sport.svg',
         'color': '#E4B3FF',
         'count': _getWordCount(LocaleKeys.home_catSport),
       },
@@ -180,7 +180,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-009',
         'key': LocaleKeys.home_catHealth,
         'name': LocaleKeys.home_catHealth.tr(),
-        'icon': 'assets/images/home/health.png',
+        'icon': 'assets/icons/health.svg',
         'color': '#B8FFC9',
         'count': _getWordCount(LocaleKeys.home_catHealth),
       },
@@ -188,7 +188,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         'id': 'dict-cat-010',
         'key': LocaleKeys.home_catBusiness,
         'name': LocaleKeys.home_catBusiness.tr(),
-        'icon': 'assets/images/home/bussines.png',
+        'icon': 'assets/icons/business.png',
         'color': '#A4C8E1',
         'count': _getWordCount(LocaleKeys.home_catBusiness),
       },
@@ -472,9 +472,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20.h),
+                SizedBox(height: 4.h),
                 _buildSearchBar(),
-                SizedBox(height: 16.h),
+                SizedBox(height: 12.h),
                 if (_searchQuery.trim().length >= 2)
                   _buildSearchResults()
                 else
@@ -501,14 +501,31 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
   }
 
   Widget _buildSearchBar() {
+    // Color specification for the shadow
+    const shadowColor = Color(0xFFC2D6E1); // Hex value from spec
+
     return Container(
-      height: 48.h,
+      height: 48.h, // Maintain current height
       decoration: BoxDecoration(
-        color: MyColors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: MyColors.border, width: 1),
+        color: MyColors.white, // Fill: White (FFFFFF) from spec
+        borderRadius: BorderRadius.circular(
+          10.r,
+        ), // Corner radius: 10 from spec
+        // REMOVED: Border.all - spec has no stroke applied
+        // ADDED: boxshadow with spec settings
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor.withOpacity(
+              0.5,
+            ), // Spec: Color C2D6E1, 50% opacity
+            blurRadius: 4.r, // Spec: Blur 4
+            spreadRadius: 0.r, // Spec: Spread 0
+            offset: Offset(0, 2.h), // Spec: Position X=0, Y=2
+          ),
+        ],
       ),
       child: TextField(
+        textAlignVertical: TextAlignVertical.center,
         controller: _searchController,
         onChanged: (value) {
           setState(() {
@@ -540,12 +557,9 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
             fontFamily: 'Montserrat',
             color: MyColors.textSecondary,
           ),
-          prefixIconConstraints: BoxConstraints(
-            minWidth: 40.w,
-            maxHeight: 24.h,
-          ),
+          // REMOVED complex constraints for prefix icon to allow vertical centering
           prefixIcon: Padding(
-            padding: EdgeInsets.only(left: 12.w, right: 8.w),
+            padding: EdgeInsets.symmetric(horizontal: 12.w),
             child: SvgPicture.asset(
               'assets/icons/scope.svg',
               width: 18.w,
@@ -571,8 +585,11 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                   },
                 )
               : null,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+          border:
+              InputBorder.none, // Component border is defined by BoxDecoration
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 0.w,
+          ), // Reset to help vertical centering
         ),
         cursorColor: MyColors.lingolaPrimaryColor,
       ),
@@ -593,7 +610,7 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
         crossAxisCount: 2,
         crossAxisSpacing: 16.w,
         mainAxisSpacing: 16.h,
-        childAspectRatio: 1.1,
+        childAspectRatio: 1.3,
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {
@@ -613,10 +630,13 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
       bgColor = const Color(0xFF4ECDC4).withOpacity(0.2);
     }
 
+    final String iconPath = category['icon'];
+    final bool isSvg = iconPath.toLowerCase().endsWith('.svg');
+
     return GestureDetector(
       onTap: () => _navigateToCategory(category['key']), // KEY aktarılıyor
       child: Container(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.r),
@@ -640,27 +660,36 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Center(
-                child: Image.asset(
-                  category['icon'],
-                  width: 20.w,
-                  height: 20.h,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.category,
-                      size: 24.sp,
-                      color: Colors.grey,
-                    );
-                  },
-                ),
+                // EKLENEN KISIM: Uzantıya göre SVG veya PNG render etme
+                child: isSvg
+                    ? SvgPicture.asset(
+                        iconPath,
+                        width: 28.w,
+                        height: 28.h,
+                        fit: BoxFit.contain,
+                      )
+                    : Image.asset(
+                        iconPath,
+                        width: 28.w,
+                        height: 28.h,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.category,
+                            size: 24.sp,
+                            color: Colors.grey,
+                          );
+                        },
+                      ),
               ),
             ),
-            const Spacer(),
+            SizedBox(height: 12.h),
             Text(
               category['name'], // Ekrana çevrilmiş isim yazılır
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: 15.sp,
+                letterSpacing: 15.sp * -0.05,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Montserrat',
                 color: MyColors.textPrimary,
@@ -668,25 +697,21 @@ class _VisualDictionaryViewState extends ConsumerState<VisualDictionaryView> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(height: 4.h),
             Row(
               children: [
                 Expanded(
                   child: Text(
                     '${category['count']} ${LocaleKeys.library_library_items.tr()}',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
+                      letterSpacing: 12.sp * -0.05,
                       fontWeight: FontWeight.w400,
                       fontFamily: 'Montserrat',
                       color: MyColors.textSecondary,
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward,
-                  size: 20.sp,
-                  color: MyColors.textSecondary,
-                ),
+                SvgPicture.asset('assets/icons/righta.svg', fit: BoxFit.fill),
               ],
             ),
           ],

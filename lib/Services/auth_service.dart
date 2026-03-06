@@ -105,7 +105,7 @@ class AuthService {
             ? WebAuthenticationOptions(
                 clientId: 'com.flywork.lingolatravel',
                 redirectUri: Uri.parse(
-                  'https://your-backend-domain.com/auth/apple/callback',
+                  'https://lingolatravel.fly-work.com/auth/apple/callback',
                 ),
               )
             : null,

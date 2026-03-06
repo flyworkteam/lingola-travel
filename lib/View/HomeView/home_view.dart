@@ -38,8 +38,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
   int _selectedCategoryIndex = 0; // Kategori filtrelemesi için tıklanan index
   final Map<int, double> _swipeProgressMap = {};
   bool _isNavigating = false;
+
   String _userName = 'Guest';
   bool _isPremium = false;
+  String? _userPhotoUrl; // Profil fotoğrafı için eklenen değişken
 
   // Yerel Bookmark Set'i ve SharedPreferences Anahtarı
   Set<String> _bookmarkedPhrases = {};
@@ -144,10 +146,19 @@ class _HomeViewState extends ConsumerState<HomeView> {
       final response = await _profileRepository.getProfile();
       if (response.success && response.data != null) {
         final userData = response.data['user'];
-        if (mounted && userData['name'] != null) {
+        if (mounted) {
           setState(() {
-            _userName = userData['name'];
-            _isPremium = userData['is_premium'];
+            if (userData['name'] != null) {
+              _userName = userData['name'];
+            }
+            // Hatanın çözüldüğü kısım burası: 1 ise veya true ise _isPremium = true olur
+            if (userData['is_premium'] != null) {
+              _isPremium =
+                  userData['is_premium'] == 1 || userData['is_premium'] == true;
+            }
+            if (userData['photo_url'] != null) {
+              _userPhotoUrl = userData['photo_url'];
+            }
           });
         }
       }
@@ -1540,8 +1551,22 @@ class _HomeViewState extends ConsumerState<HomeView> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: MyColors.lingolaPrimaryColor, width: 2),
+          color: MyColors.white,
         ),
-        child: const Icon(Icons.person, color: MyColors.lingolaPrimaryColor),
+        child: ClipOval(
+          child: _userPhotoUrl != null && _userPhotoUrl!.isNotEmpty
+              ? Image.network(
+                  _userPhotoUrl!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.person,
+                    color: MyColors.lingolaPrimaryColor,
+                  ),
+                )
+              : const Icon(Icons.person, color: MyColors.lingolaPrimaryColor),
+        ),
       ),
     );
   }

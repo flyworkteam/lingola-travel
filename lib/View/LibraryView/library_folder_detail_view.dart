@@ -66,31 +66,25 @@ class _LibraryFolderDetailViewState
     super.dispose();
   }
 
-  // Varsayılan klasör isimlerini çeviren, özel isimleri ise DİREKT gösteren fonksiyon
+  // BURASI GÜNCELLENDİ: Yeni 11 kategori sistemine göre çeviriler yapıldı.
   String getLocalizedFolderName(String name) {
     final n = name.trim().toLowerCase();
 
-    // Sadece backend'den gelen varsayılan orijinal isimlerle TAM eşleşiyorsa çevir
-    if (n == 'my airport essentials' || n == 'airport essentials')
-      return LocaleKeys.library_folder_airport.tr();
-    if (n == 'my hotel essentials' || n == 'hotel essentials')
-      return LocaleKeys.library_folder_hotel.tr();
-    if (n == 'transport essentials')
-      return LocaleKeys.library_folder_transport.tr();
-    if (n == 'my food essentials' || n == 'food essentials')
-      return LocaleKeys.library_folder_food.tr();
-    if (n == 'my shopping essentials' || n == 'shopping essentials')
-      return LocaleKeys.library_folder_shopping.tr();
-    if (n == 'culture essentials')
-      return LocaleKeys.library_folder_culture.tr();
-    if (n == 'meeting essentials')
-      return LocaleKeys.library_folder_meeting.tr();
-    if (n == 'sport essentials') return LocaleKeys.library_folder_sport.tr();
-    if (n == 'health essentials') return LocaleKeys.library_folder_health.tr();
-    if (n == 'business essentials')
-      return LocaleKeys.library_folder_business.tr();
+    if (n == 'general essentials') return LocaleKeys.home_catGeneral.tr();
+    if (n == 'travel essentials') return LocaleKeys.home_catTravel.tr();
+    if (n == 'accommodation essentials')
+      return LocaleKeys.home_catAccommodation.tr();
+    if (n == 'food & drink essentials')
+      return LocaleKeys.home_catFoodAndDrink.tr();
+    if (n == 'culture essentials') return LocaleKeys.home_catCulture.tr();
+    if (n == 'shopping essentials') return LocaleKeys.home_catShop.tr();
+    if (n == 'direction essentials') return LocaleKeys.home_catDirection.tr();
+    if (n == 'sport essentials') return LocaleKeys.home_catSport.tr();
+    if (n == 'health essentials') return LocaleKeys.home_catHealth.tr();
+    if (n == 'business essentials') return LocaleKeys.home_catBusiness.tr();
+    if (n == 'emergency essentials') return LocaleKeys.home_catEmergency.tr();
 
-    // Kullanıcı ismi değiştirmişse (Örn: "Benim Tatilim" veya "Airport Trip"), GİRDİĞİ GİBİ GÖSTER!
+    // Kullanıcı ismi kendi değiştirmişse (Örn: "Benim Tatilim"), GİRDİĞİ GİBİ GÖSTER!
     return name;
   }
 
@@ -573,7 +567,6 @@ class _LibraryFolderDetailViewState
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // --- SENİN KODLARIN BAŞLANGICI (DOKUNULMADI) ---
               Padding(
                 padding: EdgeInsets.all(16.w),
                 child: Row(
@@ -651,8 +644,6 @@ class _LibraryFolderDetailViewState
                   ],
                 ),
               ),
-              // --- SENİN KODLARIN BİTİŞİ ---
-
               // Animasyonlu Alt Progress Bar
               AnimatedSize(
                 duration: const Duration(milliseconds: 300),

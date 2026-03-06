@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod eklendi
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,15 +8,17 @@ import '../../Core/Routes/app_routes.dart';
 import '../../Core/Theme/my_colors.dart';
 import '../../Repositories/profile_repository.dart';
 import '../../Services/secure_storage_service.dart';
+import '../../Riverpod/Providers/selected_language_provider.dart'; // Provider importu
 
-class SplashView extends StatefulWidget {
+// StatefulWidget yerine ConsumerStatefulWidget kullanıyoruz
+class SplashView extends ConsumerStatefulWidget {
   const SplashView({super.key});
 
   @override
-  State<SplashView> createState() => _SplashViewState();
+  ConsumerState<SplashView> createState() => _SplashViewState();
 }
 
-class _SplashViewState extends State<SplashView> {
+class _SplashViewState extends ConsumerState<SplashView> {
   final SecureStorageService _secureStorage = SecureStorageService();
   final ProfileRepository _profileRepository = ProfileRepository();
 
@@ -43,6 +46,10 @@ class _SplashViewState extends State<SplashView> {
           final hasOnboarding = user['target_language'] != null;
 
           if (hasOnboarding) {
+            // BACKEND'DEN GELEN DİLİ TÜM UYGULAMAYA (RIVERPOD'A) BİLDİRİYORUZ
+            ref.read(selectedLanguageProvider.notifier).state =
+                user['target_language'];
+
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else {
             Navigator.pushReplacementNamed(

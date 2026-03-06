@@ -730,7 +730,7 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
             width: 320.w,
             padding: EdgeInsets.all(32.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
+              color: Color(0xFFFEF4F4),
               borderRadius: BorderRadius.circular(20.r),
               boxShadow: [
                 BoxShadow(
@@ -747,14 +747,17 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
                   width: 75.w,
                   height: 75.w,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFEEFEF),
+                    color: Colors.white,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Icon(
-                      Icons.person_remove_rounded,
-                      color: const Color(0xFFE63D4F),
-                      size: 40.sp,
+                    child: SvgPicture.asset(
+                      'assets/icons/cikisyap.svg',
+                      width: 48,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFFF44336),
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                 ),
