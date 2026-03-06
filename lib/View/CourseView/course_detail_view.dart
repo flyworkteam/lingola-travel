@@ -162,6 +162,7 @@ class _CourseDetailViewState extends State<CourseDetailView> {
 
           // Scrollable content
           SingleChildScrollView(
+            physics: ClampingScrollPhysics(),
             controller: _scrollController,
             child: Column(
               children: [

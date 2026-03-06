@@ -1,14 +1,15 @@
-import 'dart:ui';
 import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lingola_travel/Core/Theme/my_colors.dart';
-import 'package:lingola_travel/Services/speech_recognition_service.dart';
-import 'package:lingola_travel/Services/tts_service.dart';
+import 'package:lingola_travel/Models/course_model.dart';
 import 'package:lingola_travel/Repositories/lesson_repository.dart';
 import 'package:lingola_travel/Repositories/library_repository.dart';
-import 'package:lingola_travel/Models/course_model.dart';
+import 'package:lingola_travel/Services/speech_recognition_service.dart';
+import 'package:lingola_travel/Services/tts_service.dart';
 
 class LessonDetailView extends StatefulWidget {
   final String lessonId;
@@ -196,6 +197,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
         children: [
           // Main scrollable content with bottom buttons
           SingleChildScrollView(
+            physics: ClampingScrollPhysics(),
             padding: EdgeInsets.symmetric(horizontal: 20.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,7 +736,7 @@ class _LessonDetailViewState extends State<LessonDetailView>
 
         SizedBox(height: 10.h),
 
-        ...vocabulary.map((vocab) => _buildVocabularyCard(vocab)).toList(),
+        ...vocabulary.map((vocab) => _buildVocabularyCard(vocab)),
       ],
     );
   }

@@ -1024,5 +1024,17 @@
             "imVeryScared": "とても怖いです",
             "pleaseHelpMe": "どうか助けてください"
         }
+    },
+    "course": {
+        "title": "目的地を\n選ぶ",
+        "all_courses": "すべてのコース",
+        "popular": "人気",
+        "beginner": "初心者",
+        "intermediate": "中級者",
+        "no_courses": "利用可能なコースはありません",
+        "retry": "リトライ",
+        "lessons": "レッスン",
+        "completed": "完了 ✓",
+        "in_progress": "進行中"
     }
 }

@@ -1024,5 +1024,16 @@
             "imVeryScared": "Ich habe große Angst",
             "pleaseHelpMe": "Bitte helfen Sie mir"
         }
+    },"course": {
+        "title": "Wählen Sie Ihr\nZiel",
+        "all_courses": "Alle Kurse",
+        "popular": "Beliebt",
+        "beginner": "Anfänger",
+        "intermediate": "Mittelstufe",
+        "no_courses": "Keine Kurse verfügbar",
+        "retry": "Wiederholen",
+        "lessons": "Lektionen",
+        "completed": "ABGESCHLOSSEN ✓",
+        "in_progress": "IN BEARBEITUNG"
     }
 }

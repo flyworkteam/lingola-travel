@@ -1025,5 +1025,17 @@
             "imVeryScared": "Çok korkuyorum",
             "pleaseHelpMe": "Lütfen bana yardım edin"
         }
+    },
+    "course": {
+        "title": "Hedefini\nSeç",
+        "all_courses": "Tüm Kurslar",
+        "popular": "Popüler",
+        "beginner": "Başlangıç",
+        "intermediate": "Orta Seviye",
+        "no_courses": "Kurs bulunamadı",
+        "retry": "Tekrar Dene",
+        "lessons": "Ders",
+        "completed": "TAMAMLANDI ✓",
+        "in_progress": "DEVAM EDİYOR"
     }
 }

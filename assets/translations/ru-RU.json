@@ -825,7 +825,8 @@
             "threat": "Угроза",
             "witness": "Свидетель"
         }
-    },"travel_vocabulary": {
+    },
+    "travel_vocabulary": {
         "title": "Словарь для путешествий",
         "search_words": "Поиск слов...",
         "search_phrases": "Поиск фраз...",
@@ -1023,5 +1024,17 @@
             "imVeryScared": "Мне очень страшно",
             "pleaseHelpMe": "Пожалуйста, помогите мне"
         }
+    },
+    "course": {
+        "title": "Выберите свой\nпункт назначения",
+        "all_courses": "Все курсы",
+        "popular": "Популярные",
+        "beginner": "Начинающий",
+        "intermediate": "Средний",
+        "no_courses": "Нет доступных курсов",
+        "retry": "Повторить",
+        "lessons": "Уроки",
+        "completed": "ЗАВЕРШЕНО ✓",
+        "in_progress": "В ПРОЦЕССЕ"
     }
 }

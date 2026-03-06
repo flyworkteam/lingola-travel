@@ -1024,5 +1024,17 @@
             "imVeryScared": "Estou com muito medo",
             "pleaseHelpMe": "Por favor, me ajude"
         }
+    },
+    "course": {
+        "title": "Escolha o Seu\nDestino",
+        "all_courses": "Todos os cursos",
+        "popular": "Popular",
+        "beginner": "Iniciante",
+        "intermediate": "Intermediário",
+        "no_courses": "Nenhum curso disponível",
+        "retry": "Repetir",
+        "lessons": "Aulas",
+        "completed": "CONCLUÍDO ✓",
+        "in_progress": "EM CURSO"
     }
 }

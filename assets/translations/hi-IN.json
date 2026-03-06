@@ -1024,5 +1024,17 @@
             "imVeryScared": "मुझे बहुत डर लग रहा है",
             "pleaseHelpMe": "कृपया मेरी मदद करें"
         }
+    },
+    "course": {
+        "title": "अपना गंतव्य\nचुनें",
+        "all_courses": "सभी पाठ्यक्रम",
+        "popular": "लोकप्रिय",
+        "beginner": "शुरुआती",
+        "intermediate": "मध्यवर्ती",
+        "no_courses": "कोई कोर्स उपलब्ध नहीं है",
+        "retry": "पुनः प्रयास करें",
+        "lessons": "पाठ",
+        "completed": "पूरा हुआ ✓",
+        "in_progress": "जारी है"
     }
 }

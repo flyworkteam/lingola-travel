@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lingola_travel/View/ProfileView/premium_view.dart';
 
 import '../../View/HomeView/home_view.dart'; // Free version
 import '../../View/OnboardingView/creating_plan_view.dart';
@@ -82,6 +83,7 @@ class AppRoutes {
       dailyGoalSelection: (context) => const DailyGoalSelectionView(),
       creatingPlan: (context) => const CreatingPlanView(),
       home: (context) => const HomeView(), // Free version (default)
+      premium: (context) => const PremiumView(),
     };
   }
 }

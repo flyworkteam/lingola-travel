@@ -998,5 +998,16 @@ abstract class  LocaleKeys {
   static const sentences_emergency_pleaseHelpMe = 'sentences.emergency.pleaseHelpMe';
   static const sentences_emergency = 'sentences.emergency';
   static const sentences = 'sentences';
+  static const course_title = 'course.title';
+  static const course_all_courses = 'course.all_courses';
+  static const course_popular = 'course.popular';
+  static const course_beginner = 'course.beginner';
+  static const course_intermediate = 'course.intermediate';
+  static const course_no_courses = 'course.no_courses';
+  static const course_retry = 'course.retry';
+  static const course_lessons = 'course.lessons';
+  static const course_completed = 'course.completed';
+  static const course_in_progress = 'course.in_progress';
+  static const course = 'course';
 
 }

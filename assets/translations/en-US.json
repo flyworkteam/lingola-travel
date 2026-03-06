@@ -1024,5 +1024,17 @@
             "imVeryScared": "I’m very scared",
             "pleaseHelpMe": "Please help me"
         }
+    },
+    "course": {
+        "title": "Choose Your\nDestination",
+        "all_courses": "All Courses",
+        "popular": "Popular",
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "no_courses": "No courses available",
+        "retry": "Retry",
+        "lessons": "Lessons",
+        "completed": "COMPLETED ✓",
+        "in_progress": "IN PROGRESS"
     }
 }
